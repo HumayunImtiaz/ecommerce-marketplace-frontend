@@ -1,0 +1,24 @@
+# Environment variables
+   .env
+   .env.local
+   .env.development
+   .env.production
+   
+   # Dependencies
+   node_modules/
+   
+   # Next.js (agar use kar rahe ho)
+   .next/
+   out/
+   
+   # Build files
+   dist/
+   build/
+   
+   # OS files
+   .DS_Store
+   Thumbs.db
+   
+   # IDE
+   .vscode/
+   .idea/

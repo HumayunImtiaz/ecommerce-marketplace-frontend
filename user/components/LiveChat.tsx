@@ -49,7 +49,7 @@ export default function LiveChat({ onClose }: LiveChatProps) {
         if (data.success) {
           setMessages(data.data);
         }
-        
+
         // Mark as read
         await fetch(`${backendUrl}/api/auth/messages/${user.id}/read`, {
           method: "PUT",
@@ -79,7 +79,7 @@ export default function LiveChat({ onClose }: LiveChatProps) {
 
     newSocket.on("receive_message", (message: Message) => {
       setMessages((prev) => [...prev, message]);
-      
+
       // If the chat is open, immediately mark incoming messages as read
       if (message.senderModel === "Admin") {
         fetch(`${backendUrl}/api/auth/messages/${user.id}/read`, {
@@ -121,9 +121,9 @@ export default function LiveChat({ onClose }: LiveChatProps) {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-gray-200">
+    <div className="fixed bottom-6 right-6 w-96 max-w-[calc(100vw-3rem)] max-h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-gray-200">
       {/* Header */}
-      <div className="bg-blue-600 p-4 flex justify-between items-center text-white">
+      <div className="bg-blue-600 p-4 flex justify-between items-center text-white shrink-0">
         <div className="flex items-center space-x-2">
           <MessageSquare className="w-5 h-5" />
           <h3 className="font-semibold">Live Support</h3>
@@ -134,7 +134,7 @@ export default function LiveChat({ onClose }: LiveChatProps) {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 p-4 h-96 overflow-y-auto bg-gray-50 flex flex-col space-y-3">
+      <div className="flex-1 min-h-0 p-4 overflow-y-auto bg-gray-50 flex flex-col space-y-3">
         {isLoading ? (
           <div className="flex-1 flex justify-center items-center">
             <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
@@ -153,11 +153,10 @@ export default function LiveChat({ onClose }: LiveChatProps) {
                 className={`flex ${isMe ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[75%] min-w-[70px] rounded-2xl px-4 py-2 text-sm ${
-                    isMe
+                  className={`max-w-[75%] min-w-[70px] rounded-2xl px-4 py-2 text-sm ${isMe
                       ? "bg-blue-600 text-white rounded-br-sm"
                       : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
-                  }`}
+                    }`}
                 >
                   <p className="whitespace-pre-wrap">{msg.content}</p>
                   <div className={`flex justify-end items-center mt-1 text-[10px] ${isMe ? "text-blue-200" : "text-gray-400"}`}>
@@ -177,7 +176,7 @@ export default function LiveChat({ onClose }: LiveChatProps) {
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-white border-t border-gray-100">
+      <div className="p-3 bg-white border-t border-gray-100 shrink-0">
         <form
           onSubmit={handleSendMessage}
           className="flex items-center space-x-2 bg-gray-50 p-1 rounded-full border border-gray-200"
