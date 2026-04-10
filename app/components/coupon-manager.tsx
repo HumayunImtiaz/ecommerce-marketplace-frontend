@@ -1,14 +1,13 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
@@ -18,218 +17,332 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus, Edit, Trash2 } from "lucide-react"
-
-// Mock coupon data
-const coupons = [
-  {
-    id: 1,
-    code: "SAVE20",
-    type: "percentage",
-    value: 20,
-    minAmount: 100,
-    usageLimit: 100,
-    used: 45,
-    status: "active",
-    expiresAt: "2024-02-15",
-  },
-  {
-    id: 2,
-    code: "WELCOME10",
-    type: "fixed",
-    value: 10,
-    minAmount: 50,
-    usageLimit: 500,
-    used: 234,
-    status: "active",
-    expiresAt: "2024-03-01",
-  },
-  {
-    id: 3,
-    code: "EXPIRED5",
-    type: "percentage",
-    value: 5,
-    minAmount: 0,
-    usageLimit: 1000,
-    used: 567,
-    status: "expired",
-    expiresAt: "2024-01-01",
-  },
-]
+import { Plus, Trash2, Loader2, Megaphone, Ticket } from "lucide-react"
+import { toast } from "sonner"
 
 export function CouponManager() {
+  const [coupons, setCoupons] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     code: "",
-    type: "percentage",
-    value: "",
-    minAmount: "",
-    usageLimit: "",
-    expiresAt: "",
+    discountType: "percentage",
+    discountValue: "",
+    minPurchase: "0",
+    usageLimit: "100",
+    limitPerUser: "1",
+    expiryDate: "",
+    isPublic: false,
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const fetchCoupons = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/coupons")
+      const result = await response.json()
+      if (result.success) {
+        setCoupons(result.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch coupons:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchCoupons()
+  }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Creating coupon:", formData)
-    setIsDialogOpen(false)
-    setFormData({
-      code: "",
-      type: "percentage",
-      value: "",
-      minAmount: "",
-      usageLimit: "",
-      expiresAt: "",
-    })
+    setIsSubmitting(true)
+    try {
+      const response = await fetch("/api/coupons", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          discountValue: Number(formData.discountValue),
+          minPurchase: Number(formData.minPurchase),
+          usageLimit: Number(formData.usageLimit),
+          limitPerUser: Number(formData.limitPerUser),
+        }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        toast.success("Coupon created successfully")
+        setIsDialogOpen(false)
+        fetchCoupons()
+        setFormData({
+          code: "",
+          discountType: "percentage",
+          discountValue: "",
+          minPurchase: "0",
+          usageLimit: "100",
+          limitPerUser: "1",
+          expiryDate: "",
+          isPublic: false,
+        })
+      } else {
+        toast.error(result.message)
+      }
+    } catch (error) {
+      toast.error("Failed to create coupon")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this coupon?")) return
+    try {
+      const response = await fetch(`/api/coupons/${id}`, { method: "DELETE" })
+      const result = await response.json()
+      if (result.success) {
+        toast.success("Coupon removed")
+        fetchCoupons()
+      }
+    } catch (error) {
+      toast.error("Failed to delete coupon")
+    }
+  }
+
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      const response = await fetch(`/api/coupons/${id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentStatus }),
+      })
+      const result = await response.json()
+      if (result.success) {
+        fetchCoupons()
+      }
+    } catch (error) {
+      console.error("Failed to update status:", error)
+    }
   }
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Coupons & Discounts</h2>
+        <div>
+          <h2 className="text-2xl font-bold">Coupons & Discounts</h2>
+          <p className="text-muted-foreground">Manage promotional codes and public offers</p>
+        </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-blue-600 hover:bg-blue-700">
               <Plus className="h-4 w-4 mr-2" />
               Create Coupon
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Create New Coupon</DialogTitle>
-              <DialogDescription>Set up a new discount coupon for your customers.</DialogDescription>
+              <DialogDescription>Set up a new discount code for your store.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="code">Coupon Code</Label>
-                <Input
-                  id="code"
-                  value={formData.code}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, code: e.target.value }))}
-                  placeholder="SAVE20"
-                  required
-                />
-              </div>
-
+            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="type">Discount Type</Label>
+                  <Label htmlFor="code">Coupon Code</Label>
+                  <Input
+                    id="code"
+                    value={formData.code}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, code: e.target.value }))}
+                    placeholder="SAVE20"
+                    className="font-mono"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="discountType">Type</Label>
                   <Select
-                    value={formData.type}
-                    onValueChange={(value) => setFormData((prev) => ({ ...prev, type: value }))}
+                    value={formData.discountType}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, discountType: value }))}
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="percentage">Percentage</SelectItem>
-                      <SelectItem value="fixed">Fixed Amount</SelectItem>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount ($)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="value">Value</Label>
+                  <Label htmlFor="discountValue">Discount Value</Label>
                   <Input
-                    id="value"
+                    id="discountValue"
                     type="number"
-                    value={formData.value}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, value: e.target.value }))}
-                    placeholder={formData.type === "percentage" ? "20" : "10.00"}
+                    value={formData.discountValue}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, discountValue: e.target.value }))}
+                    placeholder="20"
                     required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="minPurchase">Min Purchase ($)</Label>
+                  <Input
+                    id="minPurchase"
+                    type="number"
+                    value={formData.minPurchase}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, minPurchase: e.target.value }))}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="minAmount">Minimum Amount</Label>
-                  <Input
-                    id="minAmount"
-                    type="number"
-                    step="0.01"
-                    value={formData.minAmount}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, minAmount: e.target.value }))}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="usageLimit">Usage Limit</Label>
+                  <Label htmlFor="usageLimit">Total Usage Limit</Label>
                   <Input
                     id="usageLimit"
                     type="number"
                     value={formData.usageLimit}
                     onChange={(e) => setFormData((prev) => ({ ...prev, usageLimit: e.target.value }))}
-                    placeholder="100"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="limitPerUser">Limit Per User</Label>
+                  <Input
+                    id="limitPerUser"
+                    type="number"
+                    value={formData.limitPerUser}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, limitPerUser: e.target.value }))}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="expiresAt">Expires At</Label>
+                <Label htmlFor="expiryDate">Expiry Date</Label>
                 <Input
-                  id="expiresAt"
+                  id="expiryDate"
                   type="date"
-                  value={formData.expiresAt}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, expiresAt: e.target.value }))}
+                  value={formData.expiryDate}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, expiryDate: e.target.value }))}
                   required
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+                <div className="space-y-0.5">
+                  <Label className="text-sm font-medium">Public Coupon</Label>
+                  <p className="text-xs text-muted-foreground text-pretty">Show this coupon on the homepage banner</p>
+                </div>
+                <Switch
+                  checked={formData.isPublic}
+                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, isPublic: checked }))}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Create Coupon</Button>
+                <Button type="submit" disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700">
+                  {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Create Coupon
+                </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Active Coupons</CardTitle>
-          <CardDescription>Manage your discount codes and promotional offers</CardDescription>
+      <Card className="border-none shadow-md overflow-hidden bg-white">
+        <CardHeader className="bg-slate-50/50">
+          <CardTitle>All Coupons</CardTitle>
+          <CardDescription>View and manage all your discount codes in one place.</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Code</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Usage</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {coupons.map((coupon) => (
-                <TableRow key={coupon.id}>
-                  <TableCell className="font-mono font-medium">{coupon.code}</TableCell>
-                  <TableCell className="capitalize">{coupon.type}</TableCell>
-                  <TableCell>{coupon.type === "percentage" ? `${coupon.value}%` : `$${coupon.value}`}</TableCell>
-                  <TableCell>
-                    {coupon.used} / {coupon.usageLimit}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={coupon.status === "active" ? "default" : "secondary"}>{coupon.status}</Badge>
-                  </TableCell>
-                  <TableCell>{coupon.expiresAt}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50/50">
+                  <TableHead className="font-semibold text-slate-700">Code</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Type</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Value</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Limits</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Features</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Status</TableHead>
+                  <TableHead className="font-semibold text-slate-700">Expires</TableHead>
+                  <TableHead className="w-16"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-40 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+                        <span className="text-muted-foreground">Loading coupons...</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : coupons.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                      No coupons found. Create one to get started!
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  coupons.map((coupon) => (
+                    <TableRow key={coupon._id} className="hover:bg-slate-50/50">
+                      <TableCell className="font-mono font-bold text-blue-600">{coupon.code}</TableCell>
+                      <TableCell className="capitalize">{coupon.discountType}</TableCell>
+                      <TableCell className="font-semibold">
+                        {coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `$${coupon.discountValue}`}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        <div className="flex flex-col gap-0.5">
+                          <span>Total: {coupon.usedCount} / {coupon.usageLimit}</span>
+                          <span className="text-xs text-muted-foreground italic">Per user: {coupon.limitPerUser}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {coupon.isPublic && (
+                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              <Megaphone className="h-3 w-3 mr-1" /> Public
+                            </Badge>
+                          )}
+                          {coupon.minPurchase > 0 && (
+                            <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
+                              Min: ${coupon.minPurchase}
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          checked={coupon.isActive}
+                          onCheckedChange={() => toggleStatus(coupon._id, coupon.isActive)}
+                        />
+                      </TableCell>
+                      <TableCell className="text-sm whitespace-nowrap">
+                        {new Date(coupon.expiryDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(coupon._id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>

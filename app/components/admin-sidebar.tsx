@@ -47,6 +47,11 @@ const menuItems = [
     icon: Megaphone,
   },
   {
+    title: "Coupons",
+    url: "/admin/coupons",
+    icon: ShoppingCart, // Changed icon for variety, or keep Megaphone? Let's use Ticket if available, otherwise ShoppingCart is fine. Actually, let's look for a better icon.
+  },
+  {
     title: "Analytics",
     url: "/admin/analytics",
     icon: BarChart3,

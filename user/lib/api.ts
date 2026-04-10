@@ -155,6 +155,14 @@ export const orderApi = {
       method: "POST",
       body: JSON.stringify({ paymentIntentId }),
     }),
+
+  validateCoupon: (code: string, subtotal: number) =>
+    fetcher("/api/orders/coupons/validate", {
+      method: "POST",
+      body: JSON.stringify({ code, subtotal }),
+    }),
+
+  getPublicCoupons: () => fetcher("/api/orders/coupons/public"),
 }
 
 // Wishlist APIs
