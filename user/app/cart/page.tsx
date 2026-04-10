@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
 import { useToast } from "@/contexts/ToastContext"
+import { orderApi } from "@/lib/api"
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart()
@@ -26,26 +27,27 @@ export default function CartPage() {
     }
 
     setIsApplyingPromo(true)
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    // Mock promo code validation
-    const validCodes = {
-      SAVE10: 10,
-      WELCOME20: 20,
-      FREESHIP: shipping,
+    try {
+      const result = await orderApi.validateCoupon(promoCode, subtotal)
+      if (result.success && result.data) {
+        const coupon = result.data
+        let discountAmount = 0
+        if (coupon.discountType === "percentage") {
+          discountAmount = (subtotal * coupon.discountValue) / 100
+        } else {
+          discountAmount = coupon.discountValue
+        }
+        setDiscount(discountAmount)
+        addToast(`Promo code "${coupon.code}" applied!`, "success")
+      } else {
+        addToast(result.message || "Invalid promo code", "error")
+        setDiscount(0)
+      }
+    } catch (error) {
+      addToast("Failed to validate promo code", "error")
+    } finally {
+      setIsApplyingPromo(false)
     }
-
-    if (validCodes[promoCode.toUpperCase() as keyof typeof validCodes]) {
-      const discountAmount = validCodes[promoCode.toUpperCase() as keyof typeof validCodes]
-      setDiscount(discountAmount)
-      addToast(`Promo code applied! You saved $${discountAmount}`, "success")
-    } else {
-      addToast("Invalid promo code", "error")
-    }
-
-    setIsApplyingPromo(false)
   }
 
   if (items.length === 0) {
@@ -154,9 +156,10 @@ export default function CartPage() {
                 <input
                   type="text"
                   value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   placeholder="Enter code"
-                  className="flex-1 input-field"
+                  className="flex-1 input-field uppercase font-mono"
+                  disabled={isApplyingPromo}
                 />
                 <button
                   onClick={handleApplyPromo}

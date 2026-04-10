@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import {
-  CreditCard, Truck, Shield, ArrowLeft, Loader2, Package, CheckCircle
+  CreditCard, Truck, Shield, ArrowLeft, Loader2, Package, CheckCircle, Ticket, X
 } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import {
@@ -160,12 +160,52 @@ export default function CheckoutPage() {
   const [billingErrors, setBillingErrors] = useState<AddressErrors>({})
   const [sameAsShipping, setSameAsShipping] = useState(true)
 
+  // Coupon States
+  const [couponInput, setCouponInput] = useState("")
+  const [discountAmount, setDiscountAmount] = useState(0)
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
+
   const subtotal = getCartTotal()
   const tax = subtotal * 0.08
   const shipping = subtotal > 50 ? 0 : 9.99
-  const total = subtotal + tax + shipping
+  const total = Math.max(0, subtotal + tax + shipping - discountAmount)
 
   useEffect(() => { setClientSecret(null) }, [paymentMethod])
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return
+    setIsValidatingCoupon(true)
+    try {
+      const result = await orderApi.validateCoupon(couponInput, subtotal)
+      if (result.success && result.data) {
+        const coupon = result.data
+        let discount = 0
+        if (coupon.discountType === "percentage") {
+          discount = (subtotal * coupon.discountValue) / 100
+        } else {
+          discount = coupon.discountValue
+        }
+        setDiscountAmount(discount)
+        setAppliedCoupon(coupon)
+        addToast(`Coupon "${coupon.code}" applied!`, "success")
+      } else {
+        addToast(result.message || "Invalid coupon code", "error")
+        setDiscountAmount(0)
+        setAppliedCoupon(null)
+      }
+    } catch {
+      addToast("Failed to validate coupon", "error")
+    } finally {
+      setIsValidatingCoupon(false)
+    }
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+    setDiscountAmount(0)
+    setCouponInput("")
+  }
 
   const handleShippingNext = () => {
     const errs = validateAddress(shippingAddress)
@@ -196,6 +236,8 @@ export default function CheckoutPage() {
         billingAddress: sameAsShipping ? shippingAddress : billingAddress,
         subtotal, tax, shippingCost: shipping, total,
         paymentMethod,
+        couponCode: appliedCoupon?.code,
+        discountAmount,
       })
       if (!result?.success) {
         addToast(result?.message || "Failed to place order", "error");
@@ -382,8 +424,52 @@ export default function CheckoutPage() {
               <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
               <div className="flex justify-between text-gray-600"><span>Tax (8%)</span><span>${tax.toFixed(2)}</span></div>
               <div className="flex justify-between text-gray-600"><span>Shipping</span><span>{shipping === 0 ? "Free 🎉" : `$${shipping.toFixed(2)}`}</span></div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-green-600 font-medium">
+                  <span className="flex items-center"><Ticket className="w-3 h-3 mr-1" /> Discount ({appliedCoupon?.code})</span>
+                  <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="border-t pt-3 flex justify-between font-bold text-lg"><span>Total</span><span>${total.toFixed(2)}</span></div>
             </div>
+
+            {/* Coupon Input */}
+            <div className="mt-6 border-t pt-6">
+              <label className="block text-sm font-medium mb-2 text-gray-700">Promo Code</label>
+              <div className="flex space-x-2">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                    placeholder="Enter code"
+                    disabled={!!appliedCoupon || isValidatingCoupon}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 uppercase font-mono"
+                  />
+                  {appliedCoupon && (
+                    <button 
+                      onClick={removeCoupon}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={handleApplyCoupon}
+                  disabled={!!appliedCoupon || !couponInput.trim() || isValidatingCoupon}
+                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 flex items-center shrink-0"
+                >
+                  {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
+                </button>
+              </div>
+              {appliedCoupon && (
+                <p className="text-xs text-green-600 mt-2 flex items-center font-medium">
+                  <CheckCircle className="w-3 h-3 mr-1" /> Success! You saved ${discountAmount.toFixed(2)}
+                </p>
+              )}
+            </div>
+
             <div className="mt-4 bg-green-50 p-3 rounded-xl flex items-center space-x-2">
               <Shield className="w-4 h-4 text-green-600" />
               <span className="text-xs text-green-700">Secure & encrypted checkout</span>

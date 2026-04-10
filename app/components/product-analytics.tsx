@@ -5,26 +5,25 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 
-const topProducts = [
-  { name: "Wireless Headphones", sales: 245, revenue: 24500, growth: 12.5 },
-  { name: "Smart Watch", sales: 189, revenue: 56700, growth: 8.3 },
-  { name: "Laptop Stand", sales: 156, revenue: 12480, growth: -2.1 },
-  { name: "Coffee Mug", sales: 134, revenue: 2680, growth: 15.7 },
-  { name: "Phone Case", sales: 98, revenue: 2940, growth: 5.2 },
-]
-
-const categoryPerformance = [
-  { category: "Electronics", sales: 1245, target: 1500, performance: 83 },
-  { category: "Home & Garden", sales: 890, target: 1000, performance: 89 },
-  { category: "Fashion", sales: 567, target: 800, performance: 71 },
-  { category: "Sports", sales: 345, target: 400, performance: 86 },
-]
-
 interface ProductAnalyticsProps {
-  dateRange: string
+  topProducts: {
+    name: string
+    sales: number
+    revenue: number
+    growth: number
+  }[]
+  categoryPerformance: {
+    category: string
+    sales: number
+    target: number
+    performance: number
+  }[]
 }
 
-export function ProductAnalytics({ dateRange }: ProductAnalyticsProps) {
+export function ProductAnalytics({ topProducts, categoryPerformance }: ProductAnalyticsProps) {
+  const products = topProducts.length > 0 ? topProducts : []
+  const categories = categoryPerformance.length > 0 ? categoryPerformance : []
+
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <Card>
@@ -44,7 +43,7 @@ export function ProductAnalytics({ dateRange }: ProductAnalyticsProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {topProducts.map((product) => (
+                {products.map((product) => (
                   <TableRow key={product.name}>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell className="text-right">{product.sales}</TableCell>
@@ -69,7 +68,7 @@ export function ProductAnalytics({ dateRange }: ProductAnalyticsProps) {
           <CardDescription>Sales performance vs targets</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {categoryPerformance.map((category) => (
+          {categories.map((category) => (
             <div key={category.category} className="space-y-2">
               <div className="flex justify-between items-center">
                 <span className="font-medium">{category.category}</span>
