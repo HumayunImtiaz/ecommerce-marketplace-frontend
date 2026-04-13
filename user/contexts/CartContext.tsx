@@ -5,7 +5,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import type { CartItem, Product } from "@/lib/types"
 import { useToast } from "./ToastContext"
 import { useAuth } from "./AuthContext"
-import { cartApi } from "@/lib/api"
+import { cartApi, orderApi } from "@/lib/api"
 
 interface CartContextType {
   items: CartItem[]
@@ -16,6 +16,10 @@ interface CartContextType {
   getCartTotal: () => number
   getCartCount: () => number
   isInCart: (productId: string) => boolean
+  appliedCoupon: any | null
+  applyCoupon: (code: string) => Promise<void>
+  removeCoupon: () => void
+  discountAmount: number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -25,11 +29,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { addToast } = useToast()
   const { user } = useAuth()
   const [isInitialized, setIsInitialized] = useState(false)
+  
+  // Coupon State
+  const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null)
+  const [discountAmount, setDiscountAmount] = useState(0)
 
   // Helper to map backend product to frontend product
   const mapProduct = (p: any): Product | null => {
     if (!p) return null
-    
+
     return {
       id: p._id || p.id,
       name: p.name,
@@ -57,7 +65,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         try {
           // 1. Fetch current server cart
           const { data, success } = await cartApi.getCart()
-          
+
           let serverItems: CartItem[] = []
           if (success && data?.items) {
             serverItems = data.items
@@ -91,7 +99,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               }
               // Clear local storage after sync
               localStorage.removeItem("cart")
-              
+
               // Refetch canonical cart
               const { data: finalData, success: finalSuccess } = await cartApi.getCart()
               if (finalSuccess && finalData?.items) {
@@ -111,7 +119,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               }
             }
           }
-          
+
           setItems(serverItems)
         } catch (error) {
           console.error("Failed to load or sync cart:", error)
@@ -157,17 +165,31 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             : item
         )
       )
-      
+
       if (user) {
         // Sync to server
-        await cartApi.addToCart({
+        const { success, message } = await cartApi.addToCart({
           productId: product.id,
           quantity,
           selectedColor,
           selectedSize
         })
+        if (success) {
+          addToast(`Updated ${product.name} quantity in cart`, "success")
+        } else {
+          // Rollback
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === existingItem.id
+                ? { ...item, quantity: existingItem.quantity }
+                : item
+            )
+          )
+          addToast(message || "Failed to update quantity", "error")
+        }
+      } else {
+        addToast(`Updated ${product.name} quantity in cart`, "success")
       }
-      addToast(`Updated ${product.name} quantity in cart`, "success")
     } else {
       const tempId = `${product.id}-${selectedColor || ""}-${selectedSize || ""}-${Date.now()}`
       const newItem: CartItem = {
@@ -178,10 +200,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         selectedSize,
       }
       setItems((prev) => [...prev, newItem])
-      
+
       if (user) {
         // Sync to server
-        const { data, success } = await cartApi.addToCart({
+        const { data, success, message } = await cartApi.addToCart({
           productId: product.id,
           quantity,
           selectedColor,
@@ -189,7 +211,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         })
         if (success && data?.items) {
           // Update temp ID with server ID
-          const latestItem = data.items.find((item: any) => 
+          const latestItem = data.items.find((item: any) =>
             item.productId.toString() === product.id &&
             item.selectedColor === selectedColor &&
             item.selectedSize === selectedSize
@@ -197,9 +219,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (latestItem) {
             setItems(prev => prev.map(item => item.id === tempId ? { ...item, id: latestItem._id } : item))
           }
+          addToast(`Added ${product.name} to cart`, "success")
+        } else {
+          // Rollback
+          setItems(prev => prev.filter(item => item.id !== tempId))
+          addToast(message || "Failed to add to cart", "error")
         }
+      } else {
+        addToast(`Added ${product.name} to cart`, "success")
       }
-      addToast(`Added ${product.name} to cart`, "success")
     }
   }
 
@@ -208,28 +236,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (item) {
       addToast(`Removed ${item.product.name} from cart`, "info")
     }
-    
+
     // Optimistic Update
     setItems((prev) => prev.filter((i) => i.id !== itemId))
-    
+
     if (user) {
       await cartApi.removeFromCart(itemId)
     }
   }
 
   const updateQuantity = async (itemId: string, quantity: number) => {
+    const originalItem = items.find((i) => i.id === itemId)
+    if (!originalItem) return
+
     if (quantity <= 0) {
       removeFromCart(itemId)
       return
     }
-    
+
     // Optimistic Update
     setItems((prev) =>
       prev.map((item) => (item.id === itemId ? { ...item, quantity } : item))
     )
-    
+
     if (user) {
-      await cartApi.updateQuantity(itemId, quantity)
+      const { success, message } = await cartApi.updateQuantity(itemId, quantity)
+      if (!success) {
+        // Rollback
+        setItems((prev) =>
+          prev.map((item) => (item.id === itemId ? { ...item, quantity: originalItem.quantity } : item))
+        )
+        addToast(message || "Failed to update quantity", "error")
+      }
     }
   }
 
@@ -253,6 +291,71 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return items.some((item) => item.product.id === productId)
   }
 
+  // ── Coupon Logic ──
+  const applyCoupon = async (code: string) => {
+    if (!code.trim()) return
+
+    try {
+      const subtotal = getCartTotal()
+      const { data, success, message } = await orderApi.validateCoupon(code, subtotal)
+
+      if (success && data) {
+        const coupon = data
+        setAppliedCoupon(coupon)
+        
+        // Calulate discount manually since backend returns the coupon object
+        let discountValue = 0
+        if (coupon.discountType === "percentage") {
+          discountValue = (subtotal * coupon.discountValue) / 100
+        } else {
+          discountValue = coupon.discountValue
+        }
+        
+        setDiscountAmount(discountValue)
+        addToast(`Coupon "${code}" applied! You saved $${discountValue.toFixed(2)}`, "success")
+      } else {
+        addToast(message || "Invalid coupon code", "error")
+      }
+    } catch (error) {
+      console.error("Coupon validation error:", error)
+      addToast("Failed to validate coupon", "error")
+    }
+  }
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null)
+    setDiscountAmount(0)
+    addToast("Coupon removed", "info")
+  }
+
+  // Recalculate discount if items change
+  useEffect(() => {
+    const updateDiscount = async () => {
+      if (appliedCoupon) {
+        const subtotal = getCartTotal()
+        try {
+          const { data, success } = await orderApi.validateCoupon(appliedCoupon.code, subtotal)
+          if (success && data) {
+            const coupon = data
+            let discountValue = 0
+            if (coupon.discountType === "percentage") {
+              discountValue = (subtotal * coupon.discountValue) / 100
+            } else {
+              discountValue = coupon.discountValue
+            }
+            setDiscountAmount(discountValue)
+          } else {
+            // If coupon no longer valid (e.g. subtotal below minPurchase)
+            removeCoupon()
+          }
+        } catch (error) {
+          console.error("Discount recalculation error:", error)
+        }
+      }
+    }
+    updateDiscount()
+  }, [items, appliedCoupon])
+
   return (
     <CartContext.Provider
       value={{
@@ -264,6 +367,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         getCartTotal,
         getCartCount,
         isInCart,
+        appliedCoupon,
+        applyCoupon,
+        removeCoupon,
+        discountAmount,
       }}
     >
       {children}

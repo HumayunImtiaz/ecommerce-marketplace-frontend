@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { useRef } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
@@ -45,6 +46,7 @@ interface Props {
     name:      string
     email:     string
     bio:       string
+    avatar:    string | null
     lastLogin: string | null
   }
 }
@@ -57,6 +59,13 @@ export default function AdminProfileClient({ initialData }: Props) {
   const [showNew, setShowNew]             = useState(false)
   const [showConfirm, setShowConfirm]     = useState(false)
 
+  // Avatar states
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(
+    initialData.avatar ? (initialData.avatar.startsWith("http") ? initialData.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${initialData.avatar}`) : null
+  )
+
   // Profile Formik
   const profileFormik = useFormik({
     initialValues: {
@@ -66,7 +75,15 @@ export default function AdminProfileClient({ initialData }: Props) {
     },
     validationSchema: profileSchema,
     onSubmit: async (values) => {
-      const result = await updateAdminProfileAction(values)
+      const formData = new FormData()
+      formData.append("name", values.name)
+      formData.append("email", values.email)
+      formData.append("bio", values.bio || "")
+      if (avatarFile) {
+        formData.append("avatar", avatarFile)
+      }
+
+      const result = await updateAdminProfileAction(formData)
 
       if (!result.success) {
         if (result.field === "email") {
@@ -89,6 +106,10 @@ export default function AdminProfileClient({ initialData }: Props) {
       bio:   initialData.bio,
     })
     profileFormik.setTouched({})
+    setAvatarFile(null)
+    setAvatarPreview(
+      initialData.avatar ? (initialData.avatar.startsWith("http") ? initialData.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${initialData.avatar}`) : null
+    )
     setIsEditing(false)
   }
 
@@ -134,11 +155,37 @@ export default function AdminProfileClient({ initialData }: Props) {
           <CardHeader className="pb-4">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center space-x-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarFallback className="text-lg font-semibold bg-primary text-primary-foreground">
-                    {profileFormik.values.name.split(" ").map((n) => n[0]).join("") || "A"}
-                  </AvatarFallback>
-                </Avatar>
+                <div 
+                  className={`relative ${isEditing ? 'cursor-pointer group' : ''}`}
+                  onClick={() => isEditing && fileInputRef.current?.click()}
+                >
+                  <Avatar className="h-20 w-20">
+                    {avatarPreview ? (
+                      <AvatarImage src={avatarPreview} alt="Avatar" className="object-cover" />
+                    ) : null}
+                    <AvatarFallback className="text-lg font-semibold bg-primary text-primary-foreground">
+                      {profileFormik.values.name.split(" ").map((n) => n[0]).join("") || "A"}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isEditing && (
+                    <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-white text-xs font-medium">Change</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setAvatarFile(file)
+                        setAvatarPreview(URL.createObjectURL(file))
+                      }
+                    }}
+                  />
+                </div>
                 <div className="space-y-1">
                   <h2 className="text-2xl font-bold">{profileFormik.values.name || "Admin"}</h2>
                   <p className="text-muted-foreground">{profileFormik.values.email}</p>
@@ -161,7 +208,7 @@ export default function AdminProfileClient({ initialData }: Props) {
                     <Button
                       size="sm"
                       onClick={() => profileFormik.handleSubmit()}
-                      disabled={profileFormik.isSubmitting || !profileFormik.dirty}
+                      disabled={profileFormik.isSubmitting || (!profileFormik.dirty && !avatarFile)}
                     >
                       {profileFormik.isSubmitting
                         ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>

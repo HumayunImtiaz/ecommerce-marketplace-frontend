@@ -56,6 +56,8 @@ export interface User {
   name: string
   email: string
   avatar?: string | null
+  phone?: string | null
+  dateOfBirth?: string | null
 }
 
 export interface Address {

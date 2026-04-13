@@ -8,7 +8,13 @@ export default function PromotionalBanner() {
   const [coupons, setCoupons] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
-  const [isVisible, setIsVisible] = useState(true)
+  const [isVisible, setIsVisible] = useState(false) // Start hidden to check session
+
+  useEffect(() => {
+    // Show every time they land on the page (delay slightly for better UX)
+    const timer = setTimeout(() => setIsVisible(true), 1500)
+    return () => clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     const fetchPublicCoupons = async () => {
@@ -26,6 +32,10 @@ export default function PromotionalBanner() {
     fetchPublicCoupons()
   }, [])
 
+  const handleClose = () => {
+    setIsVisible(false)
+  }
+
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code)
     setCopiedCode(code)
@@ -34,55 +44,78 @@ export default function PromotionalBanner() {
 
   if (loading || coupons.length === 0 || !isVisible) return null
 
-  // Show only the most recent/relevant public coupon for the banner
-  const activeCoupon = coupons[0]
-
   return (
-    <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white relative overflow-hidden group">
-      <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-      
-      <div className="container mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-center">
-        <div className="flex items-center space-x-2">
-          <div className="bg-white/20 p-1.5 rounded-lg backdrop-blur-sm">
-            <Ticket className="w-5 h-5 text-yellow-300" />
-          </div>
-          <span className="font-bold tracking-tight text-sm sm:text-base">
-            SPECIAL OFFER: {activeCoupon.discountType === "percentage" ? `${activeCoupon.discountValue}% OFF` : `$${activeCoupon.discountValue} OFF`}
-          </span>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+      <div 
+        className="relative max-w-md w-full bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Background Decorative Elements */}
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-600 to-purple-700" />
+        <div className="absolute top-0 left-0 w-full h-32 overflow-hidden">
+          <div className="absolute top-[-50%] left-[-10%] w-[60%] h-[200%] bg-white/10 rotate-12 blur-3xl" />
+          <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[150%] bg-purple-400/20 -rotate-12 blur-2xl" />
         </div>
 
-        <div className="flex items-center space-x-3">
-          <p className="text-xs sm:text-sm text-blue-100 font-medium">
-            Use code: <span className="text-white font-black bg-black/20 px-2 py-0.5 rounded ml-1 font-mono">{activeCoupon.code}</span>
-          </p>
-          <button
-            onClick={() => copyToClipboard(activeCoupon.code)}
-            className="flex items-center space-x-1.5 bg-white text-blue-600 px-3 py-1 rounded-full text-xs font-bold hover:bg-blue-50 transition-colors shadow-sm"
+        {/* Close Button */}
+        <button 
+          onClick={handleClose}
+          className="absolute top-4 right-4 z-20 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="relative z-10 pt-12 px-8 pb-8 text-center">
+          {/* Icon Header */}
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-xl mb-6 -mt-10 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+            <Ticket className="w-10 h-10 text-blue-600" />
+          </div>
+
+          <h2 className="text-2xl font-black text-slate-800 mb-2">Exclusive Offers!</h2>
+          <p className="text-slate-500 text-sm mb-6">We have special discounts just for you. Grab them before they&apos;re gone!</p>
+
+          {/* Coupon Cards */}
+          <div className="max-h-60 overflow-y-auto space-y-4 mb-6 pr-1">
+            {coupons.map((coupon, idx) => (
+              <div key={idx} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-5 relative group text-center">
+                <div className="text-3xl font-black text-blue-600 mb-2">
+                  {coupon.discountType === "percentage" ? `${coupon.discountValue}% OFF` : `$${coupon.discountValue} OFF`}
+                </div>
+                <div className="flex items-center justify-between space-x-2 bg-white border border-slate-100 py-2.5 px-4 rounded-xl shadow-sm mx-auto max-w-[200px]">
+                  <span className="font-mono text-xl font-bold tracking-widest text-slate-700 uppercase">{coupon.code}</span>
+                  <button
+                    onClick={() => copyToClipboard(coupon.code)}
+                    className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors shrink-0"
+                    title="Copy Code"
+                  >
+                    {copiedCode === coupon.code ? <CheckCircle className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Instruction Pointer - ESSENTIAL per user request */}
+          <div className="flex items-start space-x-3 bg-blue-50/50 p-4 rounded-xl text-left mb-8 border border-blue-100/50">
+            <div className="mt-0.5 p-1 bg-blue-100 text-blue-600 rounded-md shrink-0">
+              <CheckCircle className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-0.5">Where to use?</p>
+              <p className="text-xs text-blue-600 leading-relaxed font-medium">
+                Apply this code on the <span className="font-bold underline">Checkout Page</span> in the &apos;Available Offers&apos; section to see your savings.
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleClose}
+            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
           >
-            {copiedCode === activeCoupon.code ? (
-              <><CheckCircle className="w-3.5 h-3.5" /> <span>Copied!</span></>
-            ) : (
-              <><Copy className="w-3.5 h-3.5" /> <span>Copy</span></>
-            )}
+            Got it, Let&apos;s Shop!
           </button>
         </div>
-
-        {activeCoupon.minPurchase > 0 && (
-          <p className="text-[10px] sm:text-xs text-blue-100/80">
-            *On orders over ${activeCoupon.minPurchase}
-          </p>
-        )}
-
-        <button 
-          onClick={() => setIsVisible(false)}
-          className="absolute right-4 top-1/2 -translate-y-1/2 p-1 hover:bg-white/10 rounded-full transition-colors hidden md:block"
-        >
-          <X className="w-4 h-4 opacity-60" />
-        </button>
       </div>
-      
-      {/* Decorative pulse line */}
-      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-yellow-300/50 to-transparent animate-pulse" />
     </div>
   )
 }
