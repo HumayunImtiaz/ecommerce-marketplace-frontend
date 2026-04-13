@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, Mail, Calendar, ShieldCheck, ShieldAlert, Globe, Facebook, Key, ShoppingBag, Eye, Loader2 } from "lucide-react"
+import { ArrowLeft, Mail, Calendar, ShieldCheck, ShieldAlert, Globe, Facebook, Key, ShoppingBag, Eye, Loader2, AlertTriangle, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -19,6 +19,7 @@ interface Customer {
   provider: "local" | "google" | "facebook"
   isVerified: boolean
   isDeleted: boolean
+  deletionRequested: boolean
   createdAt: string
   lastLogin: string | null
 }
@@ -39,6 +40,8 @@ export default function CustomerDetailPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isOrdersLoading, setIsOrdersLoading] = useState(true)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,6 +73,25 @@ export default function CustomerDetailPage() {
 
     if (params.id) fetchData()
   }, [params.id])
+
+  const handlePermanentDelete = async () => {
+    setIsDeleting(true)
+    try {
+      const res = await fetch(`/api/customers/${params.id}/delete`, { method: "DELETE" })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        toast.success("User permanently deleted")
+        router.push("/admin/customers")
+      } else {
+        toast.error(data.message || "Failed to delete user")
+      }
+    } catch {
+      toast.error("Failed to connect to server")
+    } finally {
+      setIsDeleting(false)
+      setShowDeleteConfirm(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -245,6 +267,56 @@ export default function CustomerDetailPage() {
               )}
             </CardContent>
           </Card>
+          {/* Deletion Request Warning */}
+          {customer.deletionRequested && (
+            <Card className="border-red-300 bg-red-50 shadow-sm">
+              <CardHeader className="pb-3 border-b border-red-200">
+                <CardTitle className="text-lg flex items-center gap-2 text-red-700">
+                  <AlertTriangle className="h-5 w-5" />
+                  Account Deletion Requested
+                </CardTitle>
+                <CardDescription className="text-red-600">
+                  This user has requested to delete their account. Review their data and confirm the permanent deletion below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                {!showDeleteConfirm ? (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Permanently Delete User
+                  </Button>
+                ) : (
+                  <div className="bg-white border border-red-200 rounded-xl p-4 space-y-3">
+                    <p className="text-sm font-medium text-red-800">
+                      Are you sure? This action is irreversible. All user data, orders, and history will be permanently removed.
+                    </p>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={isDeleting}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        onClick={handlePermanentDelete}
+                        disabled={isDeleting}
+                        className="gap-2"
+                      >
+                        {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                        Yes, Delete Permanently
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>

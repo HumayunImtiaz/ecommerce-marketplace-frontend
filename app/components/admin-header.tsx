@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 import { Search, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,10 +17,17 @@ import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { NotificationDropdown } from "@/components/notification-dropdown"
 import { useRouter } from "next/navigation"
-import { adminLogoutAction } from "@/app/actions/auth.actions"
+import { adminLogoutAction, getAdminAction } from "@/app/actions/auth.actions"
 
 export function AdminHeader() {
   const { push } = useRouter()
+  const [admin, setAdmin] = useState<{ name: string | null; email: string | null; avatar: string | null } | null>(null)
+
+  useEffect(() => {
+    getAdminAction().then((data) => {
+      setAdmin(data)
+    })
+  }, [])
 
   const handleLogout = async () => {
     await adminLogoutAction()
@@ -42,8 +51,16 @@ export function AdminHeader() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon">
-              <User className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="rounded-full overflow-hidden w-8 h-8 focus-visible:ring-0">
+              {admin?.avatar ? (
+                <img 
+                  src={admin.avatar.startsWith("http") ? admin.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${admin.avatar}`} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="h-4 w-4" />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

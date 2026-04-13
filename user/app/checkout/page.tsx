@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import Image from "next/image"
 import {
-  CreditCard, Truck, Shield, ArrowLeft, Loader2, Package, CheckCircle, Ticket, X
+  CreditCard, Truck, Shield, ArrowLeft, Loader2, Package, CheckCircle, Ticket, X, Sparkles
 } from "lucide-react"
 import { loadStripe } from "@stripe/stripe-js"
 import {
@@ -138,7 +139,15 @@ function AddressForm({ address, onChange, errors }: {
 // ─── Checkout Page ────────────────────────────────────────────────────────────
 export default function CheckoutPage() {
   const router = useRouter()
-  const { items, getCartTotal, clearCart } = useCart()
+  const { 
+    items, 
+    getCartTotal, 
+    clearCart,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    discountAmount 
+  } = useCart()
   const { user } = useAuth()
   const { addToast } = useToast()
 
@@ -160,11 +169,29 @@ export default function CheckoutPage() {
   const [billingErrors, setBillingErrors] = useState<AddressErrors>({})
   const [sameAsShipping, setSameAsShipping] = useState(true)
 
-  // Coupon States
+  // Coupon UI States
   const [couponInput, setCouponInput] = useState("")
-  const [discountAmount, setDiscountAmount] = useState(0)
-  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
-  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false)
+  const [isApplying, setIsApplying] = useState(false)
+  const [publicCoupons, setPublicCoupons] = useState<any[]>([])
+  const [loadingCoupons, setLoadingCoupons] = useState(true)
+
+  const fetchPublicCoupons = async () => {
+    try {
+      const result = await orderApi.getPublicCoupons()
+      if (result.success && Array.isArray(result.data)) {
+        setPublicCoupons(result.data)
+      }
+    } catch (error) {
+      console.error("Failed to fetch public coupons:", error)
+    } finally {
+      setLoadingCoupons(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPublicCoupons()
+  }, [])
+
 
   const subtotal = getCartTotal()
   const tax = subtotal * 0.08
@@ -173,39 +200,6 @@ export default function CheckoutPage() {
 
   useEffect(() => { setClientSecret(null) }, [paymentMethod])
 
-  const handleApplyCoupon = async () => {
-    if (!couponInput.trim()) return
-    setIsValidatingCoupon(true)
-    try {
-      const result = await orderApi.validateCoupon(couponInput, subtotal)
-      if (result.success && result.data) {
-        const coupon = result.data
-        let discount = 0
-        if (coupon.discountType === "percentage") {
-          discount = (subtotal * coupon.discountValue) / 100
-        } else {
-          discount = coupon.discountValue
-        }
-        setDiscountAmount(discount)
-        setAppliedCoupon(coupon)
-        addToast(`Coupon "${coupon.code}" applied!`, "success")
-      } else {
-        addToast(result.message || "Invalid coupon code", "error")
-        setDiscountAmount(0)
-        setAppliedCoupon(null)
-      }
-    } catch {
-      addToast("Failed to validate coupon", "error")
-    } finally {
-      setIsValidatingCoupon(false)
-    }
-  }
-
-  const removeCoupon = () => {
-    setAppliedCoupon(null)
-    setDiscountAmount(0)
-    setCouponInput("")
-  }
 
   const handleShippingNext = () => {
     const errs = validateAddress(shippingAddress)
@@ -244,7 +238,7 @@ export default function CheckoutPage() {
         setIsProcessing(false)
         return
       }
-      
+
       setCreatedOrderNumber(result.data?.orderNumber)
       setCreatedOrderId(result.data?.orderId)
 
@@ -374,10 +368,10 @@ export default function CheckoutPage() {
                 <Shield className="w-6 h-6 text-green-600 mr-3" />
                 <h2 className="text-xl font-semibold">Complete Payment</h2>
               </div>
-              
+
               {clientSecret ? (
                 <Elements stripe={getStripe()} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-                  <StripePaymentForm 
+                  <StripePaymentForm
                     onSuccess={async (paymentIntentId) => {
                       // Confirm payment on backend (mark order as paid + processing)
                       if (createdOrderId) {
@@ -390,8 +384,8 @@ export default function CheckoutPage() {
                       clearCart()
                       router.push(`/order-confirmation?order=${createdOrderNumber}`)
                     }}
-                    isProcessing={isProcessing} 
-                    setIsProcessing={setIsProcessing} 
+                    isProcessing={isProcessing}
+                    setIsProcessing={setIsProcessing}
                   />
                 </Elements>
               ) : (
@@ -433,40 +427,98 @@ export default function CheckoutPage() {
               <div className="border-t pt-3 flex justify-between font-bold text-lg"><span>Total</span><span>${total.toFixed(2)}</span></div>
             </div>
 
-            {/* Coupon Input */}
+            {/* ── Premium Coupon Section ── */}
             <div className="mt-6 border-t pt-6">
-              <label className="block text-sm font-medium mb-2 text-gray-700">Promo Code</label>
-              <div className="flex space-x-2">
-                <div className="relative flex-1">
+              <div className="flex items-center space-x-2 mb-4">
+                <Ticket className="w-5 h-5 text-blue-600" />
+                <h3 className="font-bold text-slate-800">Promo Code</h3>
+              </div>
+
+              {/* Available Offers section */}
+              {!appliedCoupon && publicCoupons.length > 0 && (
+                <div className="mb-4 space-y-2 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1 text-yellow-500" />
+                    Available Offers
+                  </p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {publicCoupons.map((coupon) => (
+                      <button
+                        key={coupon._id}
+                        onClick={() => {
+                          setCouponInput(coupon.code)
+                          applyCoupon(coupon.code)
+                        }}
+                        className="text-left p-3 bg-blue-50/50 border border-blue-100 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all group/card relative overflow-hidden"
+                      >
+                        <div className="flex justify-between items-center relative z-10">
+                          <div>
+                            <p className="text-sm font-black text-blue-600">
+                              {coupon.discountType === "percentage" ? `${coupon.discountValue}% OFF` : `$${coupon.discountValue} OFF`}
+                            </p>
+                            <p className="text-xs font-bold text-slate-700 uppercase tracking-tighter">{coupon.code}</p>
+                          </div>
+                          <div className="bg-white text-blue-600 px-2 py-1 rounded text-[10px] font-black border border-blue-100 group-hover/card:bg-blue-600 group-hover/card:text-white transition-colors">
+                            APPLY
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {appliedCoupon ? (
+                <div className="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center justify-between shadow-sm animate-in fade-in zoom-in-95 duration-300">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider leading-none mb-1">Applied</p>
+                      <p className="text-sm font-black text-slate-800">{appliedCoupon.code}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase leading-none">Saving</p>
+                      <p className="text-lg font-black text-green-600">-${discountAmount.toFixed(2)}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        removeCoupon()
+                        setCouponInput("")
+                      }}
+                      className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      title="Remove"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex space-x-2">
                   <input
                     type="text"
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                     placeholder="Enter code"
-                    disabled={!!appliedCoupon || isValidatingCoupon}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 uppercase font-mono"
+                    disabled={isApplying}
+                    className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all uppercase font-mono tracking-widest"
                   />
-                  {appliedCoupon && (
-                    <button 
-                      onClick={removeCoupon}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button
+                    onClick={async () => {
+                      setIsApplying(true)
+                      await applyCoupon(couponInput)
+                      setIsApplying(false)
+                      setCouponInput("")
+                    }}
+                    disabled={isApplying || !couponInput.trim()}
+                    className="bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs font-black hover:bg-slate-800 disabled:opacity-50 transition-all flex items-center"
+                  >
+                    {isApplying ? <Loader2 className="w-4 h-4 animate-spin" /> : "APPLY"}
+                  </button>
                 </div>
-                <button
-                  onClick={handleApplyCoupon}
-                  disabled={!!appliedCoupon || !couponInput.trim() || isValidatingCoupon}
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 disabled:opacity-50 flex items-center shrink-0"
-                >
-                  {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : "Apply"}
-                </button>
-              </div>
-              {appliedCoupon && (
-                <p className="text-xs text-green-600 mt-2 flex items-center font-medium">
-                  <CheckCircle className="w-3 h-3 mr-1" /> Success! You saved ${discountAmount.toFixed(2)}
-                </p>
               )}
             </div>
 

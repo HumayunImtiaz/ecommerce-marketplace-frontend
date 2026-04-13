@@ -13,6 +13,7 @@ export default async function ProfilePage() {
         name:      admin.name      ?? "",
         email:     admin.email     ?? "",
         bio:       admin.bio       ?? "",
+        avatar:    admin.avatar    ?? null,
         lastLogin: admin.lastLogin ?? null,
       }}
     />

@@ -58,6 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name:   u.fullName ?? u.name,
         email:  u.email,
         avatar: u.avatar ?? null,
+        phone: u.phone ?? null,
+        dateOfBirth: u.dateOfBirth ?? null,
       })
 
       return true
@@ -82,6 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         name:   loggedInUser.fullName ?? loggedInUser.name,
         email:  loggedInUser.email,
         avatar: loggedInUser.avatar ?? null,
+        phone: loggedInUser.phone ?? null,
+        dateOfBirth: loggedInUser.dateOfBirth ?? null,
       })
 
       return true

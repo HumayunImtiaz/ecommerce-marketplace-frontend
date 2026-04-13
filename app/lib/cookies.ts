@@ -74,6 +74,7 @@ const KEYS = {
   ADMIN_NAME: "a_name",
   ADMIN_EMAIL:"a_email",
   ADMIN_BIO:  "a_bio",
+  ADMIN_AVATAR:"a_avatar",
   LAST_LOGIN: "a_last_login",
 } as const
 
@@ -102,6 +103,11 @@ export const setAdminEmailCookie = async (email: string) => {
 export const setAdminBioCookie = async (bio: string | null) => {
   const cookieStore = await cookies()
   cookieStore.set(KEYS.ADMIN_BIO, encrypt(bio ?? ""), COOKIE_OPTIONS)
+}
+
+export const setAdminAvatarCookie = async (avatar: string | null) => {
+  const cookieStore = await cookies()
+  cookieStore.set(KEYS.ADMIN_AVATAR, encrypt(avatar ?? ""), COOKIE_OPTIONS)
 }
 
 export const setLastLoginCookie = async (lastLogin: string | null) => {
@@ -143,6 +149,14 @@ export const getAdminBioCookie = async (): Promise<string | null> => {
   return decrypted === "" ? null : decrypted
 }
 
+export const getAdminAvatarCookie = async (): Promise<string | null> => {
+  const cookieStore = await cookies()
+  const val = cookieStore.get(KEYS.ADMIN_AVATAR)?.value
+  if (!val) return null
+  const decrypted = decrypt(val)
+  return decrypted === "" ? null : decrypted
+}
+
 export const getLastLoginCookie = async (): Promise<string | null> => {
   const cookieStore = await cookies()
   const val = cookieStore.get(KEYS.LAST_LOGIN)?.value
@@ -161,6 +175,7 @@ export const getAdminFromCookies = async () => {
     name:      cookieStore.get(KEYS.ADMIN_NAME)?.value,
     email:     cookieStore.get(KEYS.ADMIN_EMAIL)?.value,
     bio:       cookieStore.get(KEYS.ADMIN_BIO)?.value,
+    avatar:    cookieStore.get(KEYS.ADMIN_AVATAR)?.value,
     lastLogin: cookieStore.get(KEYS.LAST_LOGIN)?.value,
   }
 
@@ -170,6 +185,7 @@ export const getAdminFromCookies = async () => {
     name:      raw.name      ? decrypt(raw.name)       : null,
     email:     raw.email     ? decrypt(raw.email)      : null,
     bio:       raw.bio       ? (decrypt(raw.bio) || null) : null,
+    avatar:    raw.avatar    ? (decrypt(raw.avatar) || null) : null,
     lastLogin: raw.lastLogin ? (decrypt(raw.lastLogin) || null) : null,
   }
 }

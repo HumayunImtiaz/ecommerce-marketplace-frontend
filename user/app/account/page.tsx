@@ -1,17 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import {
-  User, MapPin, Package, Heart, Settings, Loader2,
-  CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp
-} from "lucide-react"
+import { User, MapPin, Package, Heart, Settings, Loader2, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, Camera } from "lucide-react"
 import Image from "next/image"
+import { useRef } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 import { useWishlist } from "@/contexts/WishlistContext"
 import ProductCard from "@/components/ProductCard"
-
-import { orderApi } from "@/lib/api"
+import { useSearchParams } from "next/navigation"
+import { orderApi, authApi } from "@/lib/api"
 
 // ─── Order types 
 interface OrderItem {
@@ -155,8 +153,6 @@ function OrderCard({ order }: { order: Order }) {
   )
 }
 
-import { useSearchParams } from "next/navigation"
-
 // ─── Main Account Page ────────────────────────────────────────────────────────
 export default function AccountPage() {
   const searchParams = useSearchParams()
@@ -164,7 +160,6 @@ export default function AccountPage() {
   const { addToast } = useToast()
   const { items: wishlistItems, isLoading: wishlistLoading } = useWishlist()
 
-  // Get initial tab from URL if present
   const initialTab = searchParams.get("tab") || "profile"
   const [activeTab, setActiveTab] = useState(initialTab)
 
@@ -172,21 +167,45 @@ export default function AccountPage() {
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
     email: user?.email || "",
-    phone: "",
-    dateOfBirth: "",
+    phone: user?.phone || "",
+    dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "",
   })
+  
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const currentAvatarUrl = user?.avatar ? (user.avatar.startsWith("http") ? user.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${user.avatar}`) : null
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(currentAvatarUrl)
 
-  // Orders state
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(false)
 
+  // Deletion state
+  const [deletionPending, setDeletionPending] = useState(false)
+  const [deletionLoading, setDeletionLoading] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+
+  // Email Preferences state
+  const [emailPrefs, setEmailPrefs] = useState({
+    orderUpdates: true,
+    promotionalEmails: true,
+    productRecommendations: false,
+  })
+  const [prefsLoading, setPrefsLoading] = useState(false)
+
   useEffect(() => {
     if (user) {
-      setProfileData((prev) => ({ ...prev, name: user.name || "", email: user.email || "" }))
+      setProfileData((prev) => ({ 
+        ...prev, 
+        name: user.name || "", 
+        email: user.email || "",
+        phone: user.phone || "",
+        dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "",
+      }))
+      setAvatarPreview(user?.avatar ? (user.avatar.startsWith("http") ? user.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${user.avatar}`) : null)
     }
   }, [user])
 
-  // Fetch orders when tab opens
   useEffect(() => {
     if (activeTab === "orders" && orders.length === 0) {
       const fetchOrders = async () => {
@@ -206,9 +225,85 @@ export default function AccountPage() {
     }
   }, [activeTab])
 
-  const handleSaveProfile = () => {
-    addToast("Profile updated successfully!", "success")
-    setIsEditing(false)
+  // Fetch email preferences when settings tab opens
+  useEffect(() => {
+    if (activeTab === "settings") {
+      const fetchPrefs = async () => {
+        setPrefsLoading(true)
+        try {
+          const { data, success } = await authApi.getEmailPreferences()
+          if (success && data) {
+            setEmailPrefs(data)
+          }
+        } catch {
+          // silent
+        } finally {
+          setPrefsLoading(false)
+        }
+      }
+      fetchPrefs()
+    }
+  }, [activeTab])
+
+  const handleSaveProfile = async () => {
+    try {
+      const formData = new FormData()
+      formData.append("fullName", profileData.name)
+      formData.append("email", profileData.email)
+      formData.append("phone", profileData.phone)
+      formData.append("dateOfBirth", profileData.dateOfBirth)
+      if (avatarFile) formData.append("avatar", avatarFile)
+
+      const res = await authApi.updateProfile(formData)
+      if (res.success) {
+        addToast("Profile updated successfully. Refresh to see avatar completely propagated.", "success")
+        setIsEditing(false)
+      } else {
+        addToast(res.message || "Failed to update profile", "error")
+      }
+    } catch {
+      addToast("Failed to communicate with server", "error")
+    }
+  }
+
+  const handleTogglePref = async (key: keyof typeof emailPrefs) => {
+    const newPrefs = { ...emailPrefs, [key]: !emailPrefs[key] }
+    // Optimistic update
+    setEmailPrefs(newPrefs)
+    
+    try {
+      const result = await authApi.updateEmailPreferences({ [key]: newPrefs[key] })
+      if (!result.success) {
+        // Rollback on failure
+        setEmailPrefs(emailPrefs)
+        addToast(result.message || "Failed to update preference", "error")
+      }
+    } catch {
+      setEmailPrefs(emailPrefs)
+      addToast("Failed to connect to server", "error")
+    }
+  }
+
+  const handleRequestDeletion = async () => {
+    setDeletionLoading(true)
+    try {
+      const result = await authApi.requestDeletion()
+      if (result.success) {
+        setDeletionPending(true)
+        setShowDeleteConfirm(false)
+        addToast("Account deletion request sent to admin.", "success")
+      } else {
+        if (result.message === "Deletion already requested") {
+          setDeletionPending(true)
+          setShowDeleteConfirm(false)
+        }
+        addToast(result.message || "Failed to request deletion", "error")
+      }
+    } catch {
+      addToast("Failed to connect to server", "error")
+    } finally {
+      setDeletionLoading(false)
+    }
   }
 
   const tabs = [
@@ -237,12 +332,16 @@ export default function AccountPage() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex items-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <User className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden shrink-0">
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-8 h-8 text-blue-600" />
+                )}
               </div>
-              <div className="ml-4">
-                <h2 className="font-semibold">{user.name}</h2>
-                <p className="text-gray-600 text-sm">{user.email}</p>
+              <div className="ml-4 truncate">
+                <h2 className="font-semibold truncate">{user.name}</h2>
+                <p className="text-gray-600 text-sm truncate">{user.email}</p>
               </div>
             </div>
 
@@ -311,6 +410,50 @@ export default function AccountPage() {
                     </div>
                   ))}
                 </div>
+                
+                <div className="mt-8">
+                  <label className="block text-sm font-medium mb-4">Profile Image</label>
+                  <div className="flex items-center space-x-6">
+                    <div 
+                      className={`relative w-24 h-24 rounded-full overflow-hidden shrink-0 ${isEditing ? 'cursor-pointer group ring-2 ring-blue-500 ring-offset-2' : ''}`}
+                      onClick={() => isEditing && fileInputRef.current?.click()}
+                    >
+                      {avatarPreview ? (
+                        <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-blue-100 flex items-center justify-center">
+                          <User className="w-10 h-10 text-blue-600" />
+                        </div>
+                      )}
+                      
+                      {isEditing && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Camera className="w-6 h-6 text-white" />
+                        </div>
+                      )}
+                      
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            setAvatarFile(file)
+                            setAvatarPreview(URL.createObjectURL(file))
+                          }
+                        }}
+                      />
+                    </div>
+                    {isEditing && (
+                      <div className="text-sm text-gray-500 max-w-[200px]">
+                        Click on the image area to upload a new profile picture. Recommended 100x100.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 {isEditing && (
                   <div className="flex space-x-4 mt-6">
                     <button onClick={handleSaveProfile} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium">Save Changes</button>
@@ -336,7 +479,7 @@ export default function AccountPage() {
                     <p className="text-sm text-gray-500 mt-1">When you place orders, they will appear here.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                     {orders.map((order) => (
                       <OrderCard key={order.id} order={order} />
                     ))}
@@ -391,21 +534,90 @@ export default function AccountPage() {
                 <div className="space-y-6">
                   <div className="border-b pb-6">
                     <h3 className="font-medium mb-4">Email Preferences</h3>
-                    <div className="space-y-3">
-                      {["Order updates and shipping notifications", "Promotional emails and special offers", "Product recommendations"].map((label, i) => (
-                        <label key={i} className="flex items-center cursor-pointer">
-                          <input type="checkbox" className="mr-3" defaultChecked={i < 2} />
-                          <span className="text-sm">{label}</span>
-                        </label>
-                      ))}
-                    </div>
+                    {prefsLoading ? (
+                      <div className="flex items-center space-x-2 py-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                        <span className="text-sm text-gray-500">Loading preferences...</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {[
+                          { id: "orderUpdates", label: "Order updates and shipping notifications" },
+                          { id: "promotionalEmails", label: "Promotional emails and special offers" },
+                          { id: "productRecommendations", label: "Product recommendations" },
+                        ].map((pref) => (
+                          <label key={pref.id} className="flex items-center cursor-pointer group">
+                            <div className="relative flex items-center">
+                              <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={(emailPrefs as any)[pref.id]}
+                                onChange={() => handleTogglePref(pref.id as any)}
+                              />
+                              <div className="w-10 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </div>
+                            <span className="ml-3 text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">
+                              {pref.label}
+                            </span>
+                          </label>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <h3 className="font-medium mb-4 text-red-600">Danger Zone</h3>
-                    <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm transition-colors">
-                      Delete Account
-                    </button>
-                    <p className="text-xs text-gray-500 mt-2">This action cannot be undone.</p>
+
+                    {deletionPending ? (
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                        <div className="flex items-center space-x-3">
+                          <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+                          <div>
+                            <p className="font-medium text-amber-800">Deletion Request Pending</p>
+                            <p className="text-xs text-amber-600 mt-0.5">Your account deletion request has been sent to the admin for review. You will be notified once it is processed.</p>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => setShowDeleteConfirm(true)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl text-sm transition-colors"
+                        >
+                          Delete Account
+                        </button>
+                        <p className="text-xs text-gray-500 mt-2">This will send a deletion request to the admin for final approval.</p>
+                      </>
+                    )}
+
+                    {/* Delete Confirmation Modal */}
+                    {showDeleteConfirm && (
+                      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center">
+                          <div className="w-14 h-14 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <XCircle className="w-7 h-7 text-red-600" />
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Account?</h3>
+                          <p className="text-sm text-gray-500 mb-6">
+                            Are you sure? This will send a request to the admin. Once approved, all your data will be permanently removed.
+                          </p>
+                          <div className="flex space-x-3">
+                            <button
+                              onClick={() => setShowDeleteConfirm(false)}
+                              className="flex-1 border border-gray-300 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={handleRequestDeletion}
+                              disabled={deletionLoading}
+                              className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2.5 rounded-xl text-sm font-medium transition-colors flex items-center justify-center"
+                            >
+                              {deletionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Yes, Delete"}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

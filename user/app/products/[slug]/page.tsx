@@ -27,8 +27,9 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState("description")
   const [reviewCount, setReviewCount] = useState(0)
 
-  const { addToCart } = useCart()
+  const { addToCart, appliedCoupon, applyCoupon, removeCoupon, discountAmount } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
+
 
   // ── Product fetch karo ────────────────────────────────────────────────────
   useEffect(() => {
@@ -179,9 +180,8 @@ export default function ProductPage() {
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${
-                    selectedImage === index ? "border-blue-600" : "border-gray-200"
-                  }`}
+                  className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${selectedImage === index ? "border-blue-600" : "border-gray-200"
+                    }`}
                 >
                   <Image
                     src={image || "/placeholder.svg"}
@@ -206,11 +206,10 @@ export default function ProductPage() {
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-5 h-5 ${
-                    i < Math.floor(product.rating)
+                  className={`w-5 h-5 ${i < Math.floor(product.rating)
                       ? "text-yellow-400 fill-current"
                       : "text-gray-300"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -251,11 +250,10 @@ export default function ProductPage() {
                   <button
                     key={color}
                     onClick={() => setSelectedColor(color)}
-                    className={`px-4 py-2 border rounded-xl transition-colors ${
-                      selectedColor === color
+                    className={`px-4 py-2 border rounded-xl transition-colors ${selectedColor === color
                         ? "border-blue-600 bg-blue-50 text-blue-600"
                         : "border-gray-300 hover:border-gray-400"
-                    }`}
+                      }`}
                   >
                     {color}
                   </button>
@@ -273,11 +271,10 @@ export default function ProductPage() {
                   <button
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`px-4 py-2 border rounded-xl transition-colors ${
-                      selectedSize === size
+                    className={`px-4 py-2 border rounded-xl transition-colors ${selectedSize === size
                         ? "border-blue-600 bg-blue-50 text-blue-600"
                         : "border-gray-300 hover:border-gray-400"
-                    }`}
+                      }`}
                   >
                     {size}
                   </button>
@@ -291,18 +288,18 @@ export default function ProductPage() {
             <h3 className="font-semibold mb-3">Quantity</h3>
             <div className="flex items-center space-x-4">
               <div className="flex items-center border rounded-xl">
-                <button 
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))} 
+                <button
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="p-2 hover:bg-gray-100 rounded-l-xl"
                   disabled={quantity <= 1}
                 >
                   <Minus className={`w-4 h-4 ${quantity <= 1 ? "text-gray-300" : ""}`} />
                 </button>
                 <span className="px-4 py-2 font-medium">{quantity}</span>
-                <button 
+                <button
                   onClick={() => {
                     if (quantity < availableStock) setQuantity(quantity + 1)
-                  }} 
+                  }}
                   className={`p-2 rounded-r-xl ${quantity >= availableStock ? "cursor-not-allowed text-gray-300" : "hover:bg-gray-100"}`}
                   disabled={quantity >= availableStock}
                 >
@@ -323,22 +320,20 @@ export default function ProductPage() {
             <button
               onClick={handleAddToCart}
               disabled={availableStock === 0}
-              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-6 rounded-xl font-semibold transition-all ${
-                availableStock > 0
+              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-6 rounded-xl font-semibold transition-all ${availableStock > 0
                   ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
                   : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+                }`}
             >
               <ShoppingCart className="w-5 h-5" />
               <span>Add to Cart</span>
             </button>
             <button
               onClick={handleWishlistToggle}
-              className={`p-3 border rounded-xl transition-colors ${
-                isInWishlist(product.id)
+              className={`p-3 border rounded-xl transition-colors ${isInWishlist(product.id)
                   ? "bg-red-50 border-red-200 text-red-600"
                   : "border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-600"
-              }`}
+                }`}
             >
               <Heart className="w-5 h-5" fill={isInWishlist(product.id) ? "currentColor" : "none"} />
             </button>
@@ -379,11 +374,10 @@ export default function ProductPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${
-                  activeTab === tab
+                className={`py-2 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${activeTab === tab
                     ? "border-blue-600 text-blue-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 {tab}
                 {tab === "reviews" && reviewCount > 0 && ` (${reviewCount})`}

@@ -7,6 +7,7 @@ import {
   setAdminNameCookie,
   setAdminEmailCookie,
   setAdminBioCookie,
+  setAdminAvatarCookie,
   setLastLoginCookie,
 } from "@/lib/cookies"
 
@@ -17,11 +18,7 @@ export type ActionResult =
   | { success: false; message: string; field?: string }
 
 
-export async function updateAdminProfileAction(values: {
-  name: string
-  email: string
-  bio: string
-}): Promise<ActionResult> {
+export async function updateAdminProfileAction(formData: FormData): Promise<ActionResult> {
   try {
     const token = await getTokenCookie()
 
@@ -32,14 +29,9 @@ export async function updateAdminProfileAction(values: {
     const response = await fetch(`${API_BASE_URL}/api/auth/admin/profile`, {
       method: "PATCH",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        fullName: values.name,
-        email: values.email,
-        bio: values.bio || null,
-      }),
+      body: formData,
       cache: "no-store",
     })
 
@@ -57,6 +49,7 @@ export async function updateAdminProfileAction(values: {
     await setAdminNameCookie(result.data.fullName)
     await setAdminEmailCookie(result.data.email)
     await setAdminBioCookie(result.data.bio ?? null)
+    await setAdminAvatarCookie(result.data.avatar ?? null)
     if (result.data.lastLogin) {
       await setLastLoginCookie(result.data.lastLogin)
     }

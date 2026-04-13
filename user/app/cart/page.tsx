@@ -9,46 +9,21 @@ import { useToast } from "@/contexts/ToastContext"
 import { orderApi } from "@/lib/api"
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, getCartTotal, clearCart } = useCart()
-  const [promoCode, setPromoCode] = useState("")
-  const [discount, setDiscount] = useState(0)
-  const [isApplyingPromo, setIsApplyingPromo] = useState(false)
-  const { addToast } = useToast()
+  const { 
+    items, 
+    updateQuantity, 
+    removeFromCart, 
+    getCartTotal, 
+    clearCart,
+    appliedCoupon,
+    discountAmount
+  } = useCart()
 
   const subtotal = getCartTotal()
   const tax = subtotal * 0.08 // 8% tax
   const shipping = subtotal > 50 ? 0 : 9.99
-  const total = subtotal + tax + shipping - discount
+  const total = Math.max(0, subtotal + tax + shipping - discountAmount)
 
-  const handleApplyPromo = async () => {
-    if (!promoCode.trim()) {
-      addToast("Please enter a promo code", "error")
-      return
-    }
-
-    setIsApplyingPromo(true)
-    try {
-      const result = await orderApi.validateCoupon(promoCode, subtotal)
-      if (result.success && result.data) {
-        const coupon = result.data
-        let discountAmount = 0
-        if (coupon.discountType === "percentage") {
-          discountAmount = (subtotal * coupon.discountValue) / 100
-        } else {
-          discountAmount = coupon.discountValue
-        }
-        setDiscount(discountAmount)
-        addToast(`Promo code "${coupon.code}" applied!`, "success")
-      } else {
-        addToast(result.message || "Invalid promo code", "error")
-        setDiscount(0)
-      }
-    } catch (error) {
-      addToast("Failed to validate promo code", "error")
-    } finally {
-      setIsApplyingPromo(false)
-    }
-  }
 
   if (items.length === 0) {
     return (
@@ -149,26 +124,25 @@ export default function CartPage() {
           <div className="bg-white rounded-xl shadow-md p-6 sticky top-4">
             <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
 
-            {/* Promo Code */}
+            {/* Coupon Section (Informational) */}
             <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Promo Code</label>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder="Enter code"
-                  className="flex-1 input-field uppercase font-mono"
-                  disabled={isApplyingPromo}
-                />
-                <button
-                  onClick={handleApplyPromo}
-                  disabled={isApplyingPromo}
-                  className="btn-secondary disabled:opacity-50"
-                >
-                  {isApplyingPromo ? "Applying..." : "Apply"}
-                </button>
-              </div>
+              <label className="block text-sm font-medium mb-2 text-slate-700">Promo Code</label>
+              {appliedCoupon ? (
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] text-blue-500 font-bold uppercase tracking-wider">Applied Coupon</p>
+                    <p className="text-lg font-black text-blue-800">{appliedCoupon.code}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-blue-400 font-bold uppercase">Saving</p>
+                    <p className="text-xl font-black text-blue-600">-${discountAmount.toFixed(2)}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-center">
+                  <p className="text-sm text-slate-500">Apply coupons on the Product Detail Page to get discounts.</p>
+                </div>
+              )}
             </div>
 
             {/* Order Breakdown */}
@@ -178,10 +152,10 @@ export default function CartPage() {
                 <span>${subtotal.toFixed(2)}</span>
               </div>
 
-              {discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-${discount.toFixed(2)}</span>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-green-600 font-medium">
+                  <span>Discount ({appliedCoupon?.code})</span>
+                  <span>-${discountAmount.toFixed(2)}</span>
                 </div>
               )}
 

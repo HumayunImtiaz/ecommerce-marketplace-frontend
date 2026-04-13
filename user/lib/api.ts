@@ -7,9 +7,16 @@ async function fetcher<T = any>(
   options: RequestInit = {}
 ): Promise<{ data: T | null; success: boolean; message: string; status: number }> {
   try {
+    const isFormData = options.body instanceof FormData
+    const defaultHeaders: any = {}
+    if (!isFormData) {
+      defaultHeaders["Content-Type"] = "application/json"
+    }
+
     const defaultOptions: RequestInit = {
       headers: {
-        "Content-Type": "application/json",
+        ...defaultHeaders,
+        ...(options.headers || {}),
       },
       ...options,
     }
@@ -71,6 +78,26 @@ export const authApi = {
     fetcher("/api/auth/reset-password", {
       method: "POST",
       body: JSON.stringify({ token, ...data }),
+    }),
+
+  requestDeletion: () =>
+    fetcher("/api/auth/request-deletion", {
+      method: "POST",
+    }),
+
+  updateProfile: (formData: FormData) =>
+    fetcher("/api/auth/profile", {
+      method: "PATCH",
+      body: formData,
+    }),
+
+  getEmailPreferences: () =>
+    fetcher("/api/auth/email-preferences", { cache: "no-store" }),
+
+  updateEmailPreferences: (prefs: Record<string, boolean>) =>
+    fetcher("/api/auth/email-preferences", {
+      method: "PATCH",
+      body: JSON.stringify(prefs),
     }),
 }
 

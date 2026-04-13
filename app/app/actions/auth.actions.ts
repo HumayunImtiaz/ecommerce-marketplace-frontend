@@ -10,6 +10,8 @@ import {
   setAdminBioCookie,
   setLastLoginCookie,
   clearAllAdminCookies,
+  getAdminFromCookies,
+  setAdminAvatarCookie,
 } from "@/lib/cookies"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -48,6 +50,7 @@ export async function adminLoginAction(
     await setAdminNameCookie(admin.fullName)
     await setAdminEmailCookie(admin.email)
     await setAdminBioCookie(admin.bio ?? null)
+    await setAdminAvatarCookie(admin.avatar ?? null)
     await setLastLoginCookie(admin.lastLogin ?? null)
 
     return { success: true }
@@ -62,4 +65,8 @@ export async function adminLoginAction(
 
 export async function adminLogoutAction(): Promise<void> {
   await clearAllAdminCookies()
+}
+
+export async function getAdminAction() {
+  return await getAdminFromCookies()
 }
