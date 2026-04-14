@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Loader2, Plus, Edit2, Trash2 } from "lucide-react"
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUpload } from "@/components/image-upload"
@@ -126,11 +127,7 @@ export default function CategoriesTable() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 border rounded-xl bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <AdminLoader message="Loading categories..." minHeight="h-64" />
   }
 
   return (

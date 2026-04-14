@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select"
 import { MoreHorizontal, Eye, Printer, RefreshCw, CreditCard, Package } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import Link from "next/link"
 import { DateRange } from "react-day-picker"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
@@ -287,7 +288,11 @@ export function OrdersTable({ searchQuery, filters, onOrdersLoaded }: OrdersTabl
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">Loading orders...</TableCell></TableRow>
+              <TableRow>
+                <TableCell colSpan={9} className="p-0">
+                  <AdminLoader message="Loading orders..." minHeight="min-h-[300px]" />
+                </TableCell>
+              </TableRow>
             ) : filteredOrders.length === 0 ? (
               <TableRow><TableCell colSpan={9} className="text-center h-24 text-muted-foreground">No orders found.</TableCell></TableRow>
             ) : (

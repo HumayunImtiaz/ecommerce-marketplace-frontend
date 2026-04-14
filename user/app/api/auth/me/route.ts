@@ -3,7 +3,7 @@ import { getUserFromCookies } from "@/lib/cookies"
 
 export async function GET() {
   try {
-    const { token, id, name, email, avatar } = await getUserFromCookies()
+    const { token, id, name, email, avatar, phone, dateOfBirth } = await getUserFromCookies()
 
     if (!token || !id) {
       return NextResponse.json(
@@ -16,7 +16,7 @@ export async function GET() {
       success: true,
       message: "User fetched successfully",
       data: {
-        user: { id, name, email, avatar },
+        user: { id, name, email, avatar, phone, dateOfBirth },
       },
     })
   } catch {

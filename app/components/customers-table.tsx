@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { MoreHorizontal, Eye, Trash2, UserX, Loader2 } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -167,14 +168,7 @@ export function CustomersTable({ searchQuery, filters, onRefresh, onDataChange }
   }
 
   if (isLoading) {
-    return (
-      <div className="rounded-md border p-12 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Loading customers...</span>
-        </div>
-      </div>
-    )
+    return <AdminLoader message="Loading customers..." minHeight="min-h-[400px]" />
   }
 
   return (

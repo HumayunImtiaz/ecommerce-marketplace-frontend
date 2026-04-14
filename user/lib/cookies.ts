@@ -63,11 +63,13 @@ const COOKIE_OPTIONS = {
 
 // ─── Cookie Keys ─────────────────────────────────────────────────────────────
 const KEYS = {
-  TOKEN:  "token",   // middleware isko check karta hai
-  ID:     "u_id",
-  NAME:   "u_name",
-  EMAIL:  "u_email",
-  AVATAR: "u_avatar",
+  TOKEN:       "token",   // middleware isko check karta hai
+  ID:          "u_id",
+  NAME:        "u_name",
+  EMAIL:       "u_email",
+  AVATAR:      "u_avatar",
+  PHONE:       "u_phone",
+  DATE_OF_BIRTH: "u_date_of_birth",
 } as const
 
 // ─── Setters ─────────────────────────────────────────────────────────────────
@@ -94,6 +96,16 @@ export const setUserEmailCookie = async (email: string) => {
 export const setUserAvatarCookie = async (avatar: string | null) => {
   const cookieStore = await cookies()
   cookieStore.set(KEYS.AVATAR, encrypt(avatar ?? ""), COOKIE_OPTIONS)
+}
+
+export const setUserPhoneCookie = async (phone: string | null) => {
+  const cookieStore = await cookies()
+  cookieStore.set(KEYS.PHONE, encrypt(phone ?? ""), COOKIE_OPTIONS)
+}
+
+export const setUserDateOfBirthCookie = async (dateOfBirth: string | null) => {
+  const cookieStore = await cookies()
+  cookieStore.set(KEYS.DATE_OF_BIRTH, encrypt(dateOfBirth ?? ""), COOKIE_OPTIONS)
 }
 
 // ─── Getters ─────────────────────────────────────────────────────────────────
@@ -129,24 +141,44 @@ export const getUserAvatarCookie = async (): Promise<string | null> => {
   return decrypted === "" ? null : decrypted
 }
 
+export const getUserPhoneCookie = async (): Promise<string | null> => {
+  const cookieStore = await cookies()
+  const val = cookieStore.get(KEYS.PHONE)?.value
+  if (!val) return null
+  const decrypted = decrypt(val)
+  return decrypted === "" ? null : decrypted
+}
+
+export const getUserDateOfBirthCookie = async (): Promise<string | null> => {
+  const cookieStore = await cookies()
+  const val = cookieStore.get(KEYS.DATE_OF_BIRTH)?.value
+  if (!val) return null
+  const decrypted = decrypt(val)
+  return decrypted === "" ? null : decrypted
+}
+
 // ─── Get All At Once ──────────────────────────────────────────────────────────
 export const getUserFromCookies = async () => {
   const cookieStore = await cookies()
 
   const raw = {
-    token:  cookieStore.get(KEYS.TOKEN)?.value,
-    id:     cookieStore.get(KEYS.ID)?.value,
-    name:   cookieStore.get(KEYS.NAME)?.value,
-    email:  cookieStore.get(KEYS.EMAIL)?.value,
-    avatar: cookieStore.get(KEYS.AVATAR)?.value,
+    token:       cookieStore.get(KEYS.TOKEN)?.value,
+    id:          cookieStore.get(KEYS.ID)?.value,
+    name:        cookieStore.get(KEYS.NAME)?.value,
+    email:       cookieStore.get(KEYS.EMAIL)?.value,
+    avatar:      cookieStore.get(KEYS.AVATAR)?.value,
+    phone:       cookieStore.get(KEYS.PHONE)?.value,
+    dateOfBirth: cookieStore.get(KEYS.DATE_OF_BIRTH)?.value,
   }
 
   return {
-    token:  raw.token  ? decrypt(raw.token)  : null,
-    id:     raw.id     ? decrypt(raw.id)      : null,
-    name:   raw.name   ? decrypt(raw.name)    : null,
-    email:  raw.email  ? decrypt(raw.email)   : null,
-    avatar: raw.avatar ? (decrypt(raw.avatar) || null) : null,
+    token:       raw.token       ? decrypt(raw.token)       : null,
+    id:          raw.id          ? decrypt(raw.id)          : null,
+    name:        raw.name        ? decrypt(raw.name)        : null,
+    email:       raw.email       ? decrypt(raw.email)       : null,
+    avatar:      raw.avatar      ? (decrypt(raw.avatar) || null) : null,
+    phone:       raw.phone       ? (decrypt(raw.phone) || null) : null,
+    dateOfBirth: raw.dateOfBirth ? (decrypt(raw.dateOfBirth) || null) : null,
   }
 }
 

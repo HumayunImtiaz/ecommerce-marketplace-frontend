@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { getUserFromCookies, setUserAvatarCookie } from "@/lib/cookies"
+import { getUserFromCookies, setUserAvatarCookie, setUserPhoneCookie, setUserDateOfBirthCookie } from "@/lib/cookies"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
@@ -22,9 +22,17 @@ export async function PATCH(req: Request) {
 
     const result = await response.json()
 
-    // If successful, update the local Next.js user avatar cookie
-    if (response.ok && result?.success && result?.data?.avatar) {
-      await setUserAvatarCookie(result.data.avatar)
+    // If successful, update the local Next.js user cookies for avatar and profile fields.
+    if (response.ok && result?.success) {
+      if (result.data?.avatar) {
+        await setUserAvatarCookie(result.data.avatar)
+      }
+      if (result.data?.phone !== undefined) {
+        await setUserPhoneCookie(result.data.phone)
+      }
+      if (result.data?.dateOfBirth !== undefined) {
+        await setUserDateOfBirthCookie(result.data.dateOfBirth)
+      }
     }
 
     return NextResponse.json(result, { status: response.status })

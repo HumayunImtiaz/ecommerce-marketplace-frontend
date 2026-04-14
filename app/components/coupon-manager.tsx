@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Plus, Trash2, Loader2, Megaphone, Ticket } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import { toast } from "sonner"
 
 export function CouponManager() {
@@ -277,11 +278,8 @@ export function CouponManager() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-40 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                        <span className="text-muted-foreground">Loading coupons...</span>
-                      </div>
+                    <TableCell colSpan={8} className="p-0">
+                      <AdminLoader message="Loading coupons..." minHeight="min-h-[200px]" />
                     </TableCell>
                   </TableRow>
                 ) : coupons.length === 0 ? (

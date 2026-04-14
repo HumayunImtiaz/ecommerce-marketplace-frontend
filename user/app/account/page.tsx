@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 import { useWishlist } from "@/contexts/WishlistContext"
 import ProductCard from "@/components/ProductCard"
+import AddressManager from "@/components/AddressManager"
 import { useSearchParams } from "next/navigation"
 import { orderApi, authApi } from "@/lib/api"
 
@@ -494,11 +495,7 @@ export default function AccountPage() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold">Saved Addresses</h2>
                 </div>
-                <div className="text-center py-12">
-                  <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-600">No addresses saved</p>
-                  <p className="text-sm text-gray-500 mt-2">Add addresses for faster checkout.</p>
-                </div>
+                <AddressManager />
               </div>
             )}
 

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { Mail, MailOpen, Eye, Trash2 } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import { InquiryDetailModal } from "@/components/inquiry-detail-modal"
 
 export interface Inquiry {
@@ -94,7 +95,7 @@ export function InquiriesTable({ searchQuery, filterStatus }: InquiriesTableProp
   }
 
   if (loading) {
-    return <div className="flex justify-center p-8">Loading inquiries...</div>
+    return <AdminLoader message="Loading inquiries..." minHeight="min-h-[300px]" />
   }
 
   return (

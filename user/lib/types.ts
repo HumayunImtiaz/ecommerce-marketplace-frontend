@@ -58,9 +58,11 @@ export interface User {
   avatar?: string | null
   phone?: string | null
   dateOfBirth?: string | null
+  addresses?: Address[]
 }
 
 export interface Address {
+  _id?: string
   id?: string
   name: string
   street: string
@@ -68,6 +70,8 @@ export interface Address {
   state: string
   zipCode: string
   country: string
+  latitude?: number
+  longitude?: number
   isDefault?: boolean
 }
 

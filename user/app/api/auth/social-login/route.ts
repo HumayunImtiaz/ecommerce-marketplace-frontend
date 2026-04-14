@@ -5,6 +5,8 @@ import {
   setUserNameCookie,
   setUserEmailCookie,
   setUserAvatarCookie,
+  setUserPhoneCookie,
+  setUserDateOfBirthCookie,
 } from "@/lib/cookies"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -31,6 +33,8 @@ export async function POST(req: NextRequest) {
       await setUserNameCookie(user.fullName ?? user.name ?? "")
       await setUserEmailCookie(user.email ?? "")
       await setUserAvatarCookie(user.avatar ?? null)
+      await setUserPhoneCookie(user.phone ?? null)
+      await setUserDateOfBirthCookie(user.dateOfBirth ?? null)
 
       return NextResponse.json(result, { status: response.status })
     }
