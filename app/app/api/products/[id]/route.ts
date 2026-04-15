@@ -15,7 +15,7 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const response = await fetch(`${API_BASE_URL}/api/auth/products/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -43,7 +43,7 @@ export async function DELETE(
       return NextResponse.json({ success: false, message: "Unauthorized access" }, { status: 401 })
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/products/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/products/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${token}`,

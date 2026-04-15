@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const queryString = searchParams.toString()
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/products${queryString ? `?${queryString}` : ""}`, {
+    const response = await fetch(`${API_BASE_URL}/api/products${queryString ? `?${queryString}` : ""}`, {
       cache: "no-store",
     })
     const result = await response.json()

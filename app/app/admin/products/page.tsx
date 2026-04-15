@@ -42,7 +42,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [filters, setFilters] = useState({
-    category: "all",
+    categorySlug: "all",
     status: "all",
     priceRange: [0, 1000000],
   })
@@ -57,7 +57,7 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/auth/categories?hideEmpty=true`)
+        const response = await fetch("/api/categories")
         const result = await response.json()
         if (result?.success && Array.isArray(result.data)) {
           setCategories(result.data.filter((cat: CategoryItem) => cat.isActive))
@@ -71,15 +71,12 @@ export default function ProductsPage() {
 
   // Sync URL category param with filters
   useEffect(() => {
-    if (categorySlug && categories.length > 0) {
-      const matched = categories.find((cat) => cat.slug === categorySlug)
-      if (matched) {
-        setFilters((prev) => ({ ...prev, category: matched.name }))
-      }
-    } else if (!categorySlug) {
-      setFilters((prev) => ({ ...prev, category: "all" }))
+    if (categorySlug) {
+      setFilters((prev) => ({ ...prev, categorySlug: categorySlug }))
+    } else {
+      setFilters((prev) => ({ ...prev, categorySlug: "all" }))
     }
-  }, [categorySlug, categories])
+  }, [categorySlug])
 
   const handleExportCSV = () => {
     const products = productsRef.current

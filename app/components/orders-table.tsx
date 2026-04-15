@@ -25,7 +25,7 @@ import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 export interface Order {
   _id: string
   id: string
-  userId: { _id: string; fullName: string; email: string }
+  user: { fullName: string; email: string }
   orderNumber: string
   total: number
   orderStatus: string
@@ -49,7 +49,7 @@ const buildLabelHtml = (orders: Order[]) => orders.map((o) => {
       <div style="font-size:11px;color:#666;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">Shipping Label</div>
       <div style="font-weight:bold;font-size:14px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #ccc">${o.orderNumber}</div>
       <div style="font-size:11px;color:#666;margin-bottom:4px">SHIP TO:</div>
-      <div style="font-size:15px;font-weight:bold;margin-bottom:2px">${a?.name || o.userId?.fullName || "Customer"}</div>
+      <div style="font-size:15px;font-weight:bold;margin-bottom:2px">${a?.name || o.user?.fullName || "Customer"}</div>
       <div style="font-size:13px;margin-bottom:1px">${a?.street || ""}</div>
       <div style="font-size:13px;margin-bottom:1px">${a?.city || ""}, ${a?.state || ""} ${a?.zipCode || ""}</div>
       <div style="font-size:13px;margin-bottom:12px">${a?.country || ""}</div>
@@ -162,8 +162,8 @@ export function OrdersTable({ searchQuery, filters, onOrdersLoaded }: OrdersTabl
   }
 
   const filteredOrders = orders.filter((order) => {
-    const customerName = order.userId?.fullName || ""
-    const customerEmail = order.userId?.email || ""
+    const customerName = order.user?.fullName || ""
+    const customerEmail = order.user?.email || ""
     const matchesSearch =
       customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -313,8 +313,8 @@ export function OrdersTable({ searchQuery, filters, onOrdersLoaded }: OrdersTabl
                   </TableCell>
                   <TableCell className="font-medium">{order.orderNumber}</TableCell>
                   <TableCell>
-                    <div className="font-medium">{order.userId?.fullName || "Unknown"}</div>
-                    <div className="text-sm text-muted-foreground">{order.userId?.email || "N/A"}</div>
+                    <div className="font-medium">{order.user?.fullName || "Unknown"}</div>
+                    <div className="text-sm text-muted-foreground">{order.user?.email || "N/A"}</div>
                   </TableCell>
                   <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
                   <TableCell>${order.total.toFixed(2)}</TableCell>

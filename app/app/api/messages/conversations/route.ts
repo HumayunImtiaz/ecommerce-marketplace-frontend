@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/messages/conversations`, {
+    const response = await fetch(`${API_BASE_URL}/api/messages/conversations`, {
       cache: "no-store",
       headers: {
         Authorization: `Bearer ${token}`

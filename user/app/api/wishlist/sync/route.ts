@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 
     const body = await req.json()
-    const response = await fetch(`${API_BASE_URL}/api/auth/wishlist/sync`, {
+    const response = await fetch(`${API_BASE_URL}/api//sync`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

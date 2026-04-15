@@ -14,6 +14,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUpload } from "@/components/image-upload"
 
+const resolveAvatar = (url) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
+
 interface Category {
   _id: string
   name: string
@@ -153,7 +160,7 @@ export default function CategoriesTable() {
               <TableRow key={category._id}>
                 <TableCell>
                   <div className="h-12 w-12 rounded overflow-hidden border bg-gray-50">
-                    <img src={category.image || "/placeholder.svg"} alt={category.name} className="h-full w-full object-cover" />
+                    <img src={resolveAvatar(category.image)} alt={category.name} className="h-full w-full object-cover" />
                   </div>
                 </TableCell>
                 <TableCell>

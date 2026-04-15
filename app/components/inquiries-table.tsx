@@ -17,7 +17,7 @@ import { AdminLoader } from "./admin-loader"
 import { InquiryDetailModal } from "@/components/inquiry-detail-modal"
 
 export interface Inquiry {
-  _id: string
+  id: string
   name: string
   email: string
   subject: string
@@ -67,7 +67,7 @@ export function InquiriesTable({ searchQuery, filterStatus }: InquiriesTableProp
       })
       if (response.ok) {
         setInquiries((prev) =>
-          prev.map((inq) => (inq._id === id ? { ...inq, isRead } : inq))
+          prev.map((inq) => (inq.id === id ? { ...inq, isRead } : inq))
         )
       }
     } catch (error) {
@@ -90,7 +90,7 @@ export function InquiriesTable({ searchQuery, filterStatus }: InquiriesTableProp
     setSelectedInquiry(inquiry)
     setIsModalOpen(true)
     if (!inquiry.isRead) {
-      handleToggleRead(inquiry._id, true)
+      handleToggleRead(inquiry.id, true)
     }
   }
 
@@ -121,7 +121,7 @@ export function InquiriesTable({ searchQuery, filterStatus }: InquiriesTableProp
           ) : (
             filteredInquiries.map((inq) => (
               <TableRow 
-                key={inq._id} 
+                key={inq.id} 
                 className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 ${!inq.isRead ? "font-semibold bg-blue-50/30 dark:bg-blue-900/10" : ""}`}
                 onClick={() => openInquiry(inq)}
               >
@@ -162,7 +162,7 @@ export function InquiriesTable({ searchQuery, filterStatus }: InquiriesTableProp
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      onClick={() => handleToggleRead(inq._id, !inq.isRead)}
+                      onClick={() => handleToggleRead(inq.id, !inq.isRead)}
                       title={inq.isRead ? "Mark as Unread" : "Mark as Read"}
                     >
                       {inq.isRead ? <Mail className="h-4 w-4 text-gray-400" /> : <MailOpen className="h-4 w-4 text-blue-500" />}

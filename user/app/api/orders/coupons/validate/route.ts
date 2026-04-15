@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const response = await fetch(`${API_BASE_URL}/api/auth/orders/coupons/validate`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders/coupons/validate`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",

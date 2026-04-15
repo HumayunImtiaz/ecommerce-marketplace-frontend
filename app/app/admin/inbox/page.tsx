@@ -4,6 +4,13 @@ import React, { useState, useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { Send, Search, MessageSquare, UserCircle, Loader2, Check, CheckCheck } from "lucide-react";
 
+const resolveAvatar = (url: any) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
+
 interface User {
   _id: string;
   fullName: string;
@@ -46,8 +53,10 @@ export default function AdminInboxPage() {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isLoadingMessages) {
+      setTimeout(() => scrollToBottom(), 100);
+    }
+  }, [messages, isLoadingMessages]);
 
   // Fetch conversations (users who messaged)
   useEffect(() => {
@@ -234,7 +243,7 @@ export default function AdminInboxPage() {
                 >
                   <div className="relative">
                     {convo.user.avatar ? (
-                     <img src={convo.user.avatar} className="w-10 h-10 rounded-full" alt="avatar" />
+                     <img src={resolveAvatar(convo.user.avatar)} className="w-10 h-10 rounded-full" alt="avatar" />
                     ) : (
                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                        {convo.user.fullName?.charAt(0) || "U"}
@@ -280,38 +289,40 @@ export default function AdminInboxPage() {
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/30 flex flex-col space-y-4">
-                {isLoadingMessages ? (
-                  <div className="flex justify-center items-center h-full">
-                    <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                  </div>
-                ) : (
-                  <>
-                    {messages.map((msg) => {
-                      const isAdminInfo = msg.senderModel === "Admin";
-                      return (
-                        <div key={msg._id} className={`flex ${isAdminInfo ? "justify-end" : "justify-start"}`}>
-                          <div className={`max-w-[70%] min-w-[70px] rounded-2xl px-4 py-2 shadow-sm ${
-                            isAdminInfo 
-                              ? "bg-blue-600 text-white rounded-br-sm" 
-                              : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
-                          }`}>
-                            <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-                            <div className={`flex justify-end items-center mt-1 text-[10px] ${isAdminInfo ? "text-blue-100" : "text-gray-400"}`}>
-                              <span>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                              {isAdminInfo && (
-                                <span className="ml-1">
-                                  {msg.isRead ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />}
-                                </span>
-                              )}
+              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/30">
+                <div className="flex flex-col space-y-4">
+                  {isLoadingMessages ? (
+                    <div className="flex justify-center items-center py-20">
+                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                    </div>
+                  ) : (
+                    <>
+                      {messages.map((msg) => {
+                        const isAdminInfo = msg.senderModel === "Admin";
+                        return (
+                          <div key={msg._id} className={`flex ${isAdminInfo ? "justify-end" : "justify-start"}`}>
+                            <div className={`max-w-[70%] min-w-[70px] rounded-2xl px-4 py-2 shadow-sm ${
+                              isAdminInfo 
+                                ? "bg-blue-600 text-white rounded-br-sm" 
+                                : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
+                            }`}>
+                              <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                              <div className={`flex justify-end items-center mt-1 text-[10px] ${isAdminInfo ? "text-blue-100" : "text-gray-400"}`}>
+                                <span>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                {isAdminInfo && (
+                                  <span className="ml-1">
+                                    {msg.isRead ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
-                    <div ref={messagesEndRef} />
-                  </>
-                )}
+                        );
+                      })}
+                      <div ref={messagesEndRef} />
+                    </>
+                  )}
+                </div>
               </div>
 
               {/* Chat Input */}

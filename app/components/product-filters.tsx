@@ -18,7 +18,7 @@ interface CategoryItem {
 
 interface ProductFiltersProps {
   filters: {
-    category: string
+    categorySlug: string
     status: string
     priceRange: number[]
   }
@@ -62,7 +62,7 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
 
   const clearFilters = () => {
     onFiltersChange({
-      category: "all",
+      categorySlug: "all",
       status: "all",
       priceRange: [0, 1000000],
     })
@@ -70,14 +70,14 @@ export function ProductFilters({ filters, onFiltersChange }: ProductFiltersProps
 
   return (
     <div className="flex gap-2">
-      <Select value={filters.category} onValueChange={(value) => updateFilter("category", value)}>
+      <Select value={filters.categorySlug} onValueChange={(value) => updateFilter("categorySlug", value)}>
         <SelectTrigger className="w-40">
           <SelectValue placeholder={categoriesLoading ? "Loading..." : "Category"} />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Categories</SelectItem>
           {categories.map((cat) => (
-            <SelectItem key={cat._id} value={cat.name}>
+            <SelectItem key={cat._id} value={cat.slug || cat.name.toLowerCase().replace(/ /g, "-")}>
               {cat.name}
             </SelectItem>
           ))}

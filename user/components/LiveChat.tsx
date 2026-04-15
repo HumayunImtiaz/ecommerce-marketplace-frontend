@@ -31,12 +31,17 @@ export default function LiveChat({ onClose }: LiveChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (!isLoading) {
+      const timer = setTimeout(() => scrollToBottom(), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [messages, isLoading]);
 
   useEffect(() => {
     if (!user) return;
@@ -44,14 +49,14 @@ export default function LiveChat({ onClose }: LiveChatProps) {
     const fetchHistory = async () => {
       try {
         const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
-        const res = await fetch(`${backendUrl}/api/auth/messages/${user.id}`);
+        const res = await fetch(`${backendUrl}/api/messages/${user.id}`);
         const data = await res.json();
         if (data.success) {
           setMessages(data.data);
         }
 
         // Mark as read
-        await fetch(`${backendUrl}/api/auth/messages/${user.id}/read`, {
+        await fetch(`${backendUrl}/api/messages/${user.id}/read`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json"
@@ -82,7 +87,7 @@ export default function LiveChat({ onClose }: LiveChatProps) {
 
       // If the chat is open, immediately mark incoming messages as read
       if (message.senderModel === "Admin") {
-        fetch(`${backendUrl}/api/auth/messages/${user.id}/read`, {
+        fetch(`${backendUrl}/api/messages/${user.id}/read`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ readerRole: "User" })
@@ -121,9 +126,9 @@ export default function LiveChat({ onClose }: LiveChatProps) {
   if (!user) return null;
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 max-w-[calc(100vw-3rem)] max-h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col z-50 overflow-hidden border border-gray-200">
+    <div className="fixed bottom-6 right-6 w-[420px] max-w-[calc(100vw-3rem)] h-[600px] max-h-[calc(100vh-6rem)] bg-white rounded-2xl shadow-2xl z-50 overflow-hidden border border-gray-200 grid grid-rows-[auto_1fr_auto]">
       {/* Header */}
-      <div className="bg-blue-600 p-4 flex justify-between items-center text-white shrink-0">
+      <div className="bg-blue-600 p-4 flex justify-between items-center text-white">
         <div className="flex items-center space-x-2">
           <MessageSquare className="w-5 h-5" />
           <h3 className="font-semibold">Live Support</h3>
@@ -134,49 +139,51 @@ export default function LiveChat({ onClose }: LiveChatProps) {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 min-h-0 p-4 overflow-y-auto bg-gray-50 flex flex-col space-y-3">
-        {isLoading ? (
-          <div className="flex-1 flex justify-center items-center">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-gray-500 space-y-2">
-            <MessageSquare className="w-12 h-12 opacity-20" />
-            <p className="text-sm">No messages yet. Say hi!</p>
-          </div>
-        ) : (
-          messages.map((msg) => {
-            const isMe = msg.senderModel === "User";
-            return (
-              <div
-                key={msg._id}
-                className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-              >
+      <div className="min-h-0 p-4 overflow-y-auto bg-gray-50 scrollbar-thin scrollbar-thumb-gray-300">
+        <div className="flex flex-col space-y-3">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-10">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-gray-500 py-10 space-y-2">
+              <MessageSquare className="w-12 h-12 opacity-20" />
+              <p className="text-sm">No messages yet. Say hi!</p>
+            </div>
+          ) : (
+            messages.map((msg) => {
+              const isMe = msg.senderModel === "User";
+              return (
                 <div
-                  className={`max-w-[75%] min-w-[70px] rounded-2xl px-4 py-2 text-sm ${isMe
-                      ? "bg-blue-600 text-white rounded-br-sm"
-                      : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
-                    }`}
+                  key={msg._id}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.content}</p>
-                  <div className={`flex justify-end items-center mt-1 text-[10px] ${isMe ? "text-blue-200" : "text-gray-400"}`}>
-                    <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    {isMe && (
-                      <span className="ml-1">
-                        {msg.isRead ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />}
-                      </span>
-                    )}
+                  <div
+                    className={`max-w-[75%] min-w-[70px] rounded-2xl px-4 py-2 text-sm ${isMe
+                        ? "bg-blue-600 text-white rounded-br-sm"
+                        : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
+                      }`}
+                  >
+                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <div className={`flex justify-end items-center mt-1 text-[10px] ${isMe ? "text-blue-200" : "text-gray-400"}`}>
+                      <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      {isMe && (
+                        <span className="ml-1">
+                          {msg.isRead ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-        <div ref={messagesEndRef} />
+              );
+            })
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Input Area */}
-      <div className="p-3 bg-white border-t border-gray-100 shrink-0">
+      <div className="p-3 bg-white border-t border-gray-100">
         <form
           onSubmit={handleSendMessage}
           className="flex items-center space-x-2 bg-gray-50 p-1 rounded-full border border-gray-200"

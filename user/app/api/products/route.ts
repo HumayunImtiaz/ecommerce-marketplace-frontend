@@ -7,7 +7,7 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const queryString = searchParams.toString();
     
-    let url = `${API_BASE_URL}/api/auth/products`
+    let url = `${API_BASE_URL}/api/products/`
     if (queryString) {
       url += `?${queryString}`
     }

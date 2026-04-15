@@ -68,7 +68,7 @@ interface ProductItem {
 interface ProductsTableProps {
   searchQuery: string
   filters: {
-    category: string
+    categorySlug: string
     status: string
     priceRange: number[]
   }
@@ -153,7 +153,7 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
 
       const params = new URLSearchParams()
       if (searchQuery) params.append("search", searchQuery)
-      if (filters.category && filters.category !== "all") params.append("category", filters.category)
+      if (filters.categorySlug && filters.categorySlug !== "all") params.append("category", filters.categorySlug)
       if (filters.status && filters.status !== "all") params.append("status", filters.status)
       if (filters.priceRange && filters.priceRange.length === 2) {
         params.append("minPrice", filters.priceRange[0].toString())

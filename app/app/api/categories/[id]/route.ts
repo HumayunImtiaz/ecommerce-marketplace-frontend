@@ -13,7 +13,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     const body = await req.json()
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/categories/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/categories/${params.id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -41,7 +41,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/categories/${params.id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/categories/${params.id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

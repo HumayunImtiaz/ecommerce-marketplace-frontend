@@ -11,6 +11,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import {
+
+const resolveAvatar = (url) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -191,7 +198,7 @@ export function CustomersTable({ searchQuery, filters, onRefresh, onDataChange }
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={customer.avatar || "/placeholder.svg"} />
+                      <AvatarImage src={resolveAvatar(customer.avatar)} />
                       <AvatarFallback>
                         {customer.fullName.split(" ").map((n) => n[0]).join("")}
                       </AvatarFallback>
