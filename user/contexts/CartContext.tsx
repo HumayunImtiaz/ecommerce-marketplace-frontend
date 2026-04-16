@@ -54,8 +54,28 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       outOfStock: p.outOfStock ?? (p.totalStock <= 0),
       isActive: p.isActive,
       slug: p.slug,
-      sku: p.sku
+      sku: p.sku,
+      totalStock: p.totalStock,
+      variants: p.variants?.map((v: any) => ({
+        id: v.id,
+        color: v.color,
+        size: v.size,
+        price: v.price,
+        stock: v.stock ? { quantity: v.stock.quantity, status: v.stock.status } : null
+      }))
     }
+  }
+
+  // Helper to get stock for a specific variant
+  const getAvailableStock = (product: Product, color?: string, size?: string): number => {
+    if (!product.variants || product.variants.length === 0) return product.totalStock || 0
+
+    const variant = product.variants.find(v =>
+      (color ? v.color === color : true) &&
+      (size ? v.size === size : true)
+    )
+
+    return variant?.stock?.quantity ?? 0
   }
 
   // Load cart from localStorage or server
@@ -70,7 +90,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           if (success && data?.items) {
             serverItems = data.items
               .map((item: any) => {
-                const mappedProduct = mapProduct(item.productId)
+                const mappedProduct = mapProduct(item.product)
                 if (!mappedProduct) return null
                 return {
                   id: item._id,
@@ -105,7 +125,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               if (finalSuccess && finalData?.items) {
                 serverItems = finalData.items
                   .map((item: any) => {
-                    const mappedProduct = mapProduct(item.productId)
+                    const mappedProduct = mapProduct(item.product)
                     if (!mappedProduct) return null
                     return {
                       id: item._id,
@@ -158,10 +178,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     )
 
     if (existingItem) {
+      const availableStock = getAvailableStock(product, selectedColor, selectedSize)
+      const newQuantity = existingItem.quantity + quantity
+
+      if (newQuantity > availableStock) {
+        addToast(`Cannot add more. Only ${availableStock} in stock.`, "error")
+        return
+      }
+
       setItems((prev) =>
         prev.map((item) =>
           item.id === existingItem.id
-            ? { ...item, quantity: item.quantity + quantity }
+            ? { ...item, quantity: newQuantity }
             : item
         )
       )
@@ -191,6 +219,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addToast(`Updated ${product.name} quantity in cart`, "success")
       }
     } else {
+      const availableStock = getAvailableStock(product, selectedColor, selectedSize)
+      if (quantity > availableStock) {
+        addToast(`Cannot add items beyond available stock (${availableStock}).`, "error")
+        return
+      }
+
       const tempId = `${product.id}-${selectedColor || ""}-${selectedSize || ""}-${Date.now()}`
       const newItem: CartItem = {
         id: tempId,
@@ -251,6 +285,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     if (quantity <= 0) {
       removeFromCart(itemId)
+      return
+    }
+
+    // Stock validation
+    const availableStock = getAvailableStock(originalItem.product, originalItem.selectedColor, originalItem.selectedSize)
+    if (quantity > availableStock) {
+      addToast(`Only ${availableStock} items available in stock.`, "error")
       return
     }
 

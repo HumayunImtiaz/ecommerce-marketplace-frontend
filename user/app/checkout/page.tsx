@@ -19,7 +19,7 @@ import type { Address } from "@/lib/types"
 let stripePromise: Promise<any> | null = null;
 const getStripe = () => {
   if (!stripePromise && typeof window !== "undefined") {
-    stripePromise = fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/config/stripe`)
+    stripePromise = fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/config/stripe`)
       .then((res) => res.json())
       .then((data) => {
         const key = data?.data?.publishableKey;
@@ -373,16 +373,27 @@ export default function CheckoutPage() {
                 <Elements stripe={getStripe()} options={{ clientSecret, appearance: { theme: "stripe" } }}>
                   <StripePaymentForm
                     onSuccess={async (paymentIntentId) => {
+                      setIsProcessing(true)
                       // Confirm payment on backend (mark order as paid + processing)
                       if (createdOrderId) {
                         try {
-                          await orderApi.confirmPayment(createdOrderId, paymentIntentId)
+                          const result = await orderApi.confirmPayment(createdOrderId, paymentIntentId)
+                          if (result.success) {
+                            clearCart()
+                            router.push(`/order-confirmation?order=${createdOrderNumber}`)
+                          } else {
+                            addToast(result.message || "Payment confirmed in Stripe but failed to update order.", "error")
+                            // Still redirect but user might see pending status
+                            router.push(`/order-confirmation?order=${createdOrderNumber}`)
+                          }
                         } catch (err) {
                           console.error("confirmPayment error:", err)
+                          router.push(`/order-confirmation?order=${createdOrderNumber}`)
                         }
+                      } else {
+                        clearCart()
+                        router.push(`/order-confirmation?order=${createdOrderNumber}`)
                       }
-                      clearCart()
-                      router.push(`/order-confirmation?order=${createdOrderNumber}`)
                     }}
                     isProcessing={isProcessing}
                     setIsProcessing={setIsProcessing}

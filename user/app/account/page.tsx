@@ -129,11 +129,15 @@ function OrderCard({ order }: { order: Order }) {
           {/* Shipping address */}
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-1">Shipping Address</p>
-            <p className="text-sm text-gray-600">
-              {order.shippingAddress.name}, {order.shippingAddress.street},{" "}
-              {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
-              {order.shippingAddress.zipCode}, {order.shippingAddress.country}
-            </p>
+            {order.shippingAddress ? (
+              <p className="text-sm text-gray-600">
+                {order.shippingAddress.name}, {order.shippingAddress.street},{" "}
+                {order.shippingAddress.city}, {order.shippingAddress.state}{" "}
+                {order.shippingAddress.zipCode}, {order.shippingAddress.country}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-400 italic">No shipping address provided</p>
+            )}
           </div>
 
           {/* Payment status */}

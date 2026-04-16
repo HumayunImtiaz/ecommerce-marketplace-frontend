@@ -27,7 +27,7 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState("description")
   const [reviewCount, setReviewCount] = useState(0)
 
-  const { addToCart, appliedCoupon, applyCoupon, removeCoupon, discountAmount } = useCart()
+  const { items = [], addToCart, appliedCoupon, applyCoupon, removeCoupon, discountAmount } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
 
@@ -100,32 +100,42 @@ export default function ProductPage() {
   }
 
   const getAvailableStock = (): number => {
-    if (!product.variants || product.variants.length === 0) return product.totalStock ?? 0
+    const totalVariantStock = (() => {
+      if (!product || !product.variants || product.variants.length === 0) return product?.totalStock ?? 0
 
-    // Exact color + size match
-    const exactMatch = product.variants.find(
-      (v) => v.color === selectedColor && v.size === selectedSize
-    )
-    if (exactMatch && exactMatch.stock) return exactMatch.stock.quantity
+      // Exact color + size match
+      const exactMatch = product.variants.find(
+        (v) => v.color === selectedColor && v.size === selectedSize
+      )
+      if (exactMatch && exactMatch.stock) return exactMatch.stock.quantity
 
-    // Color-only match
-    const colorMatch = product.variants.find(
-      (v) => v.color === selectedColor
-    )
-    if (colorMatch && colorMatch.stock) return colorMatch.stock.quantity
+      // Color-only match
+      const colorMatch = product.variants.find(
+        (v) => v.color === selectedColor
+      )
+      if (colorMatch && colorMatch.stock) return colorMatch.stock.quantity
 
-    return product.totalStock ?? 0
+      return product.totalStock ?? 0
+    })()
+
+    const inCartQuantity = items.find(
+      item => item.product.id === product?.id && 
+              item.selectedColor === selectedColor && 
+              item.selectedSize === selectedSize
+    )?.quantity || 0
+
+    return Math.max(0, totalVariantStock - inCartQuantity)
   }
 
+  // ── Derived State ───────────────────────────────────────────────────────
   const activePrice = getVariantPrice()
   const availableStock = getAvailableStock()
 
-  const savingsPercentage = product.originalPrice
+  const savingsPercentage = (product.originalPrice && product.originalPrice > activePrice)
     ? Math.round(((product.originalPrice - activePrice) / product.originalPrice) * 100)
     : 0
 
   const handleAddToCart = () => {
-    // Pass product with active variant price so cart shows correct price
     const productWithVariantPrice = { ...product, price: activePrice }
     addToCart(productWithVariantPrice, quantity, selectedColor, selectedSize)
   }

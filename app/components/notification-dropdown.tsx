@@ -214,7 +214,7 @@ export function NotificationDropdown() {
         )}
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="justify-center">
+        <DropdownMenuItem className="justify-center" onClick={() => router.push("/admin/notifications")}>
           <Button variant="ghost" size="sm" className="w-full">
             View all notifications
           </Button>

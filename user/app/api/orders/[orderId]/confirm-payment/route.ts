@@ -21,7 +21,7 @@ export async function POST(
     const { orderId } = params
 
     const response = await fetch(
-      `${API_BASE_URL}/api//${orderId}/confirm-payment`,
+      `${API_BASE_URL}/api/orders/${orderId}/confirm-payment`,
       {
         method: "POST",
         headers: {
