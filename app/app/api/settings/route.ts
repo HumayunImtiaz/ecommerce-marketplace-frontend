@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/settings`, {
+    const response = await fetch(`${API_BASE_URL}/api/settings`, {
       cache: "no-store",
     })
     const result = await response.json()
@@ -28,7 +28,7 @@ export async function PATCH(req: Request) {
 
     const body = await req.json()
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/settings`, {
+    const response = await fetch(`${API_BASE_URL}/api/settings`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

@@ -92,12 +92,60 @@ export default function CartPage() {
                           </button>
                           <span className="px-4 py-2 font-medium">{item.quantity}</span>
                           <button
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="p-2 hover:bg-gray-100"
+                            onClick={() => {
+                              const avail = (() => {
+                                if (!item.product.variants || item.product.variants.length === 0) return item.product.totalStock || 0
+                                const v = item.product.variants.find(v => 
+                                  (item.selectedColor ? v.color === item.selectedColor : true) &&
+                                  (item.selectedSize ? v.size === item.selectedSize : true)
+                                )
+                                return v?.stock?.quantity ?? 0
+                              })()
+                              if (item.quantity < avail) {
+                                updateQuantity(item.id, item.quantity + 1)
+                              }
+                            }}
+                            disabled={(() => {
+                              const avail = (() => {
+                                if (!item.product.variants || item.product.variants.length === 0) return item.product.totalStock || 0
+                                const v = item.product.variants.find(v => 
+                                  (item.selectedColor ? v.color === item.selectedColor : true) &&
+                                  (item.selectedSize ? v.size === item.selectedSize : true)
+                                )
+                                return v?.stock?.quantity ?? 0
+                              })()
+                              return item.quantity >= avail
+                            })()}
+                            className={`p-2 ${(() => {
+                              const avail = (() => {
+                                if (!item.product.variants || item.product.variants.length === 0) return item.product.totalStock || 0
+                                const v = item.product.variants.find(v => 
+                                  (item.selectedColor ? v.color === item.selectedColor : true) &&
+                                  (item.selectedSize ? v.size === item.selectedSize : true)
+                                )
+                                return v?.stock?.quantity ?? 0
+                              })()
+                              return item.quantity >= avail
+                            })() ? "text-gray-300 cursor-not-allowed" : "hover:bg-gray-100"}`}
                           >
                             <Plus className="w-4 h-4" />
                           </button>
                         </div>
+
+                        {/* Stock warning */}
+                        {(() => {
+                           const avail = (() => {
+                                if (!item.product.variants || item.product.variants.length === 0) return item.product.totalStock || 0
+                                const v = item.product.variants.find(v => 
+                                  (item.selectedColor ? v.color === item.selectedColor : true) &&
+                                  (item.selectedSize ? v.size === item.selectedSize : true)
+                                )
+                                return v?.stock?.quantity ?? 0
+                              })()
+                           return item.quantity >= avail && (
+                             <p className="text-[10px] text-amber-600 font-bold mt-1">Max stock reached</p>
+                           )
+                        })()}
 
                         {/* Item Total */}
                         <div className="text-right">

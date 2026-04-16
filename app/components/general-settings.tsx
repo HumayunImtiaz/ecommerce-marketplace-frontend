@@ -60,11 +60,12 @@ export function GeneralSettings() {
       try {
         const res = await fetch("/api/settings")
         const result = await res.json()
-        if (result.success) {
+        if (result.success && result.data) {
           setSettings(result.data)
-          // Handle Working Hours Parsing
-          if (result.data.contact.workingHours && result.data.contact.workingHours.includes(" - ")) {
-            const [open, close] = result.data.contact.workingHours.split(" - ")
+          // Handle Working Hours Parsing with defensive checks
+          const contact = result.data.contact;
+          if (contact && contact.workingHours && typeof contact.workingHours === 'string' && contact.workingHours.includes(" - ")) {
+            const [open, close] = contact.workingHours.split(" - ")
             setOpenTime(open.trim())
             setCloseTime(close.trim())
           }

@@ -63,7 +63,7 @@ export default function AdminProfileClient({ initialData }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    initialData.avatar ? (initialData.avatar.startsWith("http") ? initialData.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${initialData.avatar}`) : null
+    initialData.avatar ? (initialData.avatar.startsWith("http") || initialData.avatar.startsWith("/") ? initialData.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${initialData.avatar}`) : null
   )
 
   // Profile Formik
@@ -108,7 +108,7 @@ export default function AdminProfileClient({ initialData }: Props) {
     profileFormik.setTouched({})
     setAvatarFile(null)
     setAvatarPreview(
-      initialData.avatar ? (initialData.avatar.startsWith("http") ? initialData.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${initialData.avatar}`) : null
+      initialData.avatar ? (initialData.avatar.startsWith("http") || initialData.avatar.startsWith("/") ? initialData.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${initialData.avatar}`) : null
     )
     setIsEditing(false)
   }

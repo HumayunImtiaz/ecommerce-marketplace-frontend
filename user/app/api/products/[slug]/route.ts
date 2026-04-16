@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const slug = (await params).slug
-    const url = `${API_BASE_URL}/api/auth/products/slug/${slug}`
+    const url = `${API_BASE_URL}/api/products//slug/${slug}`
 
     const response = await fetch(url, {
       cache: "no-store",

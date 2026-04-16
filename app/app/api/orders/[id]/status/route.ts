@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     const body = await req.json()
     const { id } = params
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/orders/${id}/status`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders/${id}/status`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

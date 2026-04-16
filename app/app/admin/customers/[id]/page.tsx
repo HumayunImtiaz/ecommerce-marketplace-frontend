@@ -11,6 +11,13 @@ import { ArrowLeft, Mail, Calendar, ShieldCheck, ShieldAlert, Globe, Facebook, K
 import { toast } from "sonner"
 import Link from "next/link"
 
+const resolveAvatar = (url) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
+
 interface Customer {
   id: string
   fullName: string
@@ -145,7 +152,7 @@ export default function CustomerDetailPage() {
           <CardContent className="pt-0 -mt-12">
             <div className="flex flex-col items-center text-center space-y-4">
               <Avatar className="h-24 w-24 border-4 border-white shadow-md">
-                <AvatarImage src={customer.avatar || "/placeholder.svg"} />
+                <AvatarImage src={resolveAvatar(customer.avatar)} />
                 <AvatarFallback className="text-2xl bg-gray-100 text-gray-600">
                   {customer.fullName.split(" ").map(n => n[0]).join("")}
                 </AvatarFallback>

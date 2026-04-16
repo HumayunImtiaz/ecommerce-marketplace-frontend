@@ -72,18 +72,13 @@ export default function ViewProductPage() {
     const fetchProduct = async () => {
       try {
         setIsLoading(true)
-        const response = await fetch(`${API_BASE_URL}/api/auth/products`)
+        const response = await fetch(`${API_BASE_URL}/api/products/slug/${slug}`)
         const result = await response.json()
 
-        if (result?.success && Array.isArray(result.data)) {
-          const found = result.data.find((p: ProductItem) => p.slug === slug)
-          if (found) {
-            setProduct(found)
-          } else {
-            setError("Product not found")
-          }
+        if (result?.success && result.data && result.data.product) {
+          setProduct(result.data.product)
         } else {
-          setError("Failed to load product")
+          setError(result?.message || "Product not found")
         }
       } catch {
         setError("Failed to connect to server")

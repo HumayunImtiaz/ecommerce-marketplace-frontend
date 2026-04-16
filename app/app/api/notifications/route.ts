@@ -9,7 +9,7 @@ export async function GET(request: Request) {
 
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/notifications`, {
+    const response = await fetch(`${API_BASE_URL}/api/notifications`, {
       method: "GET",
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { MoreHorizontal, Eye, Trash2, UserX, Loader2 } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +11,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import {
+
+const resolveAvatar = (url) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -167,14 +175,7 @@ export function CustomersTable({ searchQuery, filters, onRefresh, onDataChange }
   }
 
   if (isLoading) {
-    return (
-      <div className="rounded-md border p-12 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Loading customers...</span>
-        </div>
-      </div>
-    )
+    return <AdminLoader message="Loading customers..." minHeight="min-h-[400px]" />
   }
 
   return (
@@ -197,7 +198,7 @@ export function CustomersTable({ searchQuery, filters, onRefresh, onDataChange }
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={customer.avatar || "/placeholder.svg"} />
+                      <AvatarImage src={resolveAvatar(customer.avatar)} />
                       <AvatarFallback>
                         {customer.fullName.split(" ").map((n) => n[0]).join("")}
                       </AvatarFallback>

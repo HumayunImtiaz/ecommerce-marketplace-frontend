@@ -11,7 +11,7 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json()
-    const response = await fetch(`${API_BASE_URL}/api/auth/products/bulk-status`, {
+    const response = await fetch(`${API_BASE_URL}/api/products/bulk-status`, {
       method: "PATCH",
       headers: { 
         "Content-Type": "application/json",
@@ -36,7 +36,7 @@ export async function DELETE(request: Request) {
     }
 
     const body = await request.json()
-    const response = await fetch(`${API_BASE_URL}/api/auth/products/bulk-delete`, {
+    const response = await fetch(`${API_BASE_URL}/api/products/bulk-delete`, {
       method: "DELETE",
       headers: { 
         "Content-Type": "application/json",

@@ -4,7 +4,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 export async function GET() {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/auth/orders/coupons/public`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders/coupons/public`, {
       cache: "no-store",
     });
     const data = await response.json();

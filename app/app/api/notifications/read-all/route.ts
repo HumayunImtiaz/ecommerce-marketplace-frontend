@@ -9,7 +9,7 @@ export async function PATCH(request: Request) {
 
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/notifications/read-all`, {
+    const response = await fetch(`${API_BASE_URL}/api/notifications/read-all`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${token}` },
     })

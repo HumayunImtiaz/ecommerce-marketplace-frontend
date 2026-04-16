@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/orders`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -47,7 +47,7 @@ export async function GET() {
       )
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/orders`, {
+    const response = await fetch(`${API_BASE_URL}/api/orders/`, {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
     })

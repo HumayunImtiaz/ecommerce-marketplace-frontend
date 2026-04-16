@@ -5,7 +5,8 @@ import { DashboardCharts } from "@/components/dashboard-charts"
 import { RecentActivity } from "@/components/recent-activity"
 import { KPICards } from "@/components/kpi-cards"
 import { DatePickerWithRange } from "@/components/date-range-picker"
-import { Loader2, RefreshCcw } from "lucide-react"
+import { RefreshCcw } from "lucide-react"
+import { AdminLoader } from "@/components/admin-loader"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
@@ -79,14 +80,7 @@ export default function DashboardPage() {
   }, [date, fetchDashboard])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
-        </div>
-      </div>
-    )
+    return <AdminLoader message="Loading dashboard data..." minHeight="min-h-[60vh]" />
   }
 
   return (

@@ -3,14 +3,15 @@ import { getTokenCookie } from "@/lib/cookies";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-export async function GET(req: Request, { params }: { params: { chatId: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ chatId: string }> }) {
   try {
+    const { chatId } = await params;
     const token = await getTokenCookie();
     if (!token) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/messages/${params.chatId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/messages/${chatId}`, {
       cache: "no-store",
       headers: {
         Authorization: `Bearer ${token}`

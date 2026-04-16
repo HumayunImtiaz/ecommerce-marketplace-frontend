@@ -45,7 +45,7 @@ export async function updateAdminProfileAction(formData: FormData): Promise<Acti
       }
     }
 
-   
+
     await setAdminNameCookie(result.data.fullName)
     await setAdminEmailCookie(result.data.email)
     await setAdminBioCookie(result.data.bio ?? null)

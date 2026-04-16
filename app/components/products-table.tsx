@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Edit, Trash2, Eye, Loader2 } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import { toast } from "sonner"
 import {
   AlertDialog,
@@ -67,7 +68,7 @@ interface ProductItem {
 interface ProductsTableProps {
   searchQuery: string
   filters: {
-    category: string
+    categorySlug: string
     status: string
     priceRange: number[]
   }
@@ -152,7 +153,7 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
 
       const params = new URLSearchParams()
       if (searchQuery) params.append("search", searchQuery)
-      if (filters.category && filters.category !== "all") params.append("category", filters.category)
+      if (filters.categorySlug && filters.categorySlug !== "all") params.append("category", filters.categorySlug)
       if (filters.status && filters.status !== "all") params.append("status", filters.status)
       if (filters.priceRange && filters.priceRange.length === 2) {
         params.append("minPrice", filters.priceRange[0].toString())
@@ -240,14 +241,7 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
   }
 
   if (isLoading) {
-    return (
-      <div className="rounded-md border p-12 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Loading products...</span>
-        </div>
-      </div>
-    )
+    return <AdminLoader message="Loading products..." minHeight="min-h-[400px]" />
   }
 
   return (

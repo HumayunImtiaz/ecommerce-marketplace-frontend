@@ -28,19 +28,19 @@ async function backendFetch(endpoint: string, method: string = "GET", body?: any
 }
 
 export async function GET() {
-  const { result, status } = await backendFetch("/api/auth/cart")
+  const { result, status } = await backendFetch("/api/cart")
   return NextResponse.json(result, { status })
 }
 
 export async function POST(req: Request) {
   const body = await req.json()
-  const { result, status } = await backendFetch("/api/auth/cart/add", "POST", body)
+  const { result, status } = await backendFetch("/api/cart/add", "POST", body)
   return NextResponse.json(result, { status })
 }
 
 export async function PATCH(req: Request) {
   const body = await req.json()
-  const { result, status } = await backendFetch("/api/auth/cart/update", "PATCH", body)
+  const { result, status } = await backendFetch("/api/cart/update", "PATCH", body)
   return NextResponse.json(result, { status })
 }
 
@@ -50,7 +50,7 @@ export async function DELETE(req: Request) {
   const clear = searchParams.get("clear")
 
   if (clear === "true") {
-    const { result, status } = await backendFetch("/api/auth/cart/clear", "DELETE")
+    const { result, status } = await backendFetch("/api/cart/clear", "DELETE")
     return NextResponse.json(result, { status })
   }
 
@@ -61,6 +61,6 @@ export async function DELETE(req: Request) {
     )
   }
 
-  const { result, status } = await backendFetch(`/api/auth/cart/remove/${itemId}`, "DELETE")
+  const { result, status } = await backendFetch(`/api/cart/remove/${itemId}`, "DELETE")
   return NextResponse.json(result, { status })
 }

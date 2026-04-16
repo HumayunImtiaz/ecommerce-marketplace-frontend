@@ -8,7 +8,8 @@ import { AnalyticsCharts } from "@/components/analytics-charts"
 import { RevenueMetrics } from "@/components/revenue-metrics"
 import { CustomerAnalytics } from "@/components/customer-analytics"
 import { ProductAnalytics } from "@/components/product-analytics"
-import { Download, RefreshCw, Loader2 } from "lucide-react"
+import { Download, RefreshCw } from "lucide-react"
+import { AdminLoader } from "@/components/admin-loader"
 import { DatePickerWithRange } from "@/components/date-range-picker"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
@@ -70,14 +71,7 @@ export default function AnalyticsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground text-sm">Loading analytics...</p>
-        </div>
-      </div>
-    )
+    return <AdminLoader message="Loading analytics..." minHeight="min-h-[60vh]" />
   }
 
   return (

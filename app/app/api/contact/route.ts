@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/contact`, {
+    const response = await fetch(`${API_BASE_URL}/api/contact`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -41,7 +41,7 @@ export async function PATCH(req: Request) {
        return NextResponse.json({ success: false, message: "Missing inquiry ID" }, { status: 400 });
     }
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/contact/${id}/read`, {
+    const response = await fetch(`${API_BASE_URL}/api/contact/${id}/read`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { id, message } = body;
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/contact/${id}/reply`, {
+    const response = await fetch(`${API_BASE_URL}/api/contact/${id}/reply`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

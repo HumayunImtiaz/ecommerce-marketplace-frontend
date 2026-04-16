@@ -8,10 +8,18 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { Loader2, Plus, Edit2, Trash2 } from "lucide-react"
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react"
+import { AdminLoader } from "./admin-loader"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUpload } from "@/components/image-upload"
+
+const resolveAvatar = (url) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
 
 interface Category {
   _id: string
@@ -126,11 +134,7 @@ export default function CategoriesTable() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 border rounded-xl bg-white">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    )
+    return <AdminLoader message="Loading categories..." minHeight="h-64" />
   }
 
   return (
@@ -156,7 +160,7 @@ export default function CategoriesTable() {
               <TableRow key={category._id}>
                 <TableCell>
                   <div className="h-12 w-12 rounded overflow-hidden border bg-gray-50">
-                    <img src={category.image || "/placeholder.svg"} alt={category.name} className="h-full w-full object-cover" />
+                    <img src={resolveAvatar(category.image)} alt={category.name} className="h-full w-full object-cover" />
                   </div>
                 </TableCell>
                 <TableCell>

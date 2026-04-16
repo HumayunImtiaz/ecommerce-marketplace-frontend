@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Backend pe forward karo ──
-    const response = await fetch(`${API_BASE_URL}/api/auth/upload/images`, {
+    const response = await fetch(`${API_BASE_URL}/api/upload/images`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw, Loader2, Zap } from "lucide-react"
+import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw, Loader2, Zap, Ticket } from "lucide-react"
 import type { Product } from "@/lib/types"
 import { mapProduct } from "@/lib/productMapper"
 import { useCart } from "@/contexts/CartContext"
@@ -12,7 +12,7 @@ import { useWishlist } from "@/contexts/WishlistContext"
 import ProductReviews from "@/components/ProductReviews"
 import RelatedProducts from "@/components/RelatedProducts"
 
-import { productApi } from "@/lib/api"
+import { productApi, orderApi } from "@/lib/api"
 
 export default function ProductPage() {
   const params = useParams()
@@ -27,7 +27,7 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState("description")
   const [reviewCount, setReviewCount] = useState(0)
 
-  const { addToCart, appliedCoupon, applyCoupon, removeCoupon, discountAmount } = useCart()
+  const { items = [], addToCart, appliedCoupon, applyCoupon, removeCoupon, discountAmount } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
 
@@ -100,32 +100,42 @@ export default function ProductPage() {
   }
 
   const getAvailableStock = (): number => {
-    if (!product.variants || product.variants.length === 0) return product.totalStock ?? 0
+    const totalVariantStock = (() => {
+      if (!product || !product.variants || product.variants.length === 0) return product?.totalStock ?? 0
 
-    // Exact color + size match
-    const exactMatch = product.variants.find(
-      (v) => v.color === selectedColor && v.size === selectedSize
-    )
-    if (exactMatch && exactMatch.stock) return exactMatch.stock.quantity
+      // Exact color + size match
+      const exactMatch = product.variants.find(
+        (v) => v.color === selectedColor && v.size === selectedSize
+      )
+      if (exactMatch && exactMatch.stock) return exactMatch.stock.quantity
 
-    // Color-only match
-    const colorMatch = product.variants.find(
-      (v) => v.color === selectedColor
-    )
-    if (colorMatch && colorMatch.stock) return colorMatch.stock.quantity
+      // Color-only match
+      const colorMatch = product.variants.find(
+        (v) => v.color === selectedColor
+      )
+      if (colorMatch && colorMatch.stock) return colorMatch.stock.quantity
 
-    return product.totalStock ?? 0
+      return product.totalStock ?? 0
+    })()
+
+    const inCartQuantity = items.find(
+      item => item.product.id === product?.id && 
+              item.selectedColor === selectedColor && 
+              item.selectedSize === selectedSize
+    )?.quantity || 0
+
+    return Math.max(0, totalVariantStock - inCartQuantity)
   }
 
+  // ── Derived State ───────────────────────────────────────────────────────
   const activePrice = getVariantPrice()
   const availableStock = getAvailableStock()
 
-  const savingsPercentage = product.originalPrice
+  const savingsPercentage = (product.originalPrice && product.originalPrice > activePrice)
     ? Math.round(((product.originalPrice - activePrice) / product.originalPrice) * 100)
     : 0
 
   const handleAddToCart = () => {
-    // Pass product with active variant price so cart shows correct price
     const productWithVariantPrice = { ...product, price: activePrice }
     addToCart(productWithVariantPrice, quantity, selectedColor, selectedSize)
   }
@@ -428,7 +438,114 @@ export default function ProductPage() {
       </div>
 
       {/* ── Related Products ── */}
-      <RelatedProducts currentProduct={product} />
+      <div className="mb-12">
+        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <Ticket className="w-6 h-6 text-blue-600" />
+          Available Offers & Coupons
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Coupon Display Card */}
+          <CouponOffersSection />
+          
+          {/* Manual Apply Card */}
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 flex flex-col justify-center">
+            <h4 className="font-bold text-slate-800 mb-2">Have a special code?</h4>
+            <p className="text-sm text-slate-500 mb-4">Enter your coupon code below to apply it to your order.</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="PROMO20"
+                className="flex-1 px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono"
+                id="manual-coupon-input"
+              />
+              <button 
+                onClick={() => {
+                  const input = document.getElementById("manual-coupon-input") as HTMLInputElement
+                  if (input.value) applyCoupon(input.value)
+                }}
+                className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-all"
+              >
+                Apply
+              </button>
+            </div>
+            {appliedCoupon && (
+              <div className="mt-3 flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg border border-green-100">
+                <span className="text-sm font-medium text-green-700">Applied: <span className="font-bold uppercase">{appliedCoupon.code}</span></span>
+                <button onClick={removeCoupon} className="text-xs text-red-500 hover:underline font-bold">Remove</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <RelatedProducts currentProduct={product} /> 
     </div>
+  )
+}
+
+function CouponOffersSection() {
+  const [coupons, setCoupons] = useState<any[]>([])
+  const { applyCoupon, appliedCoupon } = useCart()
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const { data, success } = await orderApi.getPublicCoupons()
+        if (success && Array.isArray(data)) {
+          setCoupons(data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch public coupons:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchCoupons()
+  }, [])
+
+  if (loading) return <div className="h-40 bg-slate-50 animate-pulse rounded-2xl border border-slate-200" />
+  if (coupons.length === 0) {
+    return (
+      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-center opacity-60">
+        <Ticket className="w-8 h-8 text-slate-400 mb-2" />
+        <p className="text-sm font-medium text-slate-500">No public offers available right now.</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {coupons.map((coupon) => (
+        <div key={coupon.id} className="relative bg-white p-6 rounded-2xl border-2 border-dashed border-blue-200 flex flex-col items-center justify-center text-center overflow-hidden group hover:border-blue-400 transition-all">
+          <div className="absolute -top-3 -right-3 w-12 h-12 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors" />
+          
+          <div className="text-2xl font-black text-blue-600 mb-1">
+            {coupon.discountType === "percentage" ? `${coupon.discountValue}% OFF` : `$${coupon.discountValue} OFF`}
+          </div>
+          <p className="text-xs text-slate-500 font-medium mb-4 uppercase tracking-wider italic">
+            Min. purchase: ${coupon.minPurchase}
+          </p>
+          
+          <div className="flex items-center gap-3">
+             <div className="bg-slate-50 px-4 py-2 rounded-lg font-mono font-bold text-slate-700 border border-slate-100">
+               {coupon.code}
+             </div>
+             <button 
+                onClick={() => applyCoupon(coupon.code)}
+                disabled={appliedCoupon?.code === coupon.code}
+                className={`px-4 py-2 rounded-lg font-bold transition-all shadow-sm ${
+                  appliedCoupon?.code === coupon.code 
+                  ? "bg-green-500 text-white cursor-default" 
+                  : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
+                }`}
+             >
+               {appliedCoupon?.code === coupon.code ? "Applied!" : "Apply Now"}
+             </button>
+          </div>
+        </div>
+      ))}
+    </>
   )
 }

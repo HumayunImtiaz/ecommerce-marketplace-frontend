@@ -8,7 +8,7 @@ export async function GET() {
     const token = await getUserTokenCookie()
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/wishlist`, {
+    const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 
     const body = await req.json()
-    const response = await fetch(`${API_BASE_URL}/api/auth/wishlist`, {
+    const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -49,7 +49,7 @@ export async function DELETE() {
     const token = await getUserTokenCookie()
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/wishlist`, {
+    const response = await fetch(`${API_BASE_URL}/api/wishlist`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

@@ -5,6 +5,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
+const resolveAvatar = (url) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
+
 interface Activity {
   id: string
   type: string
@@ -45,7 +52,7 @@ export function RecentActivity({ activities }: RecentActivityProps) {
             {activities.map((activity) => (
               <div key={activity.id} className="flex items-center gap-3">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={activity.avatar || "/placeholder.svg"} />
+                  <AvatarImage src={resolveAvatar(activity.avatar)} />
                   <AvatarFallback>
                     {activity.user
                       .split(" ")

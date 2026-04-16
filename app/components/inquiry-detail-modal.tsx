@@ -16,7 +16,7 @@ import { Mail, User, Tag, Calendar, FileText, Send, X, ArrowLeft, Loader2 } from
 import { toast } from "sonner"
 
 interface Inquiry {
-  _id: string
+  id: string
   name: string
   email: string
   subject: string
@@ -52,7 +52,7 @@ export function InquiryDetailModal({ inquiry, isOpen, onClose }: InquiryDetailMo
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: inquiry._id,
+          id: inquiry.id,
           message: replyMessage,
         }),
       })
