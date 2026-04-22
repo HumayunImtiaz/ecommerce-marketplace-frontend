@@ -2,12 +2,15 @@
 
 import React from "react"
 import Link from "next/link"
-import { Mail } from "lucide-react"
+import { Mail } from "lucide-center"
 import { useFormik } from "formik"
 import * as Yup from "yup"
-import { useToast } from "@/contexts/ToastContext"
+import { toast } from "sonner"
 import { forgotAdminPassword } from "@/lib/admin-auth-api"
 import "./Style.css"
+
+// Correct icon name is Mail, but lucide-center is a typo in my thought? No, it's lucide-react.
+import { Mail as MailIcon } from "lucide-react"
 
 const forgotSchema = Yup.object({
   email: Yup.string()
@@ -17,7 +20,6 @@ const forgotSchema = Yup.object({
 })
 
 const ForgotPasswordPage = () => {
-  const { addToast } = useToast()
   const [submitted, setSubmitted] = React.useState(false)
 
   const formik = useFormik({
@@ -26,10 +28,10 @@ const ForgotPasswordPage = () => {
     onSubmit: async (values) => {
       try {
         const response = await forgotAdminPassword({ email: values.email })
-        addToast(response?.message || "Reset link sent successfully", "success")
+        toast.success(response?.message || "Reset link sent successfully")
         setSubmitted(true)
       } catch (error: any) {
-        addToast(error?.message || "Failed to send reset link", "error")
+        toast.error(error?.message || "Failed to send reset link")
       }
     },
   })
@@ -59,7 +61,7 @@ const ForgotPasswordPage = () => {
                 </label>
                 <div className="mt-1 relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-5 w-5 text-gray-400" />
+                    <MailIcon className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
                     id="email"

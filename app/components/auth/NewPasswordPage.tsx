@@ -6,7 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import { Lock } from "lucide-react"
 import { useFormik } from "formik"
 import * as Yup from "yup"
-import { useToast } from "@/contexts/ToastContext"
+import { toast } from "sonner"
 import { resetAdminPassword } from "@/lib/admin-auth-api"
 import "./Style.css"
 
@@ -22,7 +22,6 @@ const resetSchema = Yup.object({
 const NewPasswordPage = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const { addToast } = useToast()
   const [isSuccess, setIsSuccess] = React.useState(false)
 
   const token = useMemo(() => searchParams.get("token") || "", [searchParams])
@@ -32,7 +31,7 @@ const NewPasswordPage = () => {
     validationSchema: resetSchema,
     onSubmit: async (values) => {
       if (!token) {
-        addToast("Invalid or missing reset token", "error")
+        toast.error("Invalid or missing reset token")
         return
       }
 
@@ -43,14 +42,14 @@ const NewPasswordPage = () => {
           confirmPassword: values.confirmPassword,
         })
 
-        addToast(response?.message || "Password reset successful", "success")
+        toast.success(response?.message || "Password reset successful")
         setIsSuccess(true)
 
         setTimeout(() => {
           router.push("/login")
         }, 1200)
       } catch (error: any) {
-        addToast(error?.message || "Failed to reset password", "error")
+        toast.error(error?.message || "Failed to reset password")
       }
     },
   })
