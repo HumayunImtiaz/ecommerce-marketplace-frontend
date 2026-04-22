@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useToast } from "@/contexts/ToastContext"
@@ -8,7 +8,7 @@ import { Loader2, CheckCircle, XCircle, Mail } from "lucide-react"
 
 import { authApi } from "@/lib/api"
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const { addToast } = useToast()
 
@@ -57,7 +57,7 @@ export default function VerifyEmailPage() {
     }
 
     verify()
-  }, []) // searchParams dependency hata di — token URL se ek baar hi chahiye
+  }, []) 
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
@@ -113,5 +113,13 @@ export default function VerifyEmailPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-12 w-12 animate-spin text-blue-500" /></div>}>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
