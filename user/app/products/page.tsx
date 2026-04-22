@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import ProductCard from "@/components/ProductCard"
 import ProductFilters from "@/components/ProductFilters"
@@ -10,7 +10,7 @@ import { ChevronDown, Grid, List, Sparkles, Loader2 } from "lucide-react"
 
 import { productApi } from "@/lib/api"
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams()
 
   const [products, setProducts] = useState<Product[]>([])
@@ -326,5 +326,13 @@ export default function ProductsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-12 h-12 animate-spin text-blue-500" /></div>}>
+      <ProductsContent />
+    </Suspense>
   )
 }

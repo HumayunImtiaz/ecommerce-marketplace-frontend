@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ProductsTable } from "@/components/products-table"
 import { ProductFilters } from "@/components/product-filters"
-import { Plus, Download } from "lucide-react"
+import { Plus, Download, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -35,7 +35,7 @@ interface CategoryItem {
   isActive: boolean
 }
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams()
   const categorySlug = searchParams.get("category") || ""
 
@@ -147,5 +147,13 @@ export default function ProductsPage() {
 
       <ProductsTable searchQuery={searchQuery} filters={filters} onProductsLoaded={handleProductsLoaded} />
     </div>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>}>
+      <ProductsContent />
+    </Suspense>
   )
 }

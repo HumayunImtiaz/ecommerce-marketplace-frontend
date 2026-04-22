@@ -1,9 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState, useRef } from "react"
 import { User, MapPin, Package, Heart, Settings, Loader2, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, Camera } from "lucide-react"
 import Image from "next/image"
-import { useRef } from "react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 import { useWishlist } from "@/contexts/WishlistContext"
@@ -158,8 +157,8 @@ function OrderCard({ order }: { order: Order }) {
   )
 }
 
-// ─── Main Account Page ────────────────────────────────────────────────────────
-export default function AccountPage() {
+// ─── Main Account Content ─────────────────────────────────────────────────────
+function AccountContent() {
   const searchParams = useSearchParams()
   const { user, logout } = useAuth()
   const { addToast } = useToast()
@@ -628,5 +627,13 @@ export default function AccountPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>}>
+      <AccountContent />
+    </Suspense>
   )
 }
