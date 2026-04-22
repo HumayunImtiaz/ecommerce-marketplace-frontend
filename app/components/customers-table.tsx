@@ -11,13 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import {
-
-const resolveAvatar = (url) => {
-  if (!url) return "/placeholder.svg";
-  if (url.startsWith("http")) return url;
-  if (url.startsWith("/")) return url;
-  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
-};
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -27,6 +20,13 @@ const resolveAvatar = (url) => {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+
+const resolveAvatar = (url: string | null) => {
+  if (!url) return "/placeholder.svg";
+  if (url.startsWith("http")) return url;
+  if (url.startsWith("/")) return url;
+  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
+};
 
 type CustomerItem = {
   id: string
@@ -143,7 +143,7 @@ export function CustomersTable({ searchQuery, filters, onRefresh, onDataChange }
       return matchesSearch && matchesStatus && matchesProvider
     })
   }, [customers, searchQuery, filters.status, filters.provider])
- 
+  
   useEffect(() => {
     setCurrentPage(1)
   }, [searchQuery, filters])
@@ -153,7 +153,7 @@ export function CustomersTable({ searchQuery, filters, onRefresh, onDataChange }
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   )
- 
+  
   useEffect(() => {
     if (onDataChange) onDataChange(filteredCustomers)
   }, [filteredCustomers, onDataChange])
