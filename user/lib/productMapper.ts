@@ -1,4 +1,5 @@
 import type { Product, Category, ProductVariant } from "./types"
+import { getImageUrl } from "./utils"
 
 // ─── Backend Product → Frontend Product ──────────────────────────────────────
 export const mapProduct = (p: any): Product | null => {
@@ -22,8 +23,10 @@ export const mapProduct = (p: any): Product | null => {
     description: p.description ?? "",
     price: p.price ?? 0,
     originalPrice: p.comparePrice ?? undefined,
-    image: p.images?.[0] ?? "/placeholder.svg",
-    images: p.images?.length > 0 ? p.images : ["/placeholder.svg"],
+    image: getImageUrl(p.images?.[0]),
+    images: p.images?.length > 0 
+      ? p.images.map((img: string) => getImageUrl(img)) 
+      : ["/placeholder.svg"],
     category: p.category?.name ?? p.category ?? "",
     categoryId: p.category?._id ?? p.category?.id ?? p.categoryId ?? "",
     rating: p.avgRating ?? p.rating ?? 0,
@@ -58,7 +61,7 @@ export const mapCategory = (c: any): Category | null => {
     id: c.id ?? c._id ?? "",
     name: c.name ?? "",
     slug: c.slug ?? "",
-    image: c.image && c.image !== "" ? c.image : "/placeholder.svg?height=200&width=200",
+    image: getImageUrl(c.image),
     productCount: c.productCount ?? 0,
   }
-}
+}

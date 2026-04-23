@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/pagination"
 import Image from "next/image"
 import Link from "next/link"
+import { getImageUrl } from "@/lib/utils"
 
 
 interface ProductVariant {
@@ -316,11 +317,7 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <Image
-                        src={
-                          product.images.length > 0
-                            ? product.images[0]
-                            : "/placeholder.svg"
-                        }
+                        src={getImageUrl(product.images[0])}
                         alt={product.name}
                         width={40}
                         height={40}

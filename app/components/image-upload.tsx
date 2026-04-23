@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Upload, X, Loader2, ImageIcon, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import { toast } from "sonner"
+import { getImageUrl } from "@/lib/utils"
 
 interface ImageUploadProps {
   images: string[]
@@ -135,7 +136,7 @@ export function ImageUpload({ images, onChange, error }: ImageUploadProps) {
               {images.map((image, index) => (
                 <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
                   <Image
-                    src={image || "/placeholder.svg"}
+                    src={getImageUrl(image)}
                     alt={`Product image ${index + 1}`}
                     fill
                     className="object-cover"
