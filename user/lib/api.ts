@@ -1,6 +1,6 @@
 
 
-// Generic API Fetcher
+
 
 async function fetcher<T = any>(
   endpoint: string,
