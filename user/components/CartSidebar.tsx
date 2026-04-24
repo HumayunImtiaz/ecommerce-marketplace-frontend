@@ -4,6 +4,7 @@ import { X, Plus, Minus, ShoppingBag, Sparkles, ArrowRight } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useCart } from "@/contexts/CartContext"
+import { getImageUrl } from "@/lib/utils"
 
 interface CartSidebarProps {
   isOpen: boolean
@@ -71,7 +72,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     <div className="flex items-center space-x-4">
                       <div className="relative">
                         <Image
-                          src={item.product.image || "/placeholder.svg"}
+                          src={getImageUrl(item.product.image)}
                           alt={item.product.name}
                           width={80}
                           height={80}

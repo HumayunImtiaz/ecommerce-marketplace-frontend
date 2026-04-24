@@ -10,6 +10,7 @@ import ProductCard from "@/components/ProductCard"
 import AddressManager from "@/components/AddressManager"
 import { useSearchParams } from "next/navigation"
 import { orderApi, authApi } from "@/lib/api"
+import { getImageUrl } from "@/lib/utils"
 
 // ─── Order types 
 interface OrderItem {
@@ -97,7 +98,7 @@ function OrderCard({ order }: { order: Order }) {
               {order.items.map((item, i) => (
                 <div key={i} className="flex items-center space-x-3">
                   <Image
-                    src={item.image || "/placeholder.svg"}
+                    src={getImageUrl(item.image)}
                     alt={item.name}
                     width={44}
                     height={44}
@@ -178,7 +179,7 @@ function AccountContent() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   
-  const currentAvatarUrl = user?.avatar ? (user.avatar.startsWith("http") ? user.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${user.avatar}`) : null
+  const currentAvatarUrl = getImageUrl(user?.avatar)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentAvatarUrl)
 
   const [orders, setOrders] = useState<Order[]>([])
@@ -206,7 +207,7 @@ function AccountContent() {
         phone: user.phone || "",
         dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "",
       }))
-      setAvatarPreview(user?.avatar ? (user.avatar.startsWith("http") ? user.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${user.avatar}`) : null)
+      setAvatarPreview(getImageUrl(user?.avatar))
     }
   }, [user])
 

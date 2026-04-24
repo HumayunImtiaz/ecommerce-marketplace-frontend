@@ -8,6 +8,7 @@ import { Star, Heart, ShoppingCart, Plus, Minus, Eye, Zap } from "lucide-react"
 import type { Product } from "@/lib/types"
 import { useCart } from "@/contexts/CartContext"
 import { useWishlist } from "@/contexts/WishlistContext"
+import { getImageUrl } from "@/lib/utils"
 
 interface ProductCardProps {
   product: Product
@@ -80,7 +81,7 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
         <div className="relative">
           <Link href={`/products/${product.slug}`}>
             <Image
-              src={product.image || "/placeholder.svg"}
+              src={getImageUrl(product.image)}
               alt={product.name}
               width={200}
               height={200}
@@ -207,7 +208,7 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
         <div className="relative">
           <Link href={`/products/${product.slug}`}>
             <Image
-              src={product.image || "/placeholder.svg"}
+              src={getImageUrl(product.image)}
               alt={product.name}
               width={400}
               height={300}
@@ -423,7 +424,7 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
       <div className="relative">
         <Link href={`/products/${product.slug}`}>
           <Image
-            src={product.image || "/placeholder.svg"}
+            src={getImageUrl(product.image)}
             alt={product.name}
             width={300}
             height={300}

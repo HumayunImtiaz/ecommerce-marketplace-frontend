@@ -12,7 +12,8 @@ const resolveAvatar = (url: any) => {
 };
 
 interface User {
-  _id: string;
+  id: string;
+  _id?: string;
   fullName: string;
   email: string;
   avatar: string | null;
@@ -30,7 +31,8 @@ interface Conversation {
 }
 
 interface Message {
-  _id: string;
+  id: string;
+  _id?: string;
   senderModel: "User" | "Admin";
   content: string;
   isRead: boolean;
@@ -112,8 +114,8 @@ export default function AdminInboxPage() {
       // But we always need to update conversations list.
       setConversations((prev) => {
         const prevConvos = [...prev];
-        const existingConvoIndex = prevConvos.findIndex(c => c.user._id === message.chatId);
-        
+        const existingConvoIndex = prevConvos.findIndex(c => (c.user.id || c.user._id || "") === message.chatId);
+
         if (existingConvoIndex > -1) {
           // Update existing
           prevConvos[existingConvoIndex].latestMessage = message;
@@ -124,7 +126,7 @@ export default function AdminInboxPage() {
           // Ideally fetch new user details, for now we can just reload conversations or append minimal info
           fetchConversations();
         }
-        
+
         // Sort
         return prevConvos.sort((a, b) => new Date(b.latestMessage.createdAt).getTime() - new Date(a.latestMessage.createdAt).getTime());
       });
@@ -143,14 +145,14 @@ export default function AdminInboxPage() {
       if (data.success) {
         setConversations(data.data);
       }
-    } catch (err) {}
+    } catch (err) { }
   };
 
 
   // Load specific chat memory
   useEffect(() => {
     if (!selectedChat || !socket) return;
-    
+
     setIsLoadingMessages(true);
     const fetchMessages = async () => {
       try {
@@ -159,7 +161,7 @@ export default function AdminInboxPage() {
         if (data.success) {
           setMessages(data.data);
         }
-        
+
         // Mark as read
         await fetch(`/api/messages/${selectedChat}/read`, {
           method: "PUT",
@@ -170,15 +172,15 @@ export default function AdminInboxPage() {
         }).then(() => {
           socket.emit("mark_read", { chatId: selectedChat, readerRole: "Admin" });
         });
-        
-        setConversations(prev => prev.map(c => c.user._id === selectedChat ? { ...c, unreadCount: 0 } : c));
+
+        setConversations(prev => prev.map(c => (c.user.id || c.user._id || "") === selectedChat ? { ...c, unreadCount: 0 } : c));
       } catch (err) {
         console.error("Failed to fetch messages for user", err);
       } finally {
         setIsLoadingMessages(false);
       }
     };
-    
+
     fetchMessages();
     socket.emit("join_room", selectedChat);
 
@@ -187,7 +189,7 @@ export default function AdminInboxPage() {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim() || !selectedChat || !socket) return;
-    
+
     const adminId = "admin"; // Use proper admin ID if available from auth state
 
     const newMsg = {
@@ -201,7 +203,7 @@ export default function AdminInboxPage() {
     setInputValue("");
   };
 
-  const selectedUser = conversations.find(c => c.user._id === selectedChat)?.user;
+  const selectedUser = conversations.find(c => (c.user.id || c.user._id || "") === selectedChat)?.user;
 
   return (
     <div className="flex flex-col h-full bg-white rounded-lg border border-gray-200 overflow-hidden" style={{ height: "calc(100vh - 120px)" }}>
@@ -222,7 +224,7 @@ export default function AdminInboxPage() {
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
             </div>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto w-full">
             {isLoadingConversations ? (
               <div className="flex justify-center items-center h-32">
@@ -235,19 +237,18 @@ export default function AdminInboxPage() {
             ) : (
               conversations.map((convo) => (
                 <div
-                  key={convo.user._id}
-                  onClick={() => setSelectedChat(convo.user._id)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition flex items-start gap-3 ${
-                    selectedChat === convo.user._id ? "bg-blue-50 border-l-4 border-l-blue-600" : ""
-                  }`}
+                  key={convo.user.id || convo.user._id}
+                  onClick={() => setSelectedChat(convo.user.id || convo.user._id || "")}
+                  className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition flex items-start gap-3 ${selectedChat === (convo.user.id || convo.user._id || "") ? "bg-blue-50 border-l-4 border-l-blue-600" : ""
+                    }`}
                 >
                   <div className="relative">
                     {convo.user.avatar ? (
-                     <img src={resolveAvatar(convo.user.avatar)} className="w-10 h-10 rounded-full" alt="avatar" />
+                      <img src={resolveAvatar(convo.user.avatar)} className="w-10 h-10 rounded-full" alt="avatar" />
                     ) : (
-                     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                       {convo.user.fullName?.charAt(0) || "U"}
-                     </div>
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                        {convo.user.fullName?.charAt(0) || "U"}
+                      </div>
                     )}
                     {convo.unreadCount > 0 && selectedChat !== convo.user._id && (
                       <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
@@ -259,7 +260,7 @@ export default function AdminInboxPage() {
                     <div className="flex justify-between items-baseline mb-1">
                       <h4 className="font-medium text-gray-900 truncate pr-2">{convo.user.fullName || convo.user.email}</h4>
                       <span className="text-xs text-gray-400 shrink-0">
-                        {convo.latestMessage ? new Date(convo.latestMessage.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ""}
+                        {convo.latestMessage ? new Date(convo.latestMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                       </span>
                     </div>
                     <p className={`text-sm truncate ${convo.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}>
@@ -300,15 +301,14 @@ export default function AdminInboxPage() {
                       {messages.map((msg) => {
                         const isAdminInfo = msg.senderModel === "Admin";
                         return (
-                          <div key={msg._id} className={`flex ${isAdminInfo ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[70%] min-w-[70px] rounded-2xl px-4 py-2 shadow-sm ${
-                              isAdminInfo 
-                                ? "bg-blue-600 text-white rounded-br-sm" 
+                          <div key={msg.id || msg._id} className={`flex ${isAdminInfo ? "justify-end" : "justify-start"}`}>
+                            <div className={`max-w-[70%] min-w-[70px] rounded-2xl px-4 py-2 shadow-sm ${isAdminInfo
+                                ? "bg-blue-600 text-white rounded-br-sm"
                                 : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
-                            }`}>
+                              }`}>
                               <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
                               <div className={`flex justify-end items-center mt-1 text-[10px] ${isAdminInfo ? "text-blue-100" : "text-gray-400"}`}>
-                                <span>{new Date(msg.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 {isAdminInfo && (
                                   <span className="ml-1">
                                     {msg.isRead ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />}
@@ -335,8 +335,8 @@ export default function AdminInboxPage() {
                     placeholder="Type your message..."
                     className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                   />
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={!inputValue.trim()}
                     className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2 font-medium"
                   >

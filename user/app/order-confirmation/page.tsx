@@ -4,14 +4,39 @@ import { useEffect, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { CheckCircle, Package, Truck, Mail, Loader2 } from "lucide-react"
+import { useCart } from "@/contexts/CartContext"
+import { orderApi } from "@/lib/api"
+import { useToast } from "@/contexts/ToastContext"
 
 function OrderConfirmationContent() {
   const searchParams = useSearchParams()
+  const { clearCart } = useCart()
+  const { addToast } = useToast()
   const orderNumber = searchParams.get("order") || "ORD-CONFIRMED"
+  const paymentIntentId = searchParams.get("payment_intent")
+  const orderId = searchParams.get("orderId") // We might need to pass this or fetch it
 
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [])
+    
+    // Always clear cart when landing here after an order
+    clearCart()
+
+    // If redirected from Stripe, confirm payment on backend
+    if (paymentIntentId && orderId) {
+      const confirmPayment = async () => {
+        try {
+          console.log("Stripe redirect detected. Confirming payment for order:", orderId);
+          await orderApi.confirmPayment(orderId, paymentIntentId);
+          addToast("Payment confirmed successfully!", "success");
+        } catch (err) {
+          console.error("Confirmation error:", err);
+          // If it fails, maybe the webhook already handled it, so we don't necessarily show an error
+        }
+      }
+      confirmPayment()
+    }
+  }, [paymentIntentId, clearCart])
 
   return (
     <div className="container mx-auto px-4 py-16">

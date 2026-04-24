@@ -2,6 +2,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useSettings } from "@/contexts/SettingsContext"
+import { getImageUrl } from "@/lib/utils"
 
 export default function HeroSection() {
   const { settings } = useSettings()
@@ -42,7 +43,7 @@ export default function HeroSection() {
           </div>
           <div className="relative h-[400px] lg:h-[500px]">
             <Image
-              src={hero.image}
+              src={getImageUrl(hero.image)}
               alt="Hero Image"
               fill
               className="rounded-xl shadow-2xl object-cover"
