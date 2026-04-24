@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 import type { CartItem, Product } from "@/lib/types"
 import { useToast } from "./ToastContext"
 import { useAuth } from "./AuthContext"
@@ -163,7 +163,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, user, isInitialized])
 
-  const addToCart = async (
+  const addToCart = useCallback(async (
     product: Product,
     quantity = 1,
     selectedColor?: string,
@@ -263,9 +263,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addToast(`Added ${product.name} to cart`, "success")
       }
     }
-  }
+  }, [items, user, addToast])
 
-  const removeFromCart = async (itemId: string) => {
+  const removeFromCart = useCallback(async (itemId: string) => {
     const item = items.find((i) => i.id === itemId)
     if (item) {
       addToast(`Removed ${item.product.name} from cart`, "info")
@@ -277,9 +277,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       await cartApi.removeFromCart(itemId)
     }
-  }
+  }, [items, user, addToast])
 
-  const updateQuantity = async (itemId: string, quantity: number) => {
+  const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
     const originalItem = items.find((i) => i.id === itemId)
     if (!originalItem) return
 
@@ -310,30 +310,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addToast(message || "Failed to update quantity", "error")
       }
     }
-  }
+  }, [items, user, addToast, removeFromCart])
 
-  const clearCart = async () => {
+  const clearCart = useCallback(async () => {
+    if (items.length === 0) return
+
     setItems([])
+    setAppliedCoupon(null)
+    setDiscountAmount(0)
+    
     if (user) {
       await cartApi.clearCart()
     }
     addToast("Cart cleared", "info")
-  }
+  }, [items.length, user, addToast])
 
-  const getCartTotal = () => {
+  const getCartTotal = useCallback(() => {
     return items.reduce((total, item) => total + item.product.price * item.quantity, 0)
-  }
+  }, [items])
 
-  const getCartCount = () => {
+  const getCartCount = useCallback(() => {
     return items.reduce((count, item) => count + item.quantity, 0)
-  }
+  }, [items])
 
-  const isInCart = (productId: string) => {
+  const isInCart = useCallback((productId: string) => {
     return items.some((item) => item.product.id === productId)
-  }
+  }, [items])
 
   // ── Coupon Logic ──
-  const applyCoupon = async (code: string) => {
+  const applyCoupon = useCallback(async (code: string) => {
     if (!code.trim()) return
 
     try {
@@ -361,13 +366,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error("Coupon validation error:", error)
       addToast("Failed to validate coupon", "error")
     }
-  }
+  }, [getCartTotal, addToast])
 
-  const removeCoupon = () => {
+  const removeCoupon = useCallback(() => {
+    if (!appliedCoupon) return
+    
     setAppliedCoupon(null)
     setDiscountAmount(0)
     addToast("Coupon removed", "info")
-  }
+  }, [appliedCoupon, addToast])
 
   // Recalculate discount if items change
   useEffect(() => {
@@ -397,23 +404,36 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     updateDiscount()
   }, [items, appliedCoupon])
 
+  const value = useMemo(() => ({
+    items,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getCartTotal,
+    getCartCount,
+    isInCart,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    discountAmount,
+  }), [
+    items,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getCartTotal,
+    getCartCount,
+    isInCart,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    discountAmount,
+  ])
+
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        getCartTotal,
-        getCartCount,
-        isInCart,
-        appliedCoupon,
-        applyCoupon,
-        removeCoupon,
-        discountAmount,
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   )

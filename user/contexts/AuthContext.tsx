@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react"
 import type { User } from "@/lib/types"
 import { authApi } from "@/lib/api"
 
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // ─── Login ────────────────────────────────────────────────────────────────
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true)
 
@@ -68,10 +68,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   // ─── Social Login ─────────────────────────────────────────────────────────
-  const socialLogin = async (loggedInUser: any, token: string): Promise<boolean> => {
+  const socialLogin = useCallback(async (loggedInUser: any, token: string): Promise<boolean> => {
     try {
       setIsLoading(true)
 
@@ -94,10 +94,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   // ─── Register ────────────────────────────────────────────────────────────
-  const register = async (
+  const register = useCallback(async (
     name: string,
     email: string,
     password: string
@@ -122,13 +122,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   // ─── Logout ───────────────────────────────────────────────────────────────
-  const logout = (): void => {
+  const logout = useCallback((): void => {
     authApi.logout().catch(() => {})
     setUser(null)
-  }
+  }, [])
 
   const value = useMemo(
     () => ({ user, login, socialLogin, register, logout, isLoading }),

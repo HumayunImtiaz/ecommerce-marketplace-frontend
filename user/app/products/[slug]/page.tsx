@@ -13,6 +13,7 @@ import ProductReviews from "@/components/ProductReviews"
 import RelatedProducts from "@/components/RelatedProducts"
 
 import { productApi, orderApi } from "@/lib/api"
+import { getImageUrl } from "@/lib/utils"
 
 export default function ProductPage() {
   const params = useParams()
@@ -156,7 +157,7 @@ export default function ProductPage() {
         <div>
           <div className="mb-4 relative">
             <Image
-              src={product.images[selectedImage] || "/placeholder.svg"}
+              src={getImageUrl(product.images[selectedImage])}
               alt={product.name}
               width={600}
               height={600}
@@ -194,7 +195,7 @@ export default function ProductPage() {
                     }`}
                 >
                   <Image
-                    src={image || "/placeholder.svg"}
+                    src={getImageUrl(image)}
                     alt={`${product.name} ${index + 1}`}
                     width={80}
                     height={80}

@@ -9,6 +9,7 @@ import { useWishlist } from "@/contexts/WishlistContext"
 import { useSettings } from "@/contexts/SettingsContext"
 import SearchBar from "./SearchBar"
 import CartSidebar from "./CartSidebar"
+import { getImageUrl } from "@/lib/utils"
 
 export default function Header() {
   const { settings } = useSettings()
@@ -26,7 +27,7 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="text-2xl font-bold text-blue-600 flex items-center gap-2">
               {settings?.logo ? (
-                <img src={settings.logo} alt="Logo" className="h-8 w-auto object-contain" />
+                <img src={getImageUrl(settings.logo)} alt="Logo" className="h-8 w-auto object-contain" />
               ) : (
                 settings?.storeName || "LuxeCart"
               )}
@@ -91,7 +92,7 @@ export default function Header() {
                 <button className="text-gray-700 hover:text-blue-600 transition-colors flex items-center justify-center w-8 h-8 rounded-full overflow-hidden bg-gray-100">
                   {user?.avatar ? (
                     <img 
-                      src={user.avatar.startsWith("http") ? user.avatar : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${user.avatar}`} 
+                      src={getImageUrl(user.avatar)} 
                       alt="Avatar" 
                       className="w-full h-full object-cover"
                     />

@@ -15,6 +15,7 @@ import { useCart } from "@/contexts/CartContext"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 import type { Address } from "@/lib/types"
+import { getImageUrl } from "@/lib/utils"
 
 let stripePromise: Promise<any> | null = null;
 const getStripe = () => {
@@ -51,10 +52,12 @@ const validateAddress = (addr: Address): AddressErrors => {
 import { orderApi } from "@/lib/api"
 
 // ─── Stripe Form ──────────────────────────────────────────────────────────────
-function StripePaymentForm({ onSuccess, isProcessing, setIsProcessing }: {
+function StripePaymentForm({ onSuccess, isProcessing, setIsProcessing, createdOrderNumber, createdOrderId }: {
   onSuccess: (id: string) => void
   isProcessing: boolean
   setIsProcessing: (v: boolean) => void
+  createdOrderNumber: string | null
+  createdOrderId: string | null
 }) {
   const stripe = useStripe()
   const elements = useElements()
@@ -67,7 +70,9 @@ function StripePaymentForm({ onSuccess, isProcessing, setIsProcessing }: {
 
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: window.location.origin + "/order-confirmation" },
+      confirmParams: { 
+        return_url: `${window.location.origin}/order-confirmation?order=${createdOrderNumber}&orderId=${createdOrderId}` 
+      },
       redirect: "if_required",
     })
 
@@ -372,6 +377,8 @@ export default function CheckoutPage() {
               {clientSecret ? (
                 <Elements stripe={getStripe()} options={{ clientSecret, appearance: { theme: "stripe" } }}>
                   <StripePaymentForm
+                    createdOrderNumber={createdOrderNumber}
+                    createdOrderId={createdOrderId}
                     onSuccess={async (paymentIntentId) => {
                       setIsProcessing(true)
                       // Confirm payment on backend (mark order as paid + processing)
@@ -416,7 +423,7 @@ export default function CheckoutPage() {
             <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center space-x-3">
-                  <Image src={item.product.image || "/placeholder.svg"} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
+                  <Image src={getImageUrl(item.product.image)} alt={item.product.name} width={48} height={48} className="rounded-lg object-cover flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-medium truncate">{item.product.name}</h4>
                     <p className="text-xs text-gray-500">Qty: {item.quantity}</p>

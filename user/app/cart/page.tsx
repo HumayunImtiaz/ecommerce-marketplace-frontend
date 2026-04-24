@@ -7,6 +7,7 @@ import { Minus, Plus, X, ShoppingBag, ArrowRight } from "lucide-react"
 import { useCart } from "@/contexts/CartContext"
 import { useToast } from "@/contexts/ToastContext"
 import { orderApi } from "@/lib/api"
+import { getImageUrl } from "@/lib/utils"
 
 export default function CartPage() {
   const { 
@@ -62,7 +63,7 @@ export default function CartPage() {
                 <div key={item.id} className="p-6">
                   <div className="flex items-center space-x-4">
                     <Image
-                      src={item.product.image || "/placeholder.svg"}
+                      src={getImageUrl(item.product.image)}
                       alt={item.product.name}
                       width={100}
                       height={100}

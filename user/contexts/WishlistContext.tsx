@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 import type { Product } from "@/lib/types"
 import { useToast } from "./ToastContext"
 import { useAuth } from "./AuthContext"
@@ -73,7 +73,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items, user])
 
-  const addToWishlist = async (product: Product) => {
+  const addToWishlist = useCallback(async (product: Product) => {
     try {
       if (user) {
         const res = await wishlistApi.addToWishlist(product.id)
@@ -94,9 +94,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       addToast("Failed to add to wishlist", "error")
     }
-  }
+  }, [user, addToast, fetchWishlist])
 
-  const removeFromWishlist = async (productId: string) => {
+  const removeFromWishlist = useCallback(async (productId: string) => {
     try {
       if (user) {
         const res = await wishlistApi.removeFromWishlist(productId)
@@ -117,13 +117,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       addToast("Failed to remove from wishlist", "error")
     }
-  }
+  }, [user, addToast, fetchWishlist])
 
-  const isInWishlist = (productId: string) => {
+  const isInWishlist = useCallback((productId: string) => {
     return items.some((item) => item.id === productId)
-  }
+  }, [items])
 
-  const clearWishlist = async () => {
+  const clearWishlist = useCallback(async () => {
     try {
       if (user) {
         const res = await wishlistApi.clearWishlist()
@@ -138,9 +138,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       addToast("Failed to clear wishlist", "error")
     }
-  }
+  }, [user, addToast])
 
-  const syncGuestWishlist = async () => {
+  const syncGuestWishlist = useCallback(async () => {
     if (!user) return
 
     const savedWishlist = localStorage.getItem("wishlist")
@@ -161,20 +161,28 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Sync error:", error)
     }
-  }
+  }, [user, fetchWishlist, addToast])
+
+  const value = useMemo(() => ({
+    items,
+    isLoading,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    clearWishlist,
+    syncGuestWishlist,
+  }), [
+    items,
+    isLoading,
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    clearWishlist,
+    syncGuestWishlist,
+  ])
 
   return (
-    <WishlistContext.Provider
-      value={{
-        items,
-        isLoading,
-        addToWishlist,
-        removeFromWishlist,
-        isInWishlist,
-        clearWishlist,
-        syncGuestWishlist,
-      }}
-    >
+    <WishlistContext.Provider value={value}>
       {children}
     </WishlistContext.Provider>
   )

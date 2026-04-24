@@ -7,7 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
 
 interface Message {
-  _id: string;
+  id: string;
+  _id?: string;
   senderModel: "User" | "Admin";
   content: string;
   isRead: boolean;
@@ -73,7 +74,8 @@ export default function LiveChat({ onClose }: LiveChatProps) {
     fetchHistory();
 
     // Connect socket
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:5000";
+    const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+    const backendUrl = baseUrl.replace(/\/api$/, "");
     const newSocket = io(backendUrl);
 
     setSocket(newSocket);
@@ -155,7 +157,7 @@ export default function LiveChat({ onClose }: LiveChatProps) {
               const isMe = msg.senderModel === "User";
               return (
                 <div
-                  key={msg._id}
+                  key={msg.id || msg._id}
                   className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                 >
                   <div
