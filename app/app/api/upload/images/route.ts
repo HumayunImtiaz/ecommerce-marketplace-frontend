@@ -17,16 +17,23 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── Backend pe forward karo (Stream raw body to avoid Vercel FormData serialization issues) ──
+    // ── Client se FormData lo ──
+    const formData = await req.formData()
+
+    if (!formData.has("images")) {
+      return NextResponse.json(
+        { success: false, message: "No images provided" },
+        { status: 400 }
+      )
+    }
+
+    // ── Backend pe forward karo ──
     const response = await fetch(`${API_BASE_URL}/api/upload/images`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": req.headers.get("content-type") || "",
       },
-      body: req.body,
-      // @ts-ignore
-      duplex: "half",
+      body: formData,
     })
 
     const result = await response.json()
