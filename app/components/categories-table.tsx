@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUpload } from "@/components/image-upload"
 
-const resolveAvatar = (url) => {
+const resolveAvatar = (url: string) => {
   if (!url) return "/placeholder.svg";
   if (url.startsWith("http")) return url;
   if (url.startsWith("/")) return url;
@@ -209,7 +209,7 @@ export default function CategoriesTable() {
               <Label htmlFor="image">Category Image</Label>
               <ImageUpload
                 images={formData.image ? [formData.image] : []}
-                onChange={(urls) => setFormData((prev) => ({ ...prev, image: urls[0] || "" }))}
+                onChange={(urls) => setFormData((prev) => ({ ...prev, image: urls[urls.length - 1] || "" }))}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">

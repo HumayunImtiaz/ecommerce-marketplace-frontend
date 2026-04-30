@@ -183,7 +183,7 @@ export function GeneralSettings() {
             <Label>Store Logo</Label>
             <ImageUpload
               images={settings.logo ? [settings.logo] : []}
-              onChange={(urls) => setSettings((prev) => ({ ...prev, logo: urls[0] || "" }))}
+              onChange={(urls) => setSettings((prev) => ({ ...prev, logo: urls[urls.length - 1] || "" }))}
             />
           </div>
         </CardContent>
@@ -221,7 +221,7 @@ export function GeneralSettings() {
               <Label>Hero Image</Label>
               <ImageUpload
                 images={settings.hero.image ? [settings.hero.image] : []}
-                onChange={(urls) => setSettings((prev) => ({ ...prev, hero: { ...prev.hero, image: urls[0] || "" } }))}
+                onChange={(urls) => setSettings((prev) => ({ ...prev, hero: { ...prev.hero, image: urls[urls.length - 1] || "" } }))}
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -277,7 +277,7 @@ export function GeneralSettings() {
             <Label>About Image</Label>
             <ImageUpload
               images={settings.about.image ? [settings.about.image] : []}
-              onChange={(urls) => setSettings((prev) => ({ ...prev, about: { ...prev.about, image: urls[0] || "" } }))}
+              onChange={(urls) => setSettings((prev) => ({ ...prev, about: { ...prev.about, image: urls[urls.length - 1] || "" } }))}
             />
           </div>
         </CardContent>

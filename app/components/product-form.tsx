@@ -748,7 +748,7 @@ export function ProductForm() {
               <Label htmlFor="categoryImage">Category Image</Label>
               <ImageUpload
                 images={newCategoryImage ? [newCategoryImage] : []}
-                onChange={(urls) => setNewCategoryImage(urls[0] || "")}
+                onChange={(urls) => setNewCategoryImage(urls[urls.length - 1] || "")}
               />
             </div>
             <div className="flex justify-end gap-2">
