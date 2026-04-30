@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 
-const resolveAvatar = (url) => {
+const resolveAvatar = (url: string | null) => {
   if (!url) return "/placeholder.svg";
   if (url.startsWith("http")) return url;
   if (url.startsWith("/")) return url;

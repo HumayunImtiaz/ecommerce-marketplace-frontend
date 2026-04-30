@@ -220,7 +220,7 @@ export function AboutSettings() {
                 <Label>Member Image</Label>
                 <ImageUpload
                   images={member.image ? [member.image] : []}
-                  onChange={(urls) => handleArrayChange("team", index, "image", urls[0] || "")}
+                  onChange={(urls) => handleArrayChange("team", index, "image", urls[urls.length - 1] || "")}
                 />
               </div>
               <div className="space-y-2">
@@ -308,7 +308,7 @@ export function AboutSettings() {
             <Label>Mission Image</Label>
             <ImageUpload
               images={about.mission?.image ? [about.mission.image] : []}
-              onChange={(urls) => setAbout(prev => ({ ...prev, mission: { ...prev.mission, image: urls[0] || "" } }))}
+              onChange={(urls) => setAbout(prev => ({ ...prev, mission: { ...prev.mission, image: urls[urls.length - 1] || "" } }))}
             />
           </div>
           <div className="space-y-2 relative">
@@ -364,7 +364,7 @@ export function AboutSettings() {
             <Label>Sustainability Image</Label>
             <ImageUpload
               images={about.sustainability?.image ? [about.sustainability.image] : []}
-              onChange={(urls) => setAbout(prev => ({ ...prev, sustainability: { ...prev.sustainability, image: urls[0] || "" } }))}
+              onChange={(urls) => setAbout(prev => ({ ...prev, sustainability: { ...prev.sustainability, image: urls[urls.length - 1] || "" } }))}
             />
           </div>
           <div className="space-y-2">

@@ -20,8 +20,12 @@ export async function POST(
     const body = await req.json()
     const { orderId } = params
 
+    // Robustly construct the backend URL by ensuring only one /api segment
+    const baseUrl = API_BASE_URL?.endsWith("/api") ? API_BASE_URL.slice(0, -4) : API_BASE_URL
+    const backendUrl = `${baseUrl}/api/orders/${orderId}/confirm-payment`
+
     const response = await fetch(
-      `${API_BASE_URL}/api/orders/${orderId}/confirm-payment`,
+      backendUrl,
       {
         method: "POST",
         headers: {
