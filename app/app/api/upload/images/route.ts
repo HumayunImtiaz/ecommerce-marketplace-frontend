@@ -17,24 +17,16 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // ── Client se FormData lo ──
-    const formData = await req.formData()
-
-    if (!formData.has("images")) {
-      return NextResponse.json(
-        { success: false, message: "No images provided" },
-        { status: 400 }
-      )
-    }
-
-    // ── Backend pe forward karo ──
+    // ── Backend pe forward karo (Stream raw body to avoid Vercel FormData serialization issues) ──
     const response = await fetch(`${API_BASE_URL}/api/upload/images`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
-        // Content-Type set mat karo — fetch khud boundary set karta hai FormData ke liye
+        "Content-Type": req.headers.get("content-type") || "",
       },
-      body: formData,
+      body: req.body,
+      // @ts-ignore
+      duplex: "half",
     })
 
     const result = await response.json()
