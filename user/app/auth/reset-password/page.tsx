@@ -4,25 +4,16 @@ import type React from "react"
 import { useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
-import { Eye, EyeOff, Lock, Loader2 } from "lucide-react"
-import { useFormik, type FormikHelpers } from "formik"
+import { Eye, EyeOff, Lock, Loader2, Sparkles, ArrowRight } from "lucide-react"
+import { useFormik } from "formik"
 import * as Yup from "yup"
 
 import { authApi } from "@/lib/api"
 import { useToast } from "@/contexts/ToastContext"
 
-type ResetPasswordFormValues = {
-  password: string
-  confirmPassword: string
-}
-
 const resetPasswordValidationSchema = Yup.object({
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")], "Passwords must match")
-    .required("Confirm password is required"),
+  password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+  confirmPassword: Yup.string().oneOf([Yup.ref("password")], "Passwords must match").required("Confirm password is required"),
 })
 
 function ResetPasswordContent() {
@@ -31,164 +22,92 @@ function ResetPasswordContent() {
   const { addToast } = useToast()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-
   const token = searchParams.get("token") || ""
 
-  const formik = useFormik<ResetPasswordFormValues>({
-    initialValues: {
-      password: "",
-      confirmPassword: "",
-    },
+  const formik = useFormik({
+    initialValues: { password: "", confirmPassword: "" },
     validationSchema: resetPasswordValidationSchema,
-    onSubmit: async (
-      values: ResetPasswordFormValues,
-      { setSubmitting, resetForm }: FormikHelpers<ResetPasswordFormValues>
-    ) => {
+    onSubmit: async (values, { setSubmitting, resetForm }) => {
       try {
-        if (!token) {
-          addToast("Invalid or missing token", "error")
-          return
-        }
-
-        const response = await authApi.resetPassword(token, {
-          password: values.password,
-          confirmPassword: values.confirmPassword,
-        })
-
-        if (!response?.success) {
-          addToast(response?.message || "Failed to reset password", "error")
-          return
-        }
-
-        addToast(response.message || "Password reset successful", "success")
-        resetForm()
-        router.push("/auth/login")
-        return
-      } catch (error: any) {
-        addToast(error?.message || "Failed to reset password", "error")
-        return
-      } finally {
-        setSubmitting(false)
-      }
+        if (!token) { addToast("Invalid or missing token", "error"); return }
+        const response = await authApi.resetPassword(token, { password: values.password, confirmPassword: values.confirmPassword })
+        if (!response?.success) { addToast(response?.message || "Failed to reset password", "error"); return }
+        addToast("Access key successfully regenerated.", "success")
+        resetForm(); router.push("/auth/login")
+      } catch (error: any) { addToast(error?.message || "Failed to reset password", "error") }
+      finally { setSubmitting(false) }
     },
   })
 
-  const getInputError = (
-    fieldName: keyof ResetPasswordFormValues
-  ): string | undefined => {
-    return formik.touched[fieldName] && formik.errors[fieldName]
-      ? formik.errors[fieldName]
-      : undefined
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-md space-y-6">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Reset your password
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Enter your new password below.
-          </p>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] px-4 py-20 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#eb9a05]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
+      
+      <div className="max-w-md w-full bg-white p-12 md:p-16 rounded-[3rem] shadow-2xl border border-[#eb9a05]/10 relative z-10 animate-fade-in-up">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-8">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Access Recovery</span>
+          </div>
+          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Key Regeneration</h2>
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">Secure your identity with a new key.</p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={formik.handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                New Password
-              </label>
-
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-
+        <form className="space-y-8" onSubmit={formik.handleSubmit}>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">New Access Key</label>
+              <div className="relative">
+                <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
-                  id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
                   value={formik.values.password}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`input-field pl-10 pr-10 ${getInputError("password") ? "border-red-500" : ""}`}
-                  placeholder="Enter new password"
+                  placeholder="Enter new key"
+                  className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.password && formik.errors.password ? "border-red-400" : "border-gray-50"}`}
                 />
-
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#eb9a05]">
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-
-              {getInputError("password") ? (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
-              ) : null}
+              {formik.touched.password && formik.errors.password && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.password}</p>}
             </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm New Password
-              </label>
-
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-
+            <div className="space-y-2">
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Validate New Key</label>
+              <div className="relative">
+                <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
-                  id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  autoComplete="new-password"
                   value={formik.values.confirmPassword}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`input-field pl-10 pr-10 ${getInputError("confirmPassword") ? "border-red-500" : ""}`}
-                  placeholder="Confirm new password"
+                  placeholder="Confirm new key"
+                  className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-400" : "border-gray-50"}`}
                 />
-
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#eb9a05]">
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-
-              {getInputError("confirmPassword") ? (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.confirmPassword}</p>
-              ) : null}
+              {formik.touched.confirmPassword && formik.errors.confirmPassword && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.confirmPassword}</p>}
             </div>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={formik.isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {formik.isSubmitting ? "Resetting..." : "Reset password"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={formik.isSubmitting}
+            className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-4 group shadow-xl"
+          >
+            <span className="text-sm font-black tracking-[0.2em] uppercase">{formik.isSubmitting ? "Regenerating..." : "Regenerate Key"}</span>
+            {!formik.isSubmitting && <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />}
+          </button>
 
           <div className="text-center">
-            <Link href="/auth/login" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-              Back to sign in
+            <Link href="/auth/login" className="text-[10px] font-black tracking-widest uppercase text-gray-400 hover:text-[#eb9a05] transition-colors">
+              Return to Login
             </Link>
           </div>
         </form>
@@ -199,7 +118,7 @@ function ResetPasswordContent() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin text-blue-500" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-[#eb9a05]" /></div>}>
       <ResetPasswordContent />
     </Suspense>
   )

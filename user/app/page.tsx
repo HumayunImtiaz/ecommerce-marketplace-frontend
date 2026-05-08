@@ -2,7 +2,6 @@ import HeroSection from "@/components/HeroSection"
 import FeaturedProducts from "@/components/FeaturedProducts"
 import CategoryGrid from "@/components/CategoryGrid"
 import TrendingProducts from "@/components/TrendingProducts"
-import NewsletterSignup from "@/components/NewsletterSignup"
 import PromotionalBanner from "@/components/PromotionalBanner"
 
 export default function HomePage() {
@@ -13,7 +12,6 @@ export default function HomePage() {
       <FeaturedProducts />
       <CategoryGrid />
       <TrendingProducts />
-      <NewsletterSignup />
     </div>
   )
 }

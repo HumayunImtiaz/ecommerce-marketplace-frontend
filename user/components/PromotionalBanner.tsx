@@ -1,18 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Ticket, Copy, CheckCircle, X } from "lucide-react"
+import { Ticket, Copy, CheckCircle, X, Sparkles } from "lucide-react"
 import { orderApi } from "@/lib/api"
 
 export default function PromotionalBanner() {
   const [coupons, setCoupons] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
-  const [isVisible, setIsVisible] = useState(false) // Start hidden to check session
+  const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    // Show every time they land on the page (delay slightly for better UX)
-    const timer = setTimeout(() => setIsVisible(true), 1500)
+    const timer = setTimeout(() => setIsVisible(true), 2000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -20,21 +19,14 @@ export default function PromotionalBanner() {
     const fetchPublicCoupons = async () => {
       try {
         const result = await orderApi.getPublicCoupons()
-        if (result.success && Array.isArray(result.data)) {
-          setCoupons(result.data)
-        }
-      } catch (error) {
-        console.error("Failed to fetch public coupons:", error)
-      } finally {
-        setLoading(false)
-      }
+        if (result.success && Array.isArray(result.data)) setCoupons(result.data)
+      } catch (error) { console.error("Failed to fetch public coupons:", error) }
+      finally { setLoading(false) }
     }
     fetchPublicCoupons()
   }, [])
 
-  const handleClose = () => {
-    setIsVisible(false)
-  }
+  const handleClose = () => setIsVisible(false)
 
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code)
@@ -45,74 +37,64 @@ export default function PromotionalBanner() {
   if (loading || coupons.length === 0 || !isVisible) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div 
-        className="relative max-w-md w-full bg-white rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Background Decorative Elements */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-blue-600 to-purple-700" />
-        <div className="absolute top-0 left-0 w-full h-32 overflow-hidden">
-          <div className="absolute top-[-50%] left-[-10%] w-[60%] h-[200%] bg-white/10 rotate-12 blur-3xl" />
-          <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[150%] bg-purple-400/20 -rotate-12 blur-2xl" />
-        </div>
-
-        {/* Close Button */}
-        <button 
-          onClick={handleClose}
-          className="absolute top-4 right-4 z-20 p-2 bg-black/20 hover:bg-black/40 text-white rounded-full transition-all"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="relative z-10 pt-12 px-8 pb-8 text-center">
-          {/* Icon Header */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-xl mb-6 -mt-10 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-            <Ticket className="w-10 h-10 text-blue-600" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#002147]/80 backdrop-blur-xl animate-in fade-in duration-700">
+      <div className="relative max-w-lg w-full bg-white rounded-[2.5rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)] animate-in zoom-in-95 duration-500 border border-[#eb9a05]/20" onClick={(e) => e.stopPropagation()}>
+        
+        {/* Top Header Gradient */}
+        <div className="h-32 bg-[#002147] relative flex items-center justify-center overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#002147] to-[#003366]"></div>
+          <div className="absolute top-[-50%] left-[-20%] w-full h-[200%] bg-[#eb9a05]/10 rotate-45 blur-3xl rounded-full"></div>
+          
+          <div className="relative z-10 text-center">
+            <div className="inline-flex items-center gap-3 px-3 py-1 rounded-full bg-[#eb9a05]/20 border border-[#eb9a05]/30 text-[#eb9a05] mb-2">
+              <Sparkles className="w-3 h-3" />
+              <span className="text-[8px] font-black tracking-[0.3em] uppercase">Limited Time</span>
+            </div>
+            <h2 className="text-2xl font-playfair font-black text-white">Special Offers</h2>
           </div>
 
-          <h2 className="text-2xl font-black text-slate-800 mb-2">Exclusive Offers!</h2>
-          <p className="text-slate-500 text-sm mb-6">We have special discounts just for you. Grab them before they&apos;re gone!</p>
+          <button onClick={handleClose} className="absolute top-6 right-6 z-20 p-3 rounded-full bg-white/10 text-white hover:bg-[#eb9a05] hover:text-[#002147] transition-all duration-300 transform hover:rotate-90">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-          {/* Coupon Cards */}
-          <div className="max-h-60 overflow-y-auto space-y-4 mb-6 pr-1">
+        <div className="p-8">
+          <p className="text-center text-gray-500 mb-6 font-medium text-sm italic leading-relaxed">
+            &quot;Quality products and exceptional value, delivered right to your doorstep.&quot;
+          </p>
+
+            <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
             {coupons.map((coupon, idx) => (
-              <div key={idx} className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-5 relative group text-center">
-                <div className="text-3xl font-black text-blue-600 mb-2">
-                  {coupon.discountType === "percentage" ? `${coupon.discountValue}% OFF` : `$${coupon.discountValue} OFF`}
-                </div>
-                <div className="flex items-center justify-between space-x-2 bg-white border border-slate-100 py-2.5 px-4 rounded-xl shadow-sm mx-auto max-w-[200px]">
-                  <span className="font-mono text-xl font-bold tracking-widest text-slate-700 uppercase">{coupon.code}</span>
-                  <button
-                    onClick={() => copyToClipboard(coupon.code)}
-                    className="p-1.5 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors shrink-0"
-                    title="Copy Code"
-                  >
-                    {copiedCode === coupon.code ? <CheckCircle className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5" />}
-                  </button>
+              <div key={idx} className="p-6 rounded-[1.5rem] border-2 border-dashed border-[#eb9a05] bg-[#f8f9fa] relative group transition-all hover:bg-white hover:shadow-xl">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="text-center">
+                    <span className="text-[8px] font-black tracking-[0.4em] uppercase text-[#eb9a05] block mb-1">Limited Offer</span>
+                    <h3 className="text-3xl font-playfair font-black text-[#002147]">
+                      {coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `$${coupon.discountValue}`} <span className="text-xl opacity-40 uppercase">Off</span>
+                    </h3>
+                  </div>
+
+                  <div className="w-full flex items-center justify-between p-4 rounded-2xl bg-[#002147] group-hover:bg-[#002b5c] transition-all">
+                    <div className="flex-1 flex justify-center">
+                      <span className="font-mono text-2xl font-black tracking-[0.3em] uppercase text-[#eb9a05]">{coupon.code}</span>
+                    </div>
+                    <button 
+                      onClick={() => copyToClipboard(coupon.code)} 
+                      className="p-4 rounded-xl bg-[#eb9a05] text-[#002147] hover:scale-110 active:scale-95 transition-all shadow-lg"
+                    >
+                      {copiedCode === coupon.code ? <CheckCircle className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Instruction Pointer - ESSENTIAL per user request */}
-          <div className="flex items-start space-x-3 bg-blue-50/50 p-4 rounded-xl text-left mb-8 border border-blue-100/50">
-            <div className="mt-0.5 p-1 bg-blue-100 text-blue-600 rounded-md shrink-0">
-              <CheckCircle className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-blue-800 uppercase tracking-wide mb-0.5">Where to use?</p>
-              <p className="text-xs text-blue-600 leading-relaxed font-medium">
-                Apply this code on the <span className="font-bold underline">Checkout Page</span> in the &apos;Available Offers&apos; section to see your savings.
-              </p>
-            </div>
-          </div>
-
           <button 
             onClick={handleClose}
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-200 transition-all active:scale-[0.98]"
+            className="w-full mt-8 btn-primary py-4 text-sm font-black tracking-[0.3em] uppercase shadow-[0_10px_30px_rgba(0,33,71,0.2)]"
           >
-            Got it, Let&apos;s Shop!
+            Shop Now
           </button>
         </div>
       </div>

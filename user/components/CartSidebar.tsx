@@ -1,8 +1,8 @@
 "use client"
 
-import { X, Plus, Minus, ShoppingBag, Sparkles, ArrowRight } from "lucide-react"
-import Image from "next/image"
+import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { useCart } from "@/contexts/CartContext"
 import { getImageUrl } from "@/lib/utils"
 
@@ -12,181 +12,134 @@ interface CartSidebarProps {
 }
 
 export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
-  const { items, updateQuantity, removeFromCart, getCartTotal } = useCart()
+  const { items, removeFromCart, updateQuantity, getCartTotal } = useCart()
 
   return (
     <>
-      {/* Enhanced Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50 transition-opacity duration-300"
-          onClick={onClose}
-        />
-      )}
+      {/* Backdrop */}
+      <div 
+        className={`fixed inset-0 bg-[#002147]/60 backdrop-blur-md z-[100] transition-opacity duration-500 ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        onClick={onClose}
+      />
 
-      {/* Enhanced Sidebar */}
-      <div
-        className={`fixed right-0 top-0 h-full w-96 bg-white shadow-2xl z-50 transform transition-all duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
+      {/* Sidebar */}
+      <div 
+        className={`fixed top-0 right-0 h-full w-full sm:w-[450px] bg-white z-[101] shadow-2xl transition-transform duration-700 ease-in-out transform ${isOpen ? "translate-x-0" : "translate-x-full"} border-l border-[#eb9a05]/20`}
       >
         <div className="flex flex-col h-full">
-          {/* Enhanced Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-            <h2 className="text-xl font-bold flex items-center text-gray-800">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-2 rounded-xl mr-3">
-                <ShoppingBag className="w-5 h-5 text-white" />
-              </div>
-              Shopping Cart ({items.length})
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-2 hover:bg-white rounded-xl transition-all"
+          {/* Header */}
+          <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-[#002147] text-white">
+            <div className="flex items-center gap-3">
+              <ShoppingBag className="w-6 h-6 text-[#eb9a05]" />
+              <h2 className="text-2xl font-playfair font-black uppercase tracking-tight">Your Selection</h2>
+              <span className="text-xs font-bold bg-[#eb9a05] text-[#002147] px-2 py-0.5 rounded-full">{items.length}</span>
+            </div>
+            <button 
+              onClick={onClose} 
+              className="p-3 rounded-full hover:bg-white/10 transition-all transform hover:rotate-90 text-[#eb9a05]"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
 
-          {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto p-4">
+          {/* Items */}
+          <div className="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
             {items.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="bg-gradient-to-br from-gray-100 to-gray-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <ShoppingBag className="w-12 h-12 text-gray-400" />
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+                <div className="w-24 h-24 bg-[#f8f9fa] rounded-full flex items-center justify-center border-2 border-dashed border-[#eb9a05]/30">
+                  <ShoppingBag className="w-10 h-10 text-gray-300" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">Your cart is empty</h3>
-                <p className="text-gray-500 mb-6">Add some amazing products to get started!</p>
-                <Link
-                  href="/products"
+                <div>
+                  <h3 className="text-2xl font-playfair font-black text-[#002147] mb-2">Awaiting Excellence</h3>
+                  <p className="text-gray-400 text-sm font-medium">Your collection is currently empty.</p>
+                </div>
+                <button 
                   onClick={onClose}
-                  className="inline-flex items-center bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                  className="btn-primary py-4 px-10 text-sm font-bold tracking-widest uppercase"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Start Shopping
-                </Link>
+                  Explore Collection
+                </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <div className="relative">
-                        <Image
-                          src={getImageUrl(item.product.image)}
-                          alt={item.product.name}
-                          width={80}
-                          height={80}
-                          className="rounded-xl object-cover shadow-sm"
-                        />
-                        {item.product.isFeatured && (
-                          <div className="absolute -top-1 -right-1 bg-yellow-400 text-white text-xs px-1 py-0.5 rounded-full font-bold">
-                            ⭐
-                          </div>
-                        )}
+              items.map((item) => (
+                <div key={item.id} className="flex gap-6 animate-fade-in-up group">
+                  <div className="relative w-28 h-32 rounded-2xl overflow-hidden bg-[#f8f9fa] border border-gray-100 flex-shrink-0">
+                    <Image 
+                      src={getImageUrl(item.product.image)} 
+                      alt={item.product.name} 
+                      fill 
+                      className="object-cover transition-transform group-hover:scale-110" 
+                    />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <Link href={`/products/${item.product.slug}`} onClick={onClose}>
+                        <h4 className="font-playfair font-bold text-lg leading-tight hover:text-[#eb9a05] transition-colors" style={{ color: 'var(--primary)' }}>
+                          {item.product.name}
+                        </h4>
+                      </Link>
+                      <button 
+                        onClick={() => removeFromCart(item.id)}
+                        className="p-1 text-gray-300 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    
+                    <div className="flex items-center gap-4 text-[10px] font-bold uppercase tracking-widest opacity-40">
+                      {item.selectedColor && <span>Color: {item.selectedColor}</span>}
+                      {item.selectedSize && <span>Size: {item.selectedSize}</span>}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-4">
+                      <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="p-2 hover:bg-gray-50 transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="w-8 text-center font-bold" style={{ color: 'var(--primary)' }}>{item.quantity}</span>
+                        <button 
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="p-2 hover:bg-gray-50 transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
                       </div>
-
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-800 truncate">{item.product.name}</h3>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <span className="text-lg font-bold text-blue-600">${item.product.price}</span>
-                          {item.product.originalPrice && (
-                            <span className="text-sm text-gray-500 line-through">${item.product.originalPrice}</span>
-                          )}
-                        </div>
-
-                        {/* Product Options */}
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {item.selectedColor && (
-                            <span className="bg-white px-2 py-1 rounded-full text-xs font-medium border">
-                              {item.selectedColor}
-                            </span>
-                          )}
-                          {item.selectedSize && (
-                            <span className="bg-white px-2 py-1 rounded-full text-xs font-medium border">
-                              {item.selectedSize}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Enhanced Quantity Controls */}
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center bg-white border-2 border-gray-200 rounded-xl">
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                              className="p-2 hover:bg-gray-50 rounded-l-lg transition-colors"
-                            >
-                              <Minus className="w-4 h-4 text-gray-600" />
-                            </button>
-                            <span className="px-4 py-2 font-bold text-gray-800 min-w-[3rem] text-center">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                              className="p-2 hover:bg-gray-50 rounded-r-lg transition-colors"
-                            >
-                              <Plus className="w-4 h-4 text-gray-600" />
-                            </button>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="font-bold text-gray-800">
-                              ${(item.product.price * item.quantity).toFixed(2)}
-                            </div>
-                            <button
-                              onClick={() => removeFromCart(item.id)}
-                              className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                      <span className="font-black text-[#002147]">${(item.product.price * item.quantity).toFixed(2)}</span>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))
             )}
           </div>
 
-          {/* Enhanced Footer */}
+          {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-gray-200 p-6 bg-gradient-to-r from-blue-50 to-purple-50">
-              <div className="space-y-4">
-                {/* Total */}
-                <div className="flex justify-between items-center">
-                  <span className="text-xl font-bold text-gray-800">Total:</span>
-                  <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                    ${getCartTotal().toFixed(2)}
-                  </span>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  <Link
-                    href="/cart"
-                    onClick={onClose}
-                    className="block w-full bg-white border-2 border-gray-300 text-gray-700 py-3 rounded-xl font-semibold text-center hover:bg-gray-50 hover:border-gray-400 transition-all"
-                  >
-                    View Full Cart
-                  </Link>
-                  <Link
-                    href="/checkout"
-                    onClick={onClose}
-                    className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold text-center hover:shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
-                  >
-                    <span>Checkout Now</span>
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Link>
-                </div>
-
-                {/* Free Shipping Notice */}
-                {getCartTotal() < 50 && (
-                  <div className="bg-blue-100 border border-blue-200 rounded-xl p-3 text-center">
-                    <p className="text-sm text-blue-800 font-medium">
-                      🚚 Add ${(50 - getCartTotal()).toFixed(2)} more for free shipping!
-                    </p>
-                  </div>
-                )}
+            <div className="p-8 border-t border-gray-100 bg-[#f8f9fa] space-y-6 shadow-[0_-20px_50px_rgba(0,0,0,0.05)]">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold uppercase tracking-[0.2em] opacity-40">Estimated Total</span>
+                <span className="text-3xl font-playfair font-black text-[#002147]">${getCartTotal().toFixed(2)}</span>
+              </div>
+              <p className="text-[10px] text-gray-400 font-medium uppercase tracking-widest text-center">
+                Complimentary shipping and premium packaging included.
+              </p>
+              <div className="grid grid-cols-1 gap-4">
+                <Link 
+                  href="/checkout" 
+                  onClick={onClose}
+                  className="btn-primary py-6 text-center text-sm font-black tracking-[0.3em] uppercase shadow-2xl flex items-center justify-center gap-4 group"
+                >
+                  Complete Purchase
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />
+                </Link>
+                <button 
+                  onClick={onClose}
+                  className="py-4 text-center text-[10px] font-black tracking-widest uppercase opacity-40 hover:opacity-100 transition-opacity"
+                >
+                  Continue Browsing
+                </button>
               </div>
             </div>
           )}
