@@ -8,7 +8,8 @@ const SECRET_KEY = process.env.COOKIE_SECRET_KEY!
 
 const getKey = (): Buffer => {
   if (!SECRET_KEY || SECRET_KEY.length < 32) {
-    throw new Error("COOKIE_SECRET_KEY must be at least 32 characters in .env")
+    console.error("FATAL: COOKIE_SECRET_KEY is missing or too short (min 32 chars) in .env")
+    throw new Error("SERVER_CONFIG_ERROR: COOKIE_SECRET_KEY")
   }
   return Buffer.from(SECRET_KEY.slice(0, 32), "utf-8")
 }

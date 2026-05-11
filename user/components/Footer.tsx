@@ -1,155 +1,176 @@
 "use client"
+
 import Link from "next/link"
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react"
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Sparkles, ShieldCheck, Globe, Clock } from "lucide-react"
 import { useSettings } from "@/contexts/SettingsContext"
+import { getImageUrl } from "@/lib/utils"
 
 export default function Footer() {
   const { settings } = useSettings()
 
   return (
-    <footer className="bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Company Info */}
-          <div>
-            <div className="flex items-center gap-2 mb-4">
+    <footer className="relative overflow-hidden bg-[#002147] text-white">
+      {/* Decorative Line */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#eb9a05] to-transparent opacity-50"></div>
+      
+      {/* Background Ambience */}
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#eb9a05]/5 rounded-full translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
+      
+      <div className="container mx-auto px-4 pt-24 pb-12 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-24">
+          {/* Brand Identity */}
+          <div className="space-y-10">
+            <Link href="/" className="inline-block group transition-all duration-500">
               {settings?.logo ? (
-                <img src={settings.logo} alt="Logo" className="h-8 w-auto object-contain brightness-0 invert" />
+                <img src={getImageUrl(settings.logo)} alt={settings.storeName} className="h-10 w-auto object-contain brightness-0 invert group-hover:scale-105" />
               ) : (
-                <h3 className="text-xl font-bold">{settings?.storeName || "LuxeCart"}</h3>
+                <div className="flex flex-col">
+                  <h3 className="text-4xl font-playfair font-black tracking-tight text-[#eb9a05] group-hover:text-white transition-colors">
+                    {settings?.storeName || "LuxeCart"}
+                  </h3>
+                  <span className="text-[8px] font-black tracking-[0.6em] uppercase opacity-40 -mt-1">Premium Quality Store</span>
+                </div>
               )}
-            </div>
+            </Link>
             
-            {settings?.contact && (
-              <div className="space-y-3 mb-6 text-sm text-gray-400">
-                {settings.contact.address && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="w-4 h-4 mt-0.5" />
-                    <span>{settings.contact.address}</span>
-                  </div>
-                )}
-                {settings.contact.phone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    <a href={`tel:${settings.contact.phone}`} className="hover:text-white transition-colors">
-                      {settings.contact.phone}
-                    </a>
-                  </div>
-                )}
-                {settings.contact.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    <a href={`mailto:${settings.contact.email}`} className="hover:text-white transition-colors">
-                      {settings.contact.email}
-                    </a>
-                  </div>
-                )}
-              </div>
-            )}
+            <p className="text-sm leading-relaxed opacity-60 italic max-w-xs">
+              Providing high-quality products with exceptional service and a commitment to excellence for all our customers.
+            </p>
 
-            <div className="flex space-x-4">
-              <Link href={settings?.socialLinks?.facebook || "#"} className="text-gray-400 hover:text-white">
-                <Facebook className="w-5 h-5" />
-              </Link>
-              <Link href={settings?.socialLinks?.twitter || "#"} className="text-gray-400 hover:text-white">
-                <Twitter className="w-5 h-5" />
-              </Link>
-              <Link href={settings?.socialLinks?.instagram || "#"} className="text-gray-400 hover:text-white">
-                <Instagram className="w-5 h-5" />
-              </Link>
-              <Link href="#" className="text-gray-400 hover:text-white">
-                <Youtube className="w-5 h-5" />
-              </Link>
+            <div className="flex space-x-6">
+              {settings?.socialLinks?.facebook && (
+                <Link href={settings.socialLinks.facebook} target="_blank" className="footer-social-link">
+                  <Facebook className="w-5 h-5" />
+                </Link>
+              )}
+              {settings?.socialLinks?.twitter && (
+                <Link href={settings.socialLinks.twitter} target="_blank" className="footer-social-link">
+                  <Twitter className="w-5 h-5" />
+                </Link>
+              )}
+              {settings?.socialLinks?.instagram && (
+                <Link href={settings.socialLinks.instagram} target="_blank" className="footer-social-link">
+                  <Instagram className="w-5 h-5" />
+                </Link>
+              )}
+              {!settings?.socialLinks && [Facebook, Twitter, Instagram].map((Icon, idx) => (
+                <Link key={idx} href="#" className="footer-social-link">
+                  <Icon className="w-5 h-5" />
+                </Link>
+              ))}
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
-              {settings?.footer?.quickLinks && settings.footer.quickLinks.length > 0 ? (
-                settings.footer.quickLinks.map((link, i) => (
-                  <li key={i}>
-                    <Link href={link.url} className="text-gray-400 hover:text-white">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <>
-                  <li>
-                    <Link href="/about" className="text-gray-400 hover:text-white">
-                      About Us
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/contact" className="text-gray-400 hover:text-white">
-                      Contact
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/faq" className="text-gray-400 hover:text-white">
-                      FAQ
-                    </Link>
-                  </li>
-                </>
-              )}
+          {/* Navigational Links */}
+          <div className="space-y-10">
+            <h4 className="text-[10px] font-black tracking-[0.5em] uppercase text-[#eb9a05]">Quick Links</h4>
+            <ul className="space-y-5">
+              {[
+                { label: "Products", href: "/products" },
+                { label: "Categories", href: "/categories" },
+                { label: "Our Story", href: "/about" },
+                { label: "Support", href: "/contact" },
+                { label: "FAQ", href: "/faq" }
+              ].map((link, idx) => (
+                <li key={idx}>
+                  <Link href={link.href} className="text-sm font-bold opacity-60 hover:opacity-100 hover:text-[#eb9a05] transition-all flex items-center group">
+                    <span className="w-0 group-hover:w-4 h-px bg-[#eb9a05] mr-0 group-hover:mr-3 transition-all duration-500"></span>
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Categories */}
-          <div>
-            <h4 className="font-semibold mb-4">Categories</h4>
-            <ul className="space-y-2">
-              {settings?.footer?.categoryLinks && settings.footer.categoryLinks.length > 0 ? (
-                settings.footer.categoryLinks.map((link, i) => (
-                  <li key={i}>
-                    <Link href={link.url} className="text-gray-400 hover:text-white">
-                      {link.label}
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <>
-                  <li>
-                    <Link href="/products?category=Electronics" className="text-gray-400 hover:text-white">
-                      Electronics
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/products?category=Fashion" className="text-gray-400 hover:text-white">
-                      Fashion
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/products?category=Home" className="text-gray-400 hover:text-white">
-                      Home & Garden
-                    </Link>
-                  </li>
-                </>
-              )}
-            </ul>
+          {/* Contact Details */}
+          <div className="space-y-10">
+            <h4 className="text-[10px] font-black tracking-[0.5em] uppercase text-[#eb9a05]">Contact Us</h4>
+            <div className="space-y-8">
+              <div className="flex items-start gap-5 group">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#eb9a05] transition-all group-hover:bg-[#eb9a05] group-hover:text-[#002147]">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Address</p>
+                  <p className="text-sm font-medium opacity-80 italic">{settings?.contact?.address || "777 Prestige Ave, NY"}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-5 group">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#eb9a05] transition-all group-hover:bg-[#eb9a05] group-hover:text-[#002147]">
+                  <Phone className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Phone</p>
+                  <p className="text-sm font-medium opacity-80">{settings?.contact?.phone || "+1 234 567 890"}</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-5 group">
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#eb9a05] transition-all group-hover:bg-[#eb9a05] group-hover:text-[#002147]">
+                  <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase opacity-40 tracking-widest mb-1">Working Hours</p>
+                  <p className="text-sm font-medium opacity-80 italic">{settings?.contact?.workingHours || "Mon - Sat: 9AM - 6PM"}</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Newsletter */}
-          <div>
-            <h4 className="font-semibold mb-4">Newsletter</h4>
-            <p className="text-gray-400 mb-4">Subscribe to get updates on new products and offers.</p>
-            <form className="space-y-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded focus:outline-none focus:border-blue-500"
-              />
-              <button type="submit" className="w-full btn-primary">
-                Subscribe
+          <div className="space-y-10">
+            <h4 className="text-[10px] font-black tracking-[0.5em] uppercase text-[#eb9a05]">Newsletter</h4>
+            <p className="text-sm opacity-60 italic leading-relaxed">Join our mailing list for exclusive updates on new products and offers.</p>
+            <form className="space-y-4">
+              <div className="relative group">
+                <input
+                  type="email"
+                  placeholder="Your Email"
+                  className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:border-[#eb9a05] focus:bg-white/10 transition-all text-sm font-bold placeholder:opacity-30"
+                />
+              </div>
+              <button type="submit" className="w-full btn-secondary py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-2xl flex items-center justify-center gap-3 group">
+                <Sparkles className="w-4 h-4 transition-transform group-hover:rotate-12" />
+                Subscribe Now
               </button>
             </form>
           </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>{settings?.footerText || `© ${new Date().getFullYear()} ${settings?.storeName || "LuxeCart"}. All rights reserved.`}</p>
+        {/* Global Assurance */}
+        <div className="mt-24 pt-12 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+           <div className="flex items-center gap-4 group cursor-default">
+              <ShieldCheck className="w-6 h-6 text-[#eb9a05] transition-transform group-hover:scale-110" />
+              <div className="flex flex-col">
+                 <span className="text-[10px] font-black tracking-widest uppercase">Secure Payments</span>
+                 <span className="text-[8px] opacity-40 uppercase">SSL Encrypted</span>
+              </div>
+           </div>
+           <div className="flex items-center gap-4 group cursor-default justify-center">
+              <Globe className="w-6 h-6 text-[#eb9a05] transition-transform group-hover:scale-110" />
+              <div className="flex flex-col">
+                 <span className="text-[10px] font-black tracking-widest uppercase">Worldwide Shipping</span>
+                 <span className="text-[8px] opacity-40 uppercase">Fast Delivery</span>
+              </div>
+           </div>
+           <div className="flex justify-end gap-3">
+              {['visa', 'mastercard', 'amex', 'paypal'].map((card) => (
+                <div key={card} className="w-12 h-8 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all">
+                   <span className="text-[8px] font-black uppercase tracking-tighter">{card}</span>
+                </div>
+              ))}
+           </div>
+        </div>
+
+        {/* Copyright & Legal */}
+        <div className="mt-16 flex flex-col md:flex-row items-center justify-between gap-8">
+          <p className="text-[10px] font-black tracking-widest uppercase opacity-30">
+            {settings?.footerText || `© ${new Date().getFullYear()} ${settings?.storeName || "LuxeCart"}. All Rights Reserved.`}
+          </p>
+          <div className="flex gap-10 text-[8px] font-black uppercase tracking-[0.3em] opacity-30">
+            <Link href="#" className="hover:text-[#eb9a05] transition-colors hover:opacity-100">Privacy Policy</Link>
+            <Link href="#" className="hover:text-[#eb9a05] transition-colors hover:opacity-100">Terms of Service</Link>
+            <Link href="#" className="hover:text-[#eb9a05] transition-colors hover:opacity-100">Shipping Policy</Link>
+          </div>
         </div>
       </div>
     </footer>

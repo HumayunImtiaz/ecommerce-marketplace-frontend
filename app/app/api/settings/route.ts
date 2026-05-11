@@ -11,6 +11,7 @@ export async function GET() {
     const result = await response.json()
     return NextResponse.json(result, { status: response.status })
   } catch (error) {
+    console.error("Settings GET error:", error)
     return NextResponse.json(
       { success: false, message: "Failed to fetch settings" },
       { status: 500 }
@@ -21,10 +22,20 @@ export async function GET() {
 export async function PATCH(req: Request) {
   try {
     const { getTokenCookie } = await import("@/lib/cookies")
-    const token = await getTokenCookie()
+    let token: string | null = null
+
+    try {
+      token = await getTokenCookie()
+    } catch (cookieError) {
+      console.error("Cookie decryption error:", cookieError)
+    }
 
     if (!token) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
+      console.error("Settings PATCH: No token found in cookies. Admin may need to re-login.")
+      return NextResponse.json(
+        { success: false, message: "Session expired. Please log in again." },
+        { status: 401 }
+      )
     }
 
     const body = await req.json()
@@ -39,8 +50,14 @@ export async function PATCH(req: Request) {
     })
 
     const result = await response.json()
+
+    if (!response.ok) {
+      console.error("Backend settings PATCH failed:", response.status, result)
+    }
+
     return NextResponse.json(result, { status: response.status })
   } catch (error) {
+    console.error("Settings PATCH error:", error)
     return NextResponse.json(
       { success: false, message: "Failed to update settings" },
       { status: 500 }

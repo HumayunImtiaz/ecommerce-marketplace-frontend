@@ -4,109 +4,79 @@ import { useEffect, useState, useRef, Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useToast } from "@/contexts/ToastContext"
-import { Loader2, CheckCircle, XCircle, Mail } from "lucide-react"
-
+import { Loader2, CheckCircle, XCircle, Mail, Sparkles, ArrowRight } from "lucide-react"
 import { authApi } from "@/lib/api"
 
 function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const { addToast } = useToast()
-
-  const [isLoading, setIsLoading]   = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [isVerified, setIsVerified] = useState(false)
-  const [message, setMessage]       = useState("Verifying your email...")
-
-  // ── StrictMode double-call rok do ─────────────────────────────────────────
+  const [message, setMessage] = useState("Authenticating your credentials...")
   const hasCalled = useRef(false)
 
   useEffect(() => {
-    if (hasCalled.current) return   // already ran — skip second StrictMode call
+    if (hasCalled.current) return
     hasCalled.current = true
-
     const verify = async () => {
       try {
         const token = searchParams.get("token")
-
-        if (!token) {
-          setIsVerified(false)
-          setMessage("Invalid or missing verification token.")
-          setIsLoading(false)
-          return
-        }
-
-        const { success, message, data } = await authApi.verifyEmail(token)
-
-        if (!success) {
-          setIsVerified(false)
-          setMessage(message || "Email verification failed.")
-          addToast(message || "Email verification failed.", "error")
-          setIsLoading(false)
-          return
-        }
-
+        if (!token) { setIsVerified(false); setMessage("Invalid or missing verification token."); setIsLoading(false); return }
+        const { success, message } = await authApi.verifyEmail(token)
+        if (!success) { setIsVerified(false); setMessage(message || "Email verification failed."); addToast(message || "Email verification failed.", "error"); setIsLoading(false); return }
         setIsVerified(true)
         setMessage("Email verified successfully! You can now login.")
         addToast("Email verified successfully!", "success")
-      } catch {
-        setIsVerified(false)
-        setMessage("Failed to connect to server. Please try again.")
-        addToast("Failed to connect to server.", "error")
-      } finally {
-        setIsLoading(false)
-      }
+      } catch { setIsVerified(false); setMessage("Failed to connect to server."); addToast("Failed to connect to server.", "error") }
+      finally { setIsLoading(false) }
     }
-
     verify()
   }, []) 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg text-center">
-        <div className="flex items-center justify-center mb-4">
-          <Mail className="h-8 w-8 text-blue-500 mr-2" />
-          <h1 className="text-2xl font-bold text-gray-900">Email Verification</h1>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] px-4 py-20 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#eb9a05]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
+      
+      <div className="max-w-md w-full bg-white p-12 md:p-16 rounded-[3rem] shadow-2xl border border-[#eb9a05]/10 relative z-10 text-center animate-fade-in-up">
+        <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-10">
+          <Sparkles className="w-4 h-4" />
+          <span className="text-[10px] font-black tracking-[0.3em] uppercase">Identity Verification</span>
         </div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center gap-3 text-gray-500 py-6">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
-            <p className="text-sm">Verifying your email...</p>
+          <div className="py-10 space-y-6">
+            <Loader2 className="h-16 w-16 animate-spin text-[#eb9a05] mx-auto" />
+            <p className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40">Consulting The Registry...</p>
           </div>
-
         ) : isVerified ? (
-          <div className="flex flex-col items-center gap-4 py-4">
-            <CheckCircle className="h-16 w-16 text-green-500" />
-            <div>
-              <p className="text-green-700 font-semibold text-lg">Verification Successful!</p>
-              <p className="text-gray-500 text-sm mt-1">Your email has been verified. You can now login.</p>
+          <div className="py-10 space-y-8 animate-fade-in-up">
+            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-green-500/10">
+              <CheckCircle className="h-12 w-12 text-green-500" />
             </div>
-            <Link
-              href="/auth/login"
-              className="mt-2 inline-block px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Go to Login
+            <div>
+              <h2 className="text-3xl font-playfair font-black text-[#002147] mb-4">Identity Confirmed</h2>
+              <p className="text-gray-400 text-sm italic font-medium leading-relaxed">Your electronic address has been successfully authenticated. Access to the collection is now granted.</p>
+            </div>
+            <Link href="/auth/login" className="btn-primary w-full py-5 rounded-2xl flex items-center justify-center gap-4 group">
+              <span className="text-sm font-black tracking-widest uppercase">Advance To Login</span>
+              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />
             </Link>
           </div>
-
         ) : (
-          <div className="flex flex-col items-center gap-4 py-4">
-            <XCircle className="h-16 w-16 text-red-500" />
-            <div>
-              <p className="text-red-600 font-semibold text-lg">Verification Failed</p>
-              <p className="text-gray-500 text-sm mt-1">{message}</p>
+          <div className="py-10 space-y-8 animate-fade-in-up">
+            <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto shadow-xl shadow-red-500/10">
+              <XCircle className="h-12 w-12 text-red-500" />
             </div>
-            <div className="flex flex-col gap-3 w-full mt-2">
-              <Link
-                href="/auth/login"
-                className="inline-block px-6 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors text-center"
-              >
-                Go to Login
+            <div>
+              <h2 className="text-3xl font-playfair font-black text-[#002147] mb-4">Authentication Error</h2>
+              <p className="text-gray-400 text-sm italic font-medium leading-relaxed">{message}</p>
+            </div>
+            <div className="space-y-4">
+              <Link href="/auth/login" className="btn-primary w-full py-5 rounded-2xl flex items-center justify-center gap-4">
+                <span className="text-sm font-black tracking-widest uppercase">Return To Login</span>
               </Link>
-              <p className="text-xs text-gray-400">
-                If the link expired,{" "}
-                <Link href="/auth/login" className="text-blue-500 hover:underline">
-                  login to resend verification email
-                </Link>
+              <p className="text-[10px] font-black tracking-widest uppercase text-gray-300">
+                If the link expired, <Link href="/auth/login" className="text-[#eb9a05] hover:underline">re-authenticate</Link>
               </p>
             </div>
           </div>
@@ -118,7 +88,7 @@ function VerifyEmailContent() {
 
 export default function VerifyEmailPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="h-12 w-12 animate-spin text-blue-500" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-[#eb9a05]" /></div>}>
       <VerifyEmailContent />
     </Suspense>
   )

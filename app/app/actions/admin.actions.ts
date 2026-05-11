@@ -38,6 +38,7 @@ export async function updateAdminProfileAction(formData: FormData): Promise<Acti
     const result = await response.json()
 
     if (!response.ok || !result?.success) {
+      console.error("Profile update failed:", result)
       return {
         success: false,
         message: result?.message || "Failed to update profile",

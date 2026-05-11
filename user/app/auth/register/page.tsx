@@ -4,31 +4,18 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Eye, EyeOff, Mail, Lock, User } from "lucide-react"
-import { useFormik, type FormikHelpers } from "formik"
+import { Eye, EyeOff, Mail, Lock, User, Sparkles, ArrowRight } from "lucide-react"
+import { useFormik } from "formik"
 import * as Yup from "yup"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 
-type RegisterFormValues = {
-  name: string
-  email: string
-  password: string
-  confirmPassword: string
-}
-
 const registerValidationSchema = Yup.object({
   name: Yup.string().required("Full name is required"),
-  email: Yup.string()
-    .email("Please enter a valid email address")
-    .required("Email is required"),
-  password: Yup.string()
-    .min(6, "Password must be at least 6 characters")
-    .required("Password is required"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")], "Passwords must match")
-    .required("Confirm password is required"),
+  email: Yup.string().email("Please enter a valid email address").required("Email is required"),
+  password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+  confirmPassword: Yup.string().oneOf([Yup.ref("password")], "Passwords must match").required("Confirm password is required"),
 })
 
 export default function RegisterPage() {
@@ -38,190 +25,126 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  const formik = useFormik<RegisterFormValues>({
-    initialValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
+  const formik = useFormik({
+    initialValues: { name: "", email: "", password: "", confirmPassword: "" },
     validationSchema: registerValidationSchema,
-    onSubmit: async (
-      values: RegisterFormValues,
-      { setSubmitting }: FormikHelpers<RegisterFormValues>
-    ) => {
+    onSubmit: async (values, { setSubmitting }) => {
       try {
         await register(values.name, values.email, values.password)
-
-      addToast("Registration successful. Please verify your email.", "success")
-      router.push("/auth/login")
-      return
-
-    } catch (error: any) {
-      addToast(error?.message || "Registration failed", "error")
-      return
-    } finally {
-        setSubmitting(false)
-      }
+        addToast("Registration successful. Please verify your email.", "success")
+        router.push("/auth/login")
+      } catch (error: any) { addToast(error?.message || "Registration failed", "error") }
+      finally { setSubmitting(false) }
     },
   })
 
-  const getInputError = (
-    fieldName: keyof RegisterFormValues
-  ): string | undefined => {
-    return formik.touched[fieldName] && formik.errors[fieldName]
-      ? formik.errors[fieldName]
-      : undefined
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link href="/auth/login" className="font-medium text-blue-600 hover:text-blue-500">
-              Sign in
-            </Link>
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] px-4 py-20 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#eb9a05]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#002147]/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-[100px]"></div>
+
+      <div className="max-w-md w-full bg-white p-12 md:p-16 rounded-[3rem] shadow-2xl border border-[#eb9a05]/10 relative z-10 animate-fade-in-up">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-8">
+            <Sparkles className="w-4 h-4" />
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Join The Collection</span>
+          </div>
+          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Create Identity</h2>
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">
+            Already a member?{" "}
+            <Link href="/auth/login" className="text-[#eb9a05] hover:underline">Sign In</Link>
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={formik.handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
+        <form className="space-y-6" onSubmit={formik.handleSubmit}>
+          <div className="space-y-6">
+            {/* Name */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Full Identity</label>
+              <div className="relative">
+                <User className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
-                  id="name"
                   name="name"
                   type="text"
                   value={formik.values.name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`input-field pl-10 ${getInputError("name") ? "border-red-500" : ""}`}
                   placeholder="Enter your full name"
+                  className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-6 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.name && formik.errors.name ? "border-red-400" : "border-gray-50"}`}
                 />
               </div>
-              {getInputError("name") ? (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.name}</p>
-              ) : null}
+              {formik.touched.name && formik.errors.name && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.name}</p>}
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+            {/* Email */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Electronic Address</label>
+              <div className="relative">
+                <Mail className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
-                  id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`input-field pl-10 ${getInputError("email") ? "border-red-500" : ""}`}
                   placeholder="Enter your email"
+                  className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-6 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.email && formik.errors.email ? "border-red-400" : "border-gray-50"}`}
                 />
               </div>
-              {getInputError("email") ? (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.email}</p>
-              ) : null}
+              {formik.touched.email && formik.errors.email && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.email}</p>}
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Access Key</label>
+              <div className="relative">
+                <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
-                  id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
                   value={formik.values.password}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`input-field pl-10 pr-10 ${getInputError("password") ? "border-red-500" : ""}`}
                   placeholder="Enter your password"
+                  className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.password && formik.errors.password ? "border-red-400" : "border-gray-50"}`}
                 />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword((prev) => !prev)}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#eb9a05] transition-colors">
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              {getInputError("password") ? (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.password}</p>
-              ) : null}
+              {formik.touched.password && formik.errors.password && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.password}</p>}
             </div>
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <div className="mt-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Validate Key</label>
+              <div className="relative">
+                <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
-                  id="confirmPassword"
                   name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
-                  autoComplete="new-password"
                   value={formik.values.confirmPassword}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  className={`input-field pl-10 pr-10 ${getInputError("confirmPassword") ? "border-red-500" : ""}`}
                   placeholder="Confirm your password"
+                  className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.confirmPassword && formik.errors.confirmPassword ? "border-red-400" : "border-gray-50"}`}
                 />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400" />
-                  )}
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#eb9a05] transition-colors">
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              {getInputError("confirmPassword") ? (
-                <p className="mt-1 text-sm text-red-600">{formik.errors.confirmPassword}</p>
-              ) : null}
+              {formik.touched.confirmPassword && formik.errors.confirmPassword && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.confirmPassword}</p>}
             </div>
           </div>
 
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading || formik.isSubmitting}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading || formik.isSubmitting ? "Creating account..." : "Create account"}
-            </button>
-          </div>
+          <button
+            type="submit"
+            disabled={isLoading || formik.isSubmitting}
+            className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-4 group shadow-xl mt-8"
+          >
+            <span className="text-sm font-black tracking-[0.2em] uppercase">{isLoading || formik.isSubmitting ? "Generating Identity..." : "Join The Collection"}</span>
+            {!isLoading && <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />}
+          </button>
         </form>
       </div>
     </div>

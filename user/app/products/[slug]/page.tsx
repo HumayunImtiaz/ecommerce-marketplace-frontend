@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw, Loader2, Zap, Ticket } from "lucide-react"
+import { Star, Heart, ShoppingCart, Minus, Plus, Truck, Shield, RotateCcw, Loader2, Zap, Ticket, CheckCircle } from "lucide-react"
 import type { Product } from "@/lib/types"
 import { mapProduct } from "@/lib/productMapper"
 import { useCart } from "@/contexts/CartContext"
@@ -28,17 +28,14 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState("description")
   const [reviewCount, setReviewCount] = useState(0)
 
-  const { items = [], addToCart, appliedCoupon, applyCoupon, removeCoupon, discountAmount } = useCart()
+  const { items = [], addToCart, appliedCoupon, applyCoupon, removeCoupon } = useCart()
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
 
-
-  // ── Product fetch karo ────────────────────────────────────────────────────
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setIsLoading(true)
         const { data, success } = await productApi.getProductBySlug(productSlug)
-
         if (success && data && data.product) {
           const mapped = mapProduct(data.product)
           if (mapped) {
@@ -48,100 +45,67 @@ export default function ProductPage() {
             setReviewCount(data.product.reviewCount ?? 0)
           }
         }
-      } catch (err) {
-        console.error("Failed to fetch product:", err)
-      } finally {
-        setIsLoading(false)
-      }
+      } catch (err) { console.error("Failed to fetch product:", err) }
+      finally { setIsLoading(false) }
     }
-
     if (productSlug) fetchProduct()
   }, [productSlug])
 
-  // ── Loading State ─────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-24 flex items-center justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-blue-500" />
+      <div className="container mx-auto px-4 py-32 flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-[#eb9a05] mb-4" />
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-[#002147] opacity-40">Loading...</p>
       </div>
     )
   }
 
-  // ── Not Found ─────────────────────────────────────────────────────────────
   if (!product) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Product Not Found</h1>
-        <p className="text-gray-600 mb-6">The product you&apos;re looking for doesn&apos;t exist.</p>
-        <Link href="/products" className="bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition-colors">
+      <div className="container mx-auto px-4 py-32 text-center">
+        <h1 className="text-4xl font-playfair font-black mb-6" style={{ color: 'var(--primary)' }}>Product Not Found</h1>
+        <p className="text-gray-500 mb-10 max-w-md mx-auto leading-relaxed">The item you are looking for is currently unavailable.</p>
+        <Link href="/products" className="btn-primary py-4 px-10">
           Browse Products
         </Link>
       </div>
     )
   }
 
-  // ── Active variant price (based on selected color + size) ──────────────────
   const getVariantPrice = (): number => {
     if (!product.variants || product.variants.length === 0) return product.price
-
-    // 1. Exact color + size match
-    const exactMatch = product.variants.find(
-      (v) => v.color === selectedColor && v.size === selectedSize && v.price !== null
-    )
+    const exactMatch = product.variants.find((v) => v.color === selectedColor && v.size === selectedSize && v.price !== null)
     if (exactMatch && exactMatch.price !== null) return exactMatch.price
-
-    // 2. Color-only match (when sizes don't affect price)
-    const colorMatch = product.variants.find(
-      (v) => v.color === selectedColor && v.price !== null
-    )
+    const colorMatch = product.variants.find((v) => v.color === selectedColor && v.price !== null)
     if (colorMatch && colorMatch.price !== null) return colorMatch.price
-
-    // 3. Fall back to base product price
     return product.price
   }
 
   const getAvailableStock = (): number => {
     const totalVariantStock = (() => {
       if (!product || !product.variants || product.variants.length === 0) return product?.totalStock ?? 0
-
-      // Exact color + size match
-      const exactMatch = product.variants.find(
-        (v) => v.color === selectedColor && v.size === selectedSize
-      )
+      const exactMatch = product.variants.find((v) => v.color === selectedColor && v.size === selectedSize)
       if (exactMatch && exactMatch.stock) return exactMatch.stock.quantity
-
-      // Color-only match
-      const colorMatch = product.variants.find(
-        (v) => v.color === selectedColor
-      )
+      const colorMatch = product.variants.find((v) => v.color === selectedColor)
       if (colorMatch && colorMatch.stock) return colorMatch.stock.quantity
-
       return product.totalStock ?? 0
     })()
-
-    const inCartQuantity = items.find(
-      item => item.product.id === product?.id && 
-              item.selectedColor === selectedColor && 
-              item.selectedSize === selectedSize
-    )?.quantity || 0
-
+    const inCartQuantity = items.find(item => item.product.id === product?.id && item.selectedColor === selectedColor && item.selectedSize === selectedSize)?.quantity || 0
     return Math.max(0, totalVariantStock - inCartQuantity)
   }
 
-  // ── Derived State ───────────────────────────────────────────────────────
-  const activePrice = getVariantPrice()
-  const availableStock = getAvailableStock()
-
-  const savingsPercentage = (product.originalPrice && product.originalPrice > activePrice)
-    ? Math.round(((product.originalPrice - activePrice) / product.originalPrice) * 100)
-    : 0
-
   const handleAddToCart = () => {
-    const productWithVariantPrice = { ...product, price: activePrice }
-    addToCart(productWithVariantPrice, quantity, selectedColor, selectedSize)
+    if (!product) return
+    addToCart(
+      product,
+      quantity,
+      selectedColor,
+      selectedSize
+    )
   }
 
   const handleWishlistToggle = () => {
+    if (!product) return
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id)
     } else {
@@ -149,338 +113,256 @@ export default function ProductPage() {
     }
   }
 
+  const activePrice = getVariantPrice()
+  const availableStock = getAvailableStock()
+  const savingsPercentage = (product.originalPrice && product.originalPrice > activePrice) ? Math.round(((product.originalPrice - activePrice) / product.originalPrice) * 100) : 0
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-12">
-
-        {/* ── Product Images ── */}
-        <div>
-          <div className="mb-4 relative">
-            <Image
-              src={getImageUrl(product.images[selectedImage])}
-              alt={product.name}
-              width={600}
-              height={600}
-              className="w-full h-96 lg:h-[500px] object-cover rounded-xl"
-            />
-            {/* Badges on image */}
-            <div className="absolute top-4 left-4 flex flex-col space-y-2">
-              {savingsPercentage > 0 && (
-                <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-md">
-                  -{savingsPercentage}% OFF
-                </span>
-              )}
-              {product.isFeatured && (
-                <span className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center shadow-md">
-                  <Zap className="w-3 h-3 mr-1" />
-                  Featured
-                </span>
-              )}
+    <div className="bg-[#f8f9fa]">
+      <div className="container mx-auto px-4 py-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 mb-24">
+          {/* Images Section */}
+          <div className="space-y-6">
+            <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-white shadow-2xl border border-[#eb9a05]/10">
+              <Image src={getImageUrl(product.images[selectedImage])} alt={product.name} fill className="object-cover" />
+              <div className="absolute top-6 left-6 flex flex-col gap-3">
+                {savingsPercentage > 0 && (
+                  <span className="bg-[#ff4d4d] text-white px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase shadow-xl">
+                    {savingsPercentage}% Off
+                  </span>
+                )}
+                {product.isFeatured && (
+                  <span className="bg-[#eb9a05] text-white px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase shadow-xl">
+                    Featured Product
+                  </span>
+                )}
+              </div>
             </div>
-            {!product.inStock && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-xl">
-                <span className="text-white font-bold bg-red-500 px-4 py-2 rounded-full">Out of Stock</span>
+
+            {product.images.length > 1 && (
+              <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all transform hover:scale-105 ${selectedImage === index ? "border-[#eb9a05] shadow-lg" : "border-transparent opacity-60 hover:opacity-100"}`}
+                  >
+                    <Image src={getImageUrl(image)} alt={product.name} width={100} height={100} className="w-full h-full object-cover" />
+                  </button>
+                ))}
               </div>
             )}
           </div>
 
-          {/* Thumbnails */}
-          {product.images.length > 1 && (
-            <div className="flex space-x-2 overflow-x-auto">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-colors ${selectedImage === index ? "border-blue-600" : "border-gray-200"
-                    }`}
-                >
-                  <Image
-                    src={getImageUrl(image)}
-                    alt={`${product.name} ${index + 1}`}
-                    width={80}
-                    height={80}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
+          {/* Details Section */}
+          <div className="flex flex-col">
+            <div className="mb-8">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-px w-8 bg-[#eb9a05]"></div>
+                <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">{product.category}</p>
+              </div>
+              <h1 className="text-5xl font-playfair font-black leading-tight mb-4" style={{ color: 'var(--primary)' }}>{product.name}</h1>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? "fill-[#eb9a05] text-[#eb9a05]" : "text-gray-200"}`} />
+                  ))}
+                </div>
+                <span className="text-xs font-bold uppercase tracking-widest opacity-40">
+                  {product.rating > 0 ? `${product.rating.toFixed(1)} Rating` : "No Rating"} • {reviewCount} Reviews
+                </span>
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* ── Product Details ── */}
-        <div>
-          <h1 className="text-3xl font-bold mb-4">{product.name}</h1>
-
-          {/* Rating */}
-          <div className="flex items-center mb-4">
-            <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-full">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-5 h-5 ${i < Math.floor(product.rating)
-                      ? "text-yellow-400 fill-current"
-                      : "text-gray-300"
-                    }`}
-                />
-              ))}
-            </div>
-            <span className="ml-2 text-gray-600">
-              {product.rating > 0 ? product.rating.toFixed(1) : "No ratings yet"}{" "}
-              {reviewCount > 0 && `(${reviewCount} reviews)`}
-            </span>
-          </div>
-
-          {/* Price */}
-          <div className="mb-6">
-            <div className="flex items-center space-x-4">
-              <span className="text-3xl font-bold text-blue-600">${activePrice.toFixed(2)}</span>
+            <div className="mb-10 flex items-baseline gap-6">
+              <span className="text-5xl font-black" style={{ color: 'var(--primary)' }}>${activePrice.toFixed(2)}</span>
               {product.originalPrice && product.originalPrice > activePrice && (
-                <span className="text-xl text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-              )}
-              {savingsPercentage > 0 && (
-                <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm font-semibold">
-                  {savingsPercentage}% OFF
-                </span>
+                <span className="text-2xl opacity-20 line-through">${product.originalPrice.toFixed(2)}</span>
               )}
             </div>
-            {/* Show variant price note if different from base */}
-            {activePrice !== product.price && product.variants && product.variants.length > 0 && (
-              <p className="text-sm text-gray-500 mt-1">Price for selected variant</p>
-            )}
-          </div>
 
-          {/* Description */}
-          <p className="text-gray-700 mb-6">{product.description}</p>
+            <div className="space-y-10 mb-12">
+              {/* Color Selection */}
+              {product.colors && product.colors.length > 0 && (
+                <div>
+                  <h3 className="text-[10px] font-black tracking-widest uppercase mb-4 opacity-40">Select Color</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {product.colors.map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`px-6 py-3 rounded-xl border-2 font-bold text-xs tracking-widest uppercase transition-all ${selectedColor === color ? "border-[#002147] bg-[#002147] text-white shadow-xl scale-105" : "border-gray-100 bg-white hover:border-[#eb9a05]"}`}
+                      >
+                        {color}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Color Selection */}
-          {product.colors && product.colors.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold mb-3">Color: <span className="text-blue-600">{selectedColor}</span></h3>
-              <div className="flex flex-wrap gap-2">
-                {product.colors.map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => setSelectedColor(color)}
-                    className={`px-4 py-2 border rounded-xl transition-colors ${selectedColor === color
-                        ? "border-blue-600 bg-blue-50 text-blue-600"
-                        : "border-gray-300 hover:border-gray-400"
-                      }`}
-                  >
-                    {color}
+              {/* Size Selection */}
+              {product.sizes && product.sizes.length > 0 && (
+                <div>
+                  <h3 className="text-[10px] font-black tracking-widest uppercase mb-4 opacity-40">Select Size</h3>
+                  <div className="flex flex-wrap gap-3">
+                    {product.sizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`min-w-[60px] h-12 flex items-center justify-center rounded-xl border-2 font-bold text-xs tracking-widest uppercase transition-all ${selectedSize === size ? "border-[#002147] bg-[#002147] text-white shadow-xl scale-105" : "border-gray-100 bg-white hover:border-[#eb9a05]"}`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Quantity & Stock */}
+              <div className="flex items-center gap-10">
+                <div className="flex items-center p-1 rounded-2xl border-2 bg-white" style={{ borderColor: 'var(--secondary)' }}>
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="p-4 hover:bg-gray-50 rounded-xl" disabled={quantity <= 1}>
+                    <Minus className={`w-4 h-4 ${quantity <= 1 ? "opacity-20" : ""}`} />
                   </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Size Selection */}
-          {product.sizes && product.sizes.length > 0 && (
-            <div className="mb-6">
-              <h3 className="font-semibold mb-3">Size: <span className="text-blue-600">{selectedSize}</span></h3>
-              <div className="flex flex-wrap gap-2">
-                {product.sizes.map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-4 py-2 border rounded-xl transition-colors ${selectedSize === size
-                        ? "border-blue-600 bg-blue-50 text-blue-600"
-                        : "border-gray-300 hover:border-gray-400"
-                      }`}
-                  >
-                    {size}
+                  <span className="w-12 text-center font-black text-xl">{quantity}</span>
+                  <button onClick={() => { if (quantity < availableStock) setQuantity(quantity + 1) }} className="p-4 hover:bg-gray-50 rounded-xl" disabled={quantity >= availableStock}>
+                    <Plus className={`w-4 h-4 ${quantity >= availableStock ? "opacity-20" : ""}`} />
                   </button>
-                ))}
+                </div>
+                <div className="flex flex-col">
+                  <span className={`text-[10px] font-black tracking-widest uppercase ${availableStock > 0 ? "text-green-600" : "text-red-500"}`}>
+                    {availableStock > 0 ? "In Stock" : "Out of Stock"}
+                  </span>
+                  <span className="text-xs opacity-40 font-medium">{availableStock} units available</span>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Quantity */}
-          <div className="mb-6">
-            <h3 className="font-semibold mb-3">Quantity</h3>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center border rounded-xl">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="p-2 hover:bg-gray-100 rounded-l-xl"
-                  disabled={quantity <= 1}
-                >
-                  <Minus className={`w-4 h-4 ${quantity <= 1 ? "text-gray-300" : ""}`} />
-                </button>
-                <span className="px-4 py-2 font-medium">{quantity}</span>
-                <button
-                  onClick={() => {
-                    if (quantity < availableStock) setQuantity(quantity + 1)
-                  }}
-                  className={`p-2 rounded-r-xl ${quantity >= availableStock ? "cursor-not-allowed text-gray-300" : "hover:bg-gray-100"}`}
-                  disabled={quantity >= availableStock}
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              <span className={`text-sm font-medium ${availableStock > 0 ? "text-green-600" : "text-red-500"}`}>
-                {availableStock > 0 ? `✓ In Stock (${availableStock} available)` : "Out of Stock"}
-              </span>
+            {/* Actions */}
+            <div className="flex gap-4 mb-12">
+              <button
+                onClick={handleAddToCart}
+                disabled={availableStock === 0}
+                className="flex-1 btn-primary py-6 flex items-center justify-center gap-4 group"
+              >
+                <ShoppingCart className="w-6 h-6 transition-transform group-hover:-translate-y-1" />
+                <span className="text-sm font-black tracking-[0.2em] uppercase">Add to Cart</span>
+              </button>
+              <button
+                onClick={handleWishlistToggle}
+                className={`p-6 rounded-2xl border-2 transition-all transform hover:scale-105 ${isInWishlist(product.id) ? "bg-red-50 border-red-200 text-red-600 shadow-xl" : "border-gray-100 bg-white hover:border-[#eb9a05] text-[#002147]"}`}
+              >
+                <Heart className="w-6 h-6" fill={isInWishlist(product.id) ? "currentColor" : "none"} />
+              </button>
             </div>
-            {quantity >= availableStock && availableStock > 0 && (
-              <p className="text-xs text-amber-600 mt-2">You have selected the maximum available quantity.</p>
-            )}
-          </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-4 mb-8">
-            <button
-              onClick={handleAddToCart}
-              disabled={availableStock === 0}
-              className={`flex-1 flex items-center justify-center space-x-2 py-3 px-6 rounded-xl font-semibold transition-all ${availableStock > 0
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span>Add to Cart</span>
-            </button>
-            <button
-              onClick={handleWishlistToggle}
-              className={`p-3 border rounded-xl transition-colors ${isInWishlist(product.id)
-                  ? "bg-red-50 border-red-200 text-red-600"
-                  : "border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-600"
-                }`}
-            >
-              <Heart className="w-5 h-5" fill={isInWishlist(product.id) ? "currentColor" : "none"} />
-            </button>
-          </div>
-
-          {/* Trust Badges */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
-              <Truck className="w-6 h-6 text-blue-600 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-sm">Free Shipping</h4>
-                <p className="text-xs text-gray-600">On orders over $50</p>
+            {/* Trust Badges */}
+            <div className="grid grid-cols-3 gap-6 pt-10 border-t border-gray-100">
+              <div className="flex flex-col items-center text-center gap-3">
+                <Truck className="w-6 h-6 text-[#eb9a05]" />
+                <span className="text-[10px] font-black tracking-widest uppercase opacity-40">Global Delivery</span>
               </div>
-            </div>
-            <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
-              <Shield className="w-6 h-6 text-green-600 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-sm">Warranty</h4>
-                <p className="text-xs text-gray-600">1 year guarantee</p>
+              <div className="flex flex-col items-center text-center gap-3">
+                <Shield className="w-6 h-6 text-[#eb9a05]" />
+                <span className="text-[10px] font-black tracking-widest uppercase opacity-40">Certified Secure</span>
               </div>
-            </div>
-            <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl">
-              <RotateCcw className="w-6 h-6 text-orange-600 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-sm">Easy Returns</h4>
-                <p className="text-xs text-gray-600">30-day return policy</p>
+              <div className="flex flex-col items-center text-center gap-3">
+                <RotateCcw className="w-6 h-6 text-[#eb9a05]" />
+                <span className="text-[10px] font-black tracking-widest uppercase opacity-40">Easy Returns</span>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* ── Tabs ── */}
-      <div className="mb-12">
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="flex space-x-8">
+        {/* Tabs & Additional Info */}
+        <div className="bg-white rounded-[3rem] p-12 md:p-20 shadow-xl mb-24 border border-[#eb9a05]/10">
+          <div className="flex flex-wrap justify-center gap-12 mb-16 border-b border-gray-50 pb-8">
             {["description", "features", "reviews"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm capitalize transition-colors ${activeTab === tab
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
-                  }`}
+                className={`text-sm font-black tracking-[0.3em] uppercase transition-all pb-4 border-b-2 ${activeTab === tab ? "border-[#eb9a05] text-[#002147]" : "border-transparent opacity-30 hover:opacity-100"}`}
               >
-                {tab}
-                {tab === "reviews" && reviewCount > 0 && ` (${reviewCount})`}
+                {tab} {tab === "reviews" && reviewCount > 0 && `(${reviewCount})`}
               </button>
             ))}
-          </nav>
-        </div>
+          </div>
 
-        <div className="min-h-[200px]">
-          {activeTab === "description" && (
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Product Description</h3>
-              <p className="text-gray-700 leading-relaxed">{product.description || "No description available."}</p>
-              {product.tags && product.tags.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {product.tags.map((tag) => (
-                    <span key={tag} className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-sm">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "features" && (
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Features</h3>
-              {product.features && product.features.length > 0 ? (
-                <ul className="space-y-2">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-center">
-                      <span className="w-2 h-2 bg-blue-600 rounded-full mr-3 flex-shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-600">No specific features listed for this product.</p>
-              )}
-            </div>
-          )}
-
-          {activeTab === "reviews" && (
-            <ProductReviews productId={product.id} />
-          )}
-        </div>
-      </div>
-
-      {/* ── Related Products ── */}
-      <div className="mb-12">
-        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-          <Ticket className="w-6 h-6 text-blue-600" />
-          Available Offers & Coupons
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Coupon Display Card */}
-          <CouponOffersSection />
-          
-          {/* Manual Apply Card */}
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-2xl border border-slate-200 flex flex-col justify-center">
-            <h4 className="font-bold text-slate-800 mb-2">Have a special code?</h4>
-            <p className="text-sm text-slate-500 mb-4">Enter your coupon code below to apply it to your order.</p>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="PROMO20"
-                className="flex-1 px-4 py-2 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 outline-none uppercase font-mono"
-                id="manual-coupon-input"
-              />
-              <button 
-                onClick={() => {
-                  const input = document.getElementById("manual-coupon-input") as HTMLInputElement
-                  if (input.value) applyCoupon(input.value)
-                }}
-                className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold hover:bg-slate-800 transition-all"
-              >
-                Apply
-              </button>
-            </div>
-            {appliedCoupon && (
-              <div className="mt-3 flex items-center justify-between bg-green-50 px-3 py-2 rounded-lg border border-green-100">
-                <span className="text-sm font-medium text-green-700">Applied: <span className="font-bold uppercase">{appliedCoupon.code}</span></span>
-                <button onClick={removeCoupon} className="text-xs text-red-500 hover:underline font-bold">Remove</button>
+          <div className="max-w-4xl mx-auto">
+            {activeTab === "description" && (
+              <div className="animate-fade-in-up">
+                <h3 className="text-3xl font-playfair font-bold mb-8" style={{ color: 'var(--primary)' }}>Description</h3>
+                <p className="text-lg text-gray-600 leading-relaxed italic mb-8">{product.description || "No description available."}</p>
+                {product.tags && product.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {product.tags.map((tag) => (
+                      <span key={tag} className="bg-[#f8f9fa] text-[#002147] px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest border border-gray-100">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
+
+            {activeTab === "features" && (
+              <div className="animate-fade-in-up">
+                <h3 className="text-3xl font-playfair font-bold mb-8" style={{ color: 'var(--primary)' }}>Features</h3>
+                {product.features && product.features.length > 0 ? (
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {product.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-4 p-4 rounded-2xl bg-[#f8f9fa] border border-gray-50">
+                        <div className="w-2 h-2 rounded-full bg-[#eb9a05]" />
+                        <span className="font-medium text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 italic">No features listed.</p>
+                )}
+              </div>
+            )}
+
+            {activeTab === "reviews" && <ProductReviews productId={product.id} />}
           </div>
         </div>
-      </div>
 
-      <RelatedProducts currentProduct={product} /> 
+        {/* Coupons Section */}
+        <div className="mb-32">
+          <div className="flex items-center gap-4 mb-12">
+            <Ticket className="w-8 h-8 text-[#eb9a05]" />
+            <h3 className="text-4xl font-playfair font-black" style={{ color: 'var(--primary)' }}>Exclusive Offers</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <CouponOffersSection />
+            <div className="bg-[#002147] p-10 rounded-[2.5rem] flex flex-col justify-center text-white shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[#eb9a05]/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+              <h4 className="text-2xl font-playfair font-bold mb-4">Coupon Code</h4>
+              <p className="text-sm opacity-60 mb-8">If you have a coupon code, apply it below.</p>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="CODE"
+                  className="flex-1 px-5 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-[#eb9a05] outline-none uppercase font-mono font-bold tracking-widest transition-all"
+                  id="manual-coupon-input"
+                />
+                <button 
+                  onClick={() => {
+                    const input = document.getElementById("manual-coupon-input") as HTMLInputElement
+                    if (input.value) applyCoupon(input.value)
+                  }}
+                  className="btn-secondary py-4 px-6 text-[10px] font-black uppercase tracking-widest"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <RelatedProducts currentProduct={product} /> 
+      </div>
     </div>
   )
 }
@@ -494,55 +376,35 @@ function CouponOffersSection() {
     const fetchCoupons = async () => {
       try {
         const { data, success } = await orderApi.getPublicCoupons()
-        if (success && Array.isArray(data)) {
-          setCoupons(data)
-        }
-      } catch (err) {
-        console.error("Failed to fetch public coupons:", err)
-      } finally {
-        setLoading(false)
-      }
+        if (success && Array.isArray(data)) setCoupons(data)
+      } catch (err) { console.error("Failed to fetch public coupons:", err) }
+      finally { setLoading(false) }
     }
     fetchCoupons()
   }, [])
 
-  if (loading) return <div className="h-40 bg-slate-50 animate-pulse rounded-2xl border border-slate-200" />
-  if (coupons.length === 0) {
-    return (
-      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-center opacity-60">
-        <Ticket className="w-8 h-8 text-slate-400 mb-2" />
-        <p className="text-sm font-medium text-slate-500">No public offers available right now.</p>
-      </div>
-    )
-  }
+  if (loading) return <div className="h-64 bg-white animate-pulse rounded-[2.5rem] border border-[#eb9a05]/10 shadow-xl" />
+  if (coupons.length === 0) return null
 
   return (
     <>
       {coupons.map((coupon) => (
-        <div key={coupon.id} className="relative bg-white p-6 rounded-2xl border-2 border-dashed border-blue-200 flex flex-col items-center justify-center text-center overflow-hidden group hover:border-blue-400 transition-all">
-          <div className="absolute -top-3 -right-3 w-12 h-12 bg-blue-50 rounded-full group-hover:bg-blue-100 transition-colors" />
-          
-          <div className="text-2xl font-black text-blue-600 mb-1">
-            {coupon.discountType === "percentage" ? `${coupon.discountValue}% OFF` : `$${coupon.discountValue} OFF`}
+        <div key={coupon.id} className="relative bg-white p-10 rounded-[2.5rem] border-2 border-dashed border-[#eb9a05]/30 flex flex-col items-center justify-center text-center group hover:border-[#eb9a05] hover:shadow-2xl transition-all duration-500">
+          <span className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05] mb-4">Special Offer</span>
+          <div className="text-5xl font-playfair font-black mb-2" style={{ color: 'var(--primary)' }}>
+            {coupon.discountType === "percentage" ? `${coupon.discountValue}%` : `$${coupon.discountValue}`} <span className="text-xl opacity-20">Off</span>
           </div>
-          <p className="text-xs text-slate-500 font-medium mb-4 uppercase tracking-wider italic">
-            Min. purchase: ${coupon.minPurchase}
-          </p>
-          
-          <div className="flex items-center gap-3">
-             <div className="bg-slate-50 px-4 py-2 rounded-lg font-mono font-bold text-slate-700 border border-slate-100">
+          <p className="text-[10px] font-bold text-gray-400 mb-8 uppercase tracking-widest">Min. Purchase: ${coupon.minPurchase}</p>
+          <div className="flex items-center gap-3 w-full">
+             <div className="flex-1 bg-[#f8f9fa] px-4 py-4 rounded-xl font-mono font-bold text-[#002147] border border-gray-100 tracking-widest text-lg uppercase">
                {coupon.code}
              </div>
              <button 
                 onClick={() => applyCoupon(coupon.code)}
                 disabled={appliedCoupon?.code === coupon.code}
-                className={`px-4 py-2 rounded-lg font-bold transition-all shadow-sm ${
-                  appliedCoupon?.code === coupon.code 
-                  ? "bg-green-500 text-white cursor-default" 
-                  : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
-                }`}
+                className={`p-4 rounded-xl transition-all shadow-xl ${appliedCoupon?.code === coupon.code ? "bg-green-500 text-white" : "btn-primary hover:scale-105 active:scale-95"}`}
              >
-               {appliedCoupon?.code === coupon.code ? "Applied!" : "Apply Now"}
+               {appliedCoupon?.code === coupon.code ? <CheckCircle className="w-6 h-6" /> : "Apply"}
              </button>
           </div>
         </div>

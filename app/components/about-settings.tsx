@@ -36,6 +36,14 @@ export function AboutSettings() {
       description: "",
       image: "",
       bullets: [] as string[],
+    },
+    cta: {
+      heading: "",
+      subtitle: "",
+      primaryButtonText: "",
+      primaryButtonLink: "",
+      secondaryButtonText: "",
+      secondaryButtonLink: "",
     }
   })
 
@@ -53,6 +61,7 @@ export function AboutSettings() {
             milestones: result.data.about.milestones || [],
             mission: result.data.about.mission || { title: "", content: [], image: "" },
             sustainability: result.data.about.sustainability || { title: "", description: "", image: "", bullets: [] },
+            cta: result.data.about.cta || { heading: "", subtitle: "", primaryButtonText: "", primaryButtonLink: "", secondaryButtonText: "", secondaryButtonLink: "" },
           })
         }
       } catch (error) {
@@ -397,6 +406,70 @@ export function AboutSettings() {
                 </Button>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Plus className="h-5 w-5 text-purple-600" />
+            <CardTitle>CTA Section</CardTitle>
+          </div>
+          <CardDescription>Configure the "Join The Inner Circle" call to action section</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Heading</Label>
+            <Input 
+              value={(about as any).cta?.heading} 
+              onChange={(e) => setAbout(prev => ({ ...prev, cta: { ...(prev as any).cta, heading: e.target.value } }))} 
+              placeholder="e.g. Become a Connoisseur of Prestige Today"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Subtitle</Label>
+            <Input 
+              value={(about as any).cta?.subtitle} 
+              onChange={(e) => setAbout(prev => ({ ...prev, cta: { ...(prev as any).cta, subtitle: e.target.value } }))} 
+              placeholder="e.g. Join The Inner Circle"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Primary Button Text</Label>
+              <Input 
+                value={(about as any).cta?.primaryButtonText} 
+                onChange={(e) => setAbout(prev => ({ ...prev, cta: { ...(prev as any).cta, primaryButtonText: e.target.value } }))} 
+                placeholder="Start Shopping"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Primary Button Link</Label>
+              <Input 
+                value={(about as any).cta?.primaryButtonLink} 
+                onChange={(e) => setAbout(prev => ({ ...prev, cta: { ...(prev as any).cta, primaryButtonLink: e.target.value } }))} 
+                placeholder="/shop"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Secondary Button Text</Label>
+              <Input 
+                value={(about as any).cta?.secondaryButtonText} 
+                onChange={(e) => setAbout(prev => ({ ...prev, cta: { ...(prev as any).cta, secondaryButtonText: e.target.value } }))} 
+                placeholder="Private Briefing"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Secondary Button Link</Label>
+              <Input 
+                value={(about as any).cta?.secondaryButtonLink} 
+                onChange={(e) => setAbout(prev => ({ ...prev, cta: { ...(prev as any).cta, secondaryButtonLink: e.target.value } }))} 
+                placeholder="/contact"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
