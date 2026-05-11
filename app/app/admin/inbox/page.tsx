@@ -206,32 +206,32 @@ export default function AdminInboxPage() {
   const selectedUser = conversations.find(c => (c.user.id || c.user._id || "") === selectedChat)?.user;
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg border border-gray-200 overflow-hidden" style={{ height: "calc(100vh - 120px)" }}>
+    <div className="flex flex-col h-full bg-background rounded-lg border overflow-hidden" style={{ height: "calc(100vh - 120px)" }}>
       <div className="flex h-full">
         {/* Sidebar */}
-        <div className="w-1/3 border-r border-gray-200 flex flex-col h-full bg-gray-50/50">
-          <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="w-1/3 border-r flex flex-col h-full bg-muted/30">
+          <div className="p-4 border-b bg-background">
             <h2 className="text-xl font-bold flex items-center gap-2">
-              <MessageSquare className="w-5 h-5 text-blue-600" />
+              <MessageSquare className="w-5 h-5 text-primary" />
               Live Chats
             </h2>
             <div className="mt-4 relative">
               <input
                 type="text"
                 placeholder="Search conversations..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-gray-50"
+                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm bg-muted/50 text-foreground"
               />
-              <Search className="w-4 h-4 text-gray-400 absolute left-3 top-3" />
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-3" />
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto w-full">
             {isLoadingConversations ? (
               <div className="flex justify-center items-center h-32">
-                <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : conversations.length === 0 ? (
-              <div className="text-center p-8 text-gray-500">
+              <div className="text-center p-8 text-muted-foreground">
                 <p>No active conversations</p>
               </div>
             ) : (
@@ -239,31 +239,31 @@ export default function AdminInboxPage() {
                 <div
                   key={convo.user.id || convo.user._id}
                   onClick={() => setSelectedChat(convo.user.id || convo.user._id || "")}
-                  className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-100 transition flex items-start gap-3 ${selectedChat === (convo.user.id || convo.user._id || "") ? "bg-blue-50 border-l-4 border-l-blue-600" : ""
+                  className={`p-4 border-b border-muted/20 cursor-pointer hover:bg-accent transition flex items-start gap-3 ${selectedChat === (convo.user.id || convo.user._id || "") ? "bg-primary/10 border-l-4 border-l-primary" : ""
                     }`}
                 >
                   <div className="relative">
                     {convo.user.avatar ? (
-                      <img src={resolveAvatar(convo.user.avatar)} className="w-10 h-10 rounded-full" alt="avatar" />
+                      <img src={resolveAvatar(convo.user.avatar)} className="w-10 h-10 rounded-full object-cover" alt="avatar" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                         {convo.user.fullName?.charAt(0) || "U"}
                       </div>
                     )}
                     {convo.unreadCount > 0 && selectedChat !== convo.user._id && (
-                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
                         {convo.unreadCount}
                       </span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
-                      <h4 className="font-medium text-gray-900 truncate pr-2">{convo.user.fullName || convo.user.email}</h4>
-                      <span className="text-xs text-gray-400 shrink-0">
+                      <h4 className="font-medium text-foreground truncate pr-2">{convo.user.fullName || convo.user.email}</h4>
+                      <span className="text-xs text-muted-foreground shrink-0">
                         {convo.latestMessage ? new Date(convo.latestMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
                       </span>
                     </div>
-                    <p className={`text-sm truncate ${convo.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}>
+                    <p className={`text-sm truncate ${convo.unreadCount > 0 ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
                       {convo.latestMessage?.senderModel === "Admin" ? "You: " : ""}
                       {convo.latestMessage?.content}
                     </p>
@@ -275,26 +275,26 @@ export default function AdminInboxPage() {
         </div>
 
         {/* Chat Area */}
-        <div className="w-2/3 flex flex-col h-full bg-white">
+        <div className="w-2/3 flex flex-col h-full bg-background">
           {selectedChat ? (
             <>
               {/* Chat Header */}
-              <div className="p-4 border-b border-gray-200 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <UserCircle className="w-6 h-6 text-gray-500" />
+              <div className="p-4 border-b flex items-center gap-3 bg-background">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <UserCircle className="w-6 h-6 text-muted-foreground" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-gray-900">{selectedUser?.fullName || "User"}</h3>
-                  <p className="text-xs text-gray-500">{selectedUser?.email}</p>
+                  <h3 className="font-bold text-foreground">{selectedUser?.fullName || "User"}</h3>
+                  <p className="text-xs text-muted-foreground">{selectedUser?.email}</p>
                 </div>
               </div>
 
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-4 bg-gray-50/30">
+              <div className="flex-1 overflow-y-auto p-4 bg-muted/10">
                 <div className="flex flex-col space-y-4">
                   {isLoadingMessages ? (
                     <div className="flex justify-center items-center py-20">
-                      <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
                     </div>
                   ) : (
                     <>
@@ -303,15 +303,15 @@ export default function AdminInboxPage() {
                         return (
                           <div key={msg.id || msg._id} className={`flex ${isAdminInfo ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[70%] min-w-[70px] rounded-2xl px-4 py-2 shadow-sm ${isAdminInfo
-                                ? "bg-blue-600 text-white rounded-br-sm"
-                                : "bg-white border border-gray-200 text-gray-800 rounded-bl-sm"
+                                ? "bg-primary text-primary-foreground rounded-br-sm"
+                                : "bg-card border text-card-foreground rounded-bl-sm"
                               }`}>
                               <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
-                              <div className={`flex justify-end items-center mt-1 text-[10px] ${isAdminInfo ? "text-blue-100" : "text-gray-400"}`}>
+                              <div className={`flex justify-end items-center mt-1 text-[10px] ${isAdminInfo ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                                 <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 {isAdminInfo && (
                                   <span className="ml-1">
-                                    {msg.isRead ? <CheckCheck className="w-3 h-3 text-blue-200" /> : <Check className="w-3 h-3" />}
+                                    {msg.isRead ? <CheckCheck className="w-3 h-3 text-primary-foreground" /> : <Check className="w-3 h-3" />}
                                   </span>
                                 )}
                               </div>
@@ -326,19 +326,19 @@ export default function AdminInboxPage() {
               </div>
 
               {/* Chat Input */}
-              <div className="p-4 border-t border-gray-200 bg-white">
+              <div className="p-4 border-t bg-background">
                 <form onSubmit={handleSendMessage} className="flex gap-2">
                   <input
                     type="text"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Type your message..."
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                    className="flex-1 bg-muted/50 border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-sm text-foreground"
                   />
                   <button
                     type="submit"
                     disabled={!inputValue.trim()}
-                    className="bg-blue-600 text-white rounded-lg px-4 py-2 hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center gap-2 font-medium"
+                    className="bg-primary text-primary-foreground rounded-lg px-4 py-2 hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center gap-2 font-medium"
                   >
                     Send <Send className="w-4 h-4" />
                   </button>
@@ -346,9 +346,9 @@ export default function AdminInboxPage() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50">
-              <MessageSquare className="w-16 h-16 mb-4 text-gray-300" />
-              <h3 className="text-xl font-medium text-gray-600">Select a conversation</h3>
+            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground bg-muted/10">
+              <MessageSquare className="w-16 h-16 mb-4 text-muted/30" />
+              <h3 className="text-xl font-medium">Select a conversation</h3>
               <p className="text-sm">Choose a chat from the sidebar to view messages</p>
             </div>
           )}
