@@ -229,4 +229,9 @@ export const contactApi = {
 // Site Settings API
 export const siteApi = {
   getSettings: () => fetcher("/api/settings", { cache: "no-store" }),
+  subscribeNewsletter: (email: string) =>
+    fetcher("/api/newsletter", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
 }

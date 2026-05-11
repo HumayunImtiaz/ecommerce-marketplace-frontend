@@ -42,21 +42,21 @@ function ResetPasswordContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] px-4 py-20 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#eb9a05]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
-      
+
       <div className="max-w-md w-full bg-white p-12 md:p-16 rounded-[3rem] shadow-2xl border border-[#eb9a05]/10 relative z-10 animate-fade-in-up">
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-8">
             <Sparkles className="w-4 h-4" />
-            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Access Recovery</span>
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Security Update</span>
           </div>
-          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Key Regeneration</h2>
-          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">Secure your identity with a new key.</p>
+          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Reset Password</h2>
+          <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">Create your new password below.</p>
         </div>
 
         <form className="space-y-8" onSubmit={formik.handleSubmit}>
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">New Access Key</label>
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">New Password</label>
               <div className="relative">
                 <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
@@ -65,7 +65,7 @@ function ResetPasswordContent() {
                   value={formik.values.password}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
-                  placeholder="Enter new key"
+                  placeholder="Enter new password"
                   className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.password && formik.errors.password ? "border-red-400" : "border-gray-50"}`}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#eb9a05]">
@@ -76,7 +76,7 @@ function ResetPasswordContent() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Validate New Key</label>
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Confirm Password</label>
               <div className="relative">
                 <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input

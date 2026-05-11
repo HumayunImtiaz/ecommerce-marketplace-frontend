@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useState, useRef } from "react"
-import { User, MapPin, Package, Heart, Settings, Loader2, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, Camera, Sparkles, LogOut, Shield } from "lucide-react"
+import { User, MapPin, Package, Heart, Settings, Loader2, CheckCircle, Clock, Truck, XCircle, ChevronDown, ChevronUp, Camera, Sparkles, LogOut, Shield, ArrowLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
@@ -12,6 +12,7 @@ import AddressManager from "@/components/AddressManager"
 import { useSearchParams } from "next/navigation"
 import { orderApi, authApi } from "@/lib/api"
 import { getImageUrl } from "@/lib/utils"
+import AddressMapPicker from "@/components/AddressMapPicker"
 
 interface OrderItem {
   productId: string
@@ -64,24 +65,26 @@ function OrderCard({ order }: { order: Order }) {
   return (
     <div className="bg-white rounded-[2rem] border border-[#eb9a05]/10 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
       <div
-        className="flex items-center justify-between p-8 cursor-pointer hover:bg-[#f8f9fa] transition-colors"
+        className="flex flex-col sm:flex-row sm:items-center justify-between p-5 md:p-8 cursor-pointer hover:bg-[#f8f9fa] transition-colors gap-6"
         onClick={() => setExpanded(!expanded)}
       >
-        <div className="flex items-center gap-8">
-          <div className="p-4 rounded-2xl bg-[#002147]/5 text-[#002147]">
-            <Package className="w-6 h-6" />
+        <div className="flex items-center gap-4 md:gap-8">
+          <div className="p-3 md:p-4 rounded-2xl bg-[#002147]/5 text-[#002147] shrink-0">
+            <Package className="w-5 h-5 md:w-6 md:h-6" />
           </div>
-          <div>
-            <p className="font-black text-xs tracking-widest uppercase text-[#002147] mb-1">{order.orderNumber}</p>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
+          <div className="min-w-0 flex-1">
+            <p className="font-black text-[10px] md:text-xs tracking-widest uppercase text-[#002147] mb-1 truncate">{order.orderNumber}</p>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
           </div>
-          <StatusBadge status={order.orderStatus} />
+          <div className="shrink-0">
+            <StatusBadge status={order.orderStatus} />
+          </div>
         </div>
-        <div className="flex items-center gap-8">
-          <div className="text-right hidden sm:block">
-            <p className="text-xl font-playfair font-black text-[#002147]">${order.total.toFixed(2)}</p>
+        <div className="flex items-center justify-between sm:justify-end gap-6 md:gap-8 border-t sm:border-none pt-4 sm:pt-0">
+          <div className="text-left sm:text-right">
+            <p className="text-lg md:text-xl font-playfair font-black text-[#002147]">${order.total.toFixed(2)}</p>
             <p className="text-[8px] font-black text-[#eb9a05] uppercase tracking-widest">
-              {order.paymentMethod === "cod" ? "Private Courier" : "Digital Asset"}
+              {order.paymentMethod === "cod" ? "Cash on Delivery" : "Online Payment"}
             </p>
           </div>
           <div className={`p-2 rounded-xl bg-gray-50 text-gray-300 transition-transform duration-500 ${expanded ? 'rotate-180' : ''}`}>
@@ -91,43 +94,43 @@ function OrderCard({ order }: { order: Order }) {
       </div>
 
       {expanded && (
-        <div className="p-10 space-y-10 border-t border-gray-50 animate-fade-in-up">
+        <div className="p-6 md:p-10 space-y-10 border-t border-gray-50 animate-fade-in-up">
           <div>
-            <h4 className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 mb-6">Acquired Items</h4>
+            <h4 className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 mb-6">Order Items</h4>
             <div className="space-y-6">
               {order.items.map((item, i) => (
-                <div key={i} className="flex items-center gap-6">
-                  <div className="relative w-20 h-24 rounded-2xl overflow-hidden bg-[#f8f9fa] border border-gray-100 flex-shrink-0">
+                <div key={i} className="flex items-center gap-4 md:gap-6">
+                  <div className="relative w-16 h-20 md:w-20 md:h-24 rounded-2xl overflow-hidden bg-[#f8f9fa] border border-gray-100 flex-shrink-0">
                     <Image src={getImageUrl(item.image)} alt={item.name} fill className="object-cover" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-playfair font-black text-[#002147]">{item.name}</p>
-                    <div className="flex items-center gap-4 mt-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs md:text-sm font-playfair font-black text-[#002147] truncate">{item.name}</p>
+                    <div className="flex items-center gap-3 mt-2">
                       <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Qty: {item.quantity}</span>
                       {item.selectedColor && <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">· {item.selectedColor}</span>}
                     </div>
                   </div>
-                  <p className="text-lg font-black text-[#002147]">${(item.price * item.quantity).toFixed(2)}</p>
+                  <p className="text-sm md:text-lg font-black text-[#002147] shrink-0">${(item.price * item.quantity).toFixed(2)}</p>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-            <div className="bg-[#f8f9fa] rounded-3xl p-8 space-y-4">
+            <div className="bg-[#f8f9fa] rounded-3xl p-6 md:p-8 space-y-4">
               <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-40"><span>Subtotal</span><span>${order.subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-40"><span>Taxation</span><span>${order.tax.toFixed(2)}</span></div>
-              <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-40"><span>Logistics</span><span>{order.shippingCost === 0 ? "Gratis" : `$${order.shippingCost.toFixed(2)}`}</span></div>
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-40"><span>Tax</span><span>${order.tax.toFixed(2)}</span></div>
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest opacity-40"><span>Shipping</span><span>{order.shippingCost === 0 ? "Gratis" : `$${order.shippingCost.toFixed(2)}`}</span></div>
               <div className="pt-4 border-t border-[#002147]/5 flex justify-between items-baseline">
-                <span className="text-xs font-black uppercase tracking-widest text-[#002147]">Final Value</span>
-                <span className="text-2xl font-playfair font-black text-[#002147]">${order.total.toFixed(2)}</span>
+                <span className="text-xs font-black uppercase tracking-widest text-[#002147]">Total</span>
+                <span className="text-xl md:text-2xl font-playfair font-black text-[#002147]">${order.total.toFixed(2)}</span>
               </div>
             </div>
 
             <div className="space-y-6">
               <div>
-                <h4 className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 mb-2">Delivery Sanctuary</h4>
-                <p className="text-sm font-medium text-gray-600 leading-relaxed italic">
+                <h4 className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 mb-2">Shipping Address</h4>
+                <p className="text-xs md:text-sm font-medium text-gray-600 leading-relaxed italic">
                   {order.shippingAddress.name}<br />
                   {order.shippingAddress.street}<br />
                   {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}<br />
@@ -135,7 +138,7 @@ function OrderCard({ order }: { order: Order }) {
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40">Payment Status:</span>
+                <span className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40">Payment:</span>
                 <span className={`text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest ${order.paymentStatus === "paid" ? "bg-green-500 text-white shadow-lg shadow-green-500/20" : "bg-yellow-500 text-white shadow-lg shadow-yellow-500/20"}`}>
                   {order.paymentStatus}
                 </span>
@@ -154,7 +157,8 @@ function AccountContent() {
   const { addToast } = useToast()
   const { items: wishlistItems, isLoading: wishlistLoading } = useWishlist()
 
-  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "profile")
+  const [activeTab, setActiveTab] = useState<string>(searchParams.get("tab") || "dashboard")
+  const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [profileData, setProfileData] = useState({
     name: user?.name || "",
@@ -162,7 +166,7 @@ function AccountContent() {
     phone: user?.phone || "",
     dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "",
   })
-  
+
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(getImageUrl(user?.avatar))
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -177,7 +181,7 @@ function AccountContent() {
 
   useEffect(() => {
     if (user) {
-      setProfileData({ 
+      setProfileData({
         name: user.name || "", email: user.email || "", phone: user.phone || "",
         dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : ""
       })
@@ -242,11 +246,11 @@ function AccountContent() {
   }
 
   const tabs = [
-    { id: "profile", label: "Identity", icon: User },
-    { id: "orders", label: "Archives", icon: Package },
-    { id: "addresses", label: "Sanctuaries", icon: MapPin },
-    { id: "wishlist", label: "Gallery", icon: Heart },
-    { id: "settings", label: "Preference", icon: Settings },
+    { id: "profile", label: "Profile", icon: User },
+    { id: "orders", label: "Orders", icon: Package },
+    { id: "addresses", label: "Addresses", icon: MapPin },
+    { id: "wishlist", label: "Wishlist", icon: Heart },
+    { id: "settings", label: "Settings", icon: Settings },
   ]
 
   if (!user) return <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-[#eb9a05]" /></div>
@@ -254,19 +258,35 @@ function AccountContent() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] py-20">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-end justify-between mb-16 gap-8">
-          <div>
+        <div className="flex flex-col md:flex-row items-center md:items-end justify-between mb-16 gap-8">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left w-full">
             <div className="flex items-center gap-4 mb-4">
-              <div className="h-px w-8 bg-[#eb9a05]"></div>
-              <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">Personal Workspace</p>
+              <div className="hidden md:block h-px w-8 bg-[#eb9a05]"></div>
+              <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">Account Dashboard</p>
             </div>
-            <h1 className="text-5xl font-playfair font-black" style={{ color: 'var(--primary)' }}>My Heritage</h1>
+            <h1 className="text-4xl md:text-5xl font-playfair font-black" style={{ color: 'var(--primary)' }}>{activeTab === 'dashboard' ? 'Welcome Back' : tabs.find(t => t.id === activeTab)?.label}</h1>
+
+            {activeTab === 'dashboard' && (
+              <div className="mt-8 lg:hidden flex flex-col items-center">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl mb-4">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-[#002147] flex items-center justify-center text-[#eb9a05]">
+                      <User className="w-12 h-12" />
+                    </div>
+                  )}
+                </div>
+                <h2 className="text-xl font-playfair font-black text-[#002147]">{user?.name}</h2>
+                <p className="text-[10px] font-bold text-[#eb9a05] uppercase tracking-widest mt-1">{user?.email}</p>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
+          {/* Sidebar - Hidden on mobile if viewing a sub-page */}
+          <div className={`lg:col-span-1 ${activeTab !== 'dashboard' ? 'hidden lg:block' : 'hidden lg:block'}`}>
             <div className="bg-white rounded-[3rem] p-10 shadow-2xl border border-[#eb9a05]/10 sticky top-28">
               <div className="flex flex-col items-center text-center mb-10">
                 <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-[#f8f9fa] shadow-2xl mb-6">
@@ -304,7 +324,7 @@ function AccountContent() {
                 <div className="pt-6 border-t border-gray-50 mt-6">
                   <button onClick={logout} className="w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-left text-red-400 hover:bg-red-50 transition-all group">
                     <LogOut className="w-5 h-5 transition-transform group-hover:-translate-x-2" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">Withdrawal</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest">Sign Out</span>
                   </button>
                 </div>
               </nav>
@@ -312,25 +332,35 @@ function AccountContent() {
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-[3.5rem] p-12 md:p-16 shadow-2xl border border-[#eb9a05]/10 min-h-[600px] animate-fade-in-up">
-              
+          <div className={`lg:col-span-3 ${activeTab === 'dashboard' ? 'hidden lg:block' : 'block'}`}>
+            <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] p-8 md:p-16 shadow-2xl border border-[#eb9a05]/10 min-h-[600px] animate-fade-in-up">
+              {/* Back Button for Mobile */}
+              {activeTab !== 'dashboard' && (
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className="lg:hidden flex items-center gap-2 text-[#eb9a05] text-[10px] font-black uppercase tracking-widest mb-10 group"
+                >
+                  <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                  Back to Dashboard
+                </button>
+              )}
+
               {/* Profile Tab */}
               {activeTab === "profile" && (
                 <div className="animate-fade-in-up">
                   <div className="flex items-center justify-between mb-12">
-                    <h2 className="text-3xl font-playfair font-black text-[#002147]">Personal Identity</h2>
+                    <h2 className="text-3xl font-playfair font-black text-[#002147]">Profile Information</h2>
                     <button onClick={() => setIsEditing(!isEditing)} className={`px-8 py-3 rounded-xl font-black text-[10px] tracking-widest uppercase transition-all ${isEditing ? 'bg-red-50 text-red-500' : 'bg-[#f8f9fa] text-[#eb9a05] hover:bg-[#002147] hover:text-white shadow-sm'}`}>
                       {isEditing ? "Discard" : "Update Profile"}
                     </button>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     {[
-                      { key: "name", label: "Full Identity", type: "text" },
-                      { key: "email", label: "Authorized Email", type: "email" },
-                      { key: "phone", label: "Contact Frequency", type: "tel" },
-                      { key: "dateOfBirth", label: "Heritage Date", type: "date" },
+                      { key: "name", label: "Full Name", type: "text" },
+                      { key: "email", label: "Email Address", type: "email" },
+                      { key: "phone", label: "Phone Number", type: "tel" },
+                      { key: "dateOfBirth", label: "Date of Birth", type: "date" },
                     ].map(({ key, label, type }) => (
                       <div key={key}>
                         <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 mb-3 ml-4">{label}</label>
@@ -344,41 +374,47 @@ function AccountContent() {
                       </div>
                     ))}
                   </div>
-                  
-                  <div className="mt-12">
-                    <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 mb-6 ml-4">Visual Portrait</label>
-                    <div className="flex items-center gap-10">
-                      <div 
-                        className={`relative w-32 h-32 rounded-3xl overflow-hidden group transition-all duration-500 ${isEditing ? 'cursor-pointer ring-4 ring-[#eb9a05]/20 shadow-2xl' : 'opacity-40 grayscale-[50%]'}`}
+                  <div className="mt-12 bg-[#f8f9fa] p-8 rounded-[2rem] border border-gray-50">
+                    <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 mb-6 ml-2">Profile Picture</label>
+                    <div className="flex flex-col sm:flex-row items-center gap-8">
+                      <div
+                        className={`relative w-32 h-32 rounded-3xl overflow-hidden group transition-all duration-500 shadow-xl ${isEditing ? 'cursor-pointer ring-4 ring-[#eb9a05]/20' : ''}`}
                         onClick={() => isEditing && fileInputRef.current?.click()}
                       >
                         {avatarPreview ? (
-                          <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                          <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" />
                         ) : (
-                          <div className="w-full h-full bg-[#f8f9fa] flex items-center justify-center text-[#eb9a05]">
+                          <div className="w-full h-full bg-[#002147] flex items-center justify-center text-[#eb9a05]">
                             <User className="w-12 h-12" />
                           </div>
                         )}
                         {isEditing && (
-                          <div className="absolute inset-0 bg-[#002147]/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
-                            <Camera className="w-8 h-8 text-[#eb9a05]" />
+                          <div className="absolute inset-0 bg-[#002147]/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
+                            <Camera className="w-8 h-8 text-white" />
                           </div>
                         )}
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) { setAvatarFile(file); setAvatarPreview(URL.createObjectURL(file)) } }} />
                       </div>
-                      {isEditing && (
-                        <div className="max-w-[200px]">
-                          <p className="text-[10px] font-bold text-[#eb9a05] uppercase tracking-widest mb-2 leading-relaxed">Update Portrait</p>
-                          <p className="text-[10px] text-gray-400 font-medium italic">Preferred: High-resolution square composition.</p>
-                        </div>
-                      )}
+                      <div className="text-center sm:text-left">
+                        <p className="text-sm font-playfair font-black text-[#002147] mb-2">Change Profile Picture</p>
+                        <p className="text-[10px] text-gray-400 font-medium leading-relaxed max-w-[180px]">Square images (1:1) work best for your digital identity.</p>
+                        {isEditing && (
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            className="mt-4 text-[10px] font-black text-[#eb9a05] uppercase tracking-widest border-b border-[#eb9a05]/20 hover:border-[#eb9a05] transition-all"
+                          >
+                            Upload New
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
 
+
                   {isEditing && (
-                    <div className="flex gap-6 mt-16 animate-fade-in-up">
-                      <button onClick={handleSaveProfile} className="btn-primary py-5 px-12 text-sm font-black tracking-widest uppercase shadow-2xl">Confirm Identity</button>
-                      <button onClick={() => setIsEditing(false)} className="px-12 py-5 rounded-2xl border-2 border-gray-100 text-[#002147] font-black text-xs tracking-widest uppercase hover:bg-gray-50 transition-all">Discard</button>
+                    <div className="flex flex-col sm:flex-row gap-4 mt-16 animate-fade-in-up">
+                      <button onClick={handleSaveProfile} className="flex-1 btn-primary py-5 px-12 text-[10px] font-black tracking-widest uppercase shadow-2xl">Save Changes</button>
+                      <button onClick={() => setIsEditing(false)} className="flex-1 px-12 py-5 rounded-2xl border-2 border-gray-100 text-[#002147] font-black text-[10px] tracking-widest uppercase hover:bg-gray-50 transition-all">Discard</button>
                     </div>
                   )}
                 </div>
@@ -387,11 +423,7 @@ function AccountContent() {
               {/* Orders Tab */}
               {activeTab === "orders" && (
                 <div className="animate-fade-in-up">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-px w-8 bg-[#eb9a05]"></div>
-                    <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">The Archives</p>
-                  </div>
-                  <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">Order History</h2>
+                  <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">Purchase History</h2>
 
                   {ordersLoading ? (
                     <div className="flex flex-col items-center justify-center py-32">
@@ -418,24 +450,50 @@ function AccountContent() {
               {/* Addresses Tab */}
               {activeTab === "addresses" && (
                 <div className="animate-fade-in-up">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-px w-8 bg-[#eb9a05]"></div>
-                    <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">The Sanctuaries</p>
-                  </div>
-                  <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">Saved Destinations</h2>
-                  <AddressManager />
+                  {isAddingAddress ? (
+                    <div>
+                      <div className="flex items-center gap-6 mb-12">
+                        <button onClick={() => setIsAddingAddress(false)} className="p-3 rounded-2xl bg-gray-50 text-[#002147] hover:bg-[#002147] hover:text-white transition-all">
+                          <ArrowLeft className="w-5 h-5" />
+                        </button>
+                        <h2 className="text-3xl font-playfair font-black text-[#002147]">New Address</h2>
+                      </div>
+                      <div className="bg-white rounded-[3rem] border border-[#eb9a05]/10 shadow-2xl overflow-hidden">
+                        <AddressMapPicker 
+                          isOpen={true} 
+                          onClose={() => setIsAddingAddress(false)} 
+                          onAddressSelect={async (address) => {
+                            try {
+                              const response = await fetch('/api/auth/user/addresses', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(address),
+                              })
+                              if (response.ok) {
+                                addToast("Address established successfully", "success")
+                                setIsAddingAddress(false)
+                                // Trigger a refresh of the address list by briefly toggling activeTab or just relying on component remount
+                              }
+                            } catch (error) { addToast("Failed to secure address", "error") }
+                          }} 
+                          isFullPage={true}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">Saved Addresses</h2>
+                      <AddressManager onAddClick={() => setIsAddingAddress(true)} />
+                    </div>
+                  )}
                 </div>
               )}
 
               {/* Wishlist Tab */}
               {activeTab === "wishlist" && (
                 <div className="animate-fade-in-up">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-px w-8 bg-[#eb9a05]"></div>
-                    <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">The Gallery</p>
-                  </div>
-                  <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">Private Desires</h2>
-                  
+                  <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">My Wishlist</h2>
+
                   {wishlistLoading ? (
                     <div className="flex flex-col items-center justify-center py-32">
                       <Loader2 className="w-12 h-12 animate-spin text-[#eb9a05] mb-4" />
@@ -443,7 +501,7 @@ function AccountContent() {
                   ) : wishlistItems.length === 0 ? (
                     <div className="text-center py-32 bg-[#f8f9fa] rounded-[3rem] border-2 border-dashed border-[#eb9a05]/20">
                       <Heart className="w-16 h-16 text-gray-200 mx-auto mb-6" />
-                      <p className="text-xl font-playfair font-bold text-[#002147]">Awaiting Selection</p>
+                      <p className="text-xl font-playfair font-bold text-[#002147]">Your wishlist is empty</p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -458,29 +516,25 @@ function AccountContent() {
               {/* Settings Tab */}
               {activeTab === "settings" && (
                 <div className="animate-fade-in-up">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="h-px w-8 bg-[#eb9a05]"></div>
-                    <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">The Preferences</p>
-                  </div>
-                  <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">Account Orchestration</h2>
-                  
+                  <h2 className="text-3xl font-playfair font-black text-[#002147] mb-12">Account Settings</h2>
+
                   <div className="space-y-12">
                     <div className="bg-[#f8f9fa] rounded-[2.5rem] p-10 border border-gray-50">
                       <div className="flex items-center gap-4 mb-8">
                         <Sparkles className="w-5 h-5 text-[#eb9a05]" />
-                        <h3 className="text-sm font-black tracking-widest uppercase text-[#002147]">Email Protocols</h3>
+                        <h3 className="text-sm font-black tracking-widest uppercase text-[#002147]">Email Notifications</h3>
                       </div>
                       {prefsLoading ? (
                         <div className="flex items-center gap-4 py-4 text-[#eb9a05]">
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          <span className="text-[10px] font-black tracking-widest uppercase">Fetching Protocols...</span>
+                          <span className="text-[10px] font-black tracking-widest uppercase">Loading Preferences...</span>
                         </div>
                       ) : (
                         <div className="space-y-6">
                           {[
                             { id: "orderUpdates", label: "Order & Shipping Notifications" },
-                            { id: "promotionalEmails", label: "Elite Access & Private Invitations" },
-                            { id: "productRecommendations", label: "Artisanal Curations" },
+                            { id: "promotionalEmails", label: "Promotional Emails & Offers" },
+                            { id: "productRecommendations", label: "Product Recommendations" },
                           ].map((pref) => (
                             <label key={pref.id} className="flex items-center justify-between cursor-pointer group p-4 rounded-2xl hover:bg-white transition-all">
                               <span className="text-xs font-bold text-gray-600 group-hover:text-[#002147] transition-colors">{pref.label}</span>
@@ -497,7 +551,7 @@ function AccountContent() {
                     <div className="bg-red-50/30 rounded-[2.5rem] p-10 border border-red-100">
                       <div className="flex items-center gap-4 mb-6">
                         <Shield className="w-5 h-5 text-red-400" />
-                        <h3 className="text-sm font-black tracking-widest uppercase text-red-600">The Final Act (Danger Zone)</h3>
+                        <h3 className="text-sm font-black tracking-widest uppercase text-red-600">Danger Zone</h3>
                       </div>
 
                       {deletionPending ? (
@@ -506,14 +560,14 @@ function AccountContent() {
                             <Clock className="w-6 h-6" />
                           </div>
                           <div>
-                            <p className="text-sm font-black text-red-600 tracking-widest uppercase">Dissolution Pending</p>
-                            <p className="text-xs text-gray-400 italic mt-1">Our council is reviewing your request for identity removal.</p>
+                            <p className="text-sm font-black text-red-600 tracking-widest uppercase">Account Deletion Pending</p>
+                            <p className="text-xs text-gray-400 italic mt-1">Our team is reviewing your request for account deletion.</p>
                           </div>
                         </div>
                       ) : (
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
-                          <p className="text-xs text-gray-400 italic max-w-xs">Permanent removal of your identity from our archives requires manual authorization from our council.</p>
-                          <button onClick={() => setShowDeleteConfirm(true)} className="px-10 py-5 rounded-2xl bg-white border-2 border-red-100 text-red-500 font-black text-[10px] tracking-widest uppercase hover:bg-red-500 hover:text-white transition-all shadow-xl">Initiate Dissolution</button>
+                          <p className="text-xs text-gray-400 italic max-w-xs">Permanent account deletion requires manual verification from our team.</p>
+                          <button onClick={() => setShowDeleteConfirm(true)} className="px-10 py-5 rounded-2xl bg-white border-2 border-red-100 text-red-500 font-black text-[10px] tracking-widest uppercase hover:bg-red-500 hover:text-white transition-all shadow-xl">Delete Account</button>
                         </div>
                       )}
                     </div>
@@ -522,6 +576,48 @@ function AccountContent() {
               )}
             </div>
           </div>
+
+          {/* Mobile Dashboard View */}
+          {activeTab === 'dashboard' && (
+            <div className="lg:hidden grid grid-cols-1 gap-4 animate-fade-in-up">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="flex items-center justify-between p-8 bg-white rounded-3xl border border-[#eb9a05]/10 shadow-xl group active:scale-95 transition-all"
+                  >
+                    <div className="flex items-center gap-6">
+                      <div className="w-14 h-14 rounded-2xl bg-[#002147]/5 flex items-center justify-center text-[#002147] group-hover:bg-[#002147] group-hover:text-[#eb9a05] transition-all">
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-playfair font-black text-[#002147]">{tab.label}</p>
+                        <p className="text-[8px] font-black tracking-widest uppercase text-gray-300 mt-1">Manage your {tab.label.toLowerCase()}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-[#eb9a05]" />
+                  </button>
+                )
+              })}
+              <button
+                onClick={logout}
+                className="flex items-center justify-between p-8 bg-red-50/30 rounded-3xl border border-red-100 shadow-xl group active:scale-95 transition-all mt-4"
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 group-hover:bg-red-500 group-hover:text-white transition-all">
+                    <LogOut className="w-6 h-6" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-playfair font-black text-red-600">Sign Out</p>
+                    <p className="text-[8px] font-black tracking-widest uppercase text-red-300 mt-1">Terminate current session</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-red-400" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -532,15 +628,15 @@ function AccountContent() {
             <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-8">
               <XCircle className="w-12 h-12 text-red-500" />
             </div>
-            <h3 className="text-3xl font-playfair font-black text-[#002147] mb-4">Confirm Dissolution?</h3>
+            <h3 className="text-3xl font-playfair font-black text-[#002147] mb-4">Confirm Account Deletion?</h3>
             <p className="text-sm text-gray-400 italic mb-10 leading-relaxed">
               This action is permanent. Once confirmed, your account, order history, and personal data will be permanently deleted.
             </p>
             <div className="flex flex-col gap-4">
               <button onClick={handleRequestDeletion} disabled={deletionLoading} className="w-full py-5 bg-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-red-500/20 flex items-center justify-center gap-3">
-                {deletionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Initiate Erasure"}
+                {deletionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Permanently Delete"}
               </button>
-              <button onClick={() => setShowDeleteConfirm(false)} className="w-full py-5 bg-[#f8f9fa] text-[#002147] rounded-2xl text-[10px] font-black uppercase tracking-widest">Abandon Act</button>
+              <button onClick={() => setShowDeleteConfirm(false)} className="w-full py-5 bg-[#f8f9fa] text-[#002147] rounded-2xl text-[10px] font-black uppercase tracking-widest">Cancel</button>
             </div>
           </div>
         </div>

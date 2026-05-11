@@ -67,7 +67,7 @@ export default function FeaturedProducts() {
 
           {featuredProducts.length > itemsPerPage && (
             <div className="flex justify-center items-center gap-6 mt-16">
-              <button 
+              <button
                 onClick={prevSlide}
                 className="p-4 rounded-full border border-[#eb9a05]/20 text-[#002147] hover:bg-[#002147] hover:text-[#eb9a05] transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg"
               >
@@ -75,13 +75,13 @@ export default function FeaturedProducts() {
               </button>
               <div className="flex gap-2">
                 {[...Array(Math.ceil(featuredProducts.length / itemsPerPage))].map((_, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className={`h-1.5 rounded-full transition-all duration-500 ${i === Math.floor(currentIndex / itemsPerPage) ? "w-10 bg-[#eb9a05]" : "w-3 bg-gray-200"}`}
                   ></div>
                 ))}
               </div>
-              <button 
+              <button
                 onClick={nextSlide}
                 className="p-4 rounded-full border border-[#eb9a05]/20 text-[#002147] hover:bg-[#002147] hover:text-[#eb9a05] transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-lg"
               >

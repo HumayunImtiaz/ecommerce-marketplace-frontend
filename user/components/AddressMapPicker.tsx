@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
-import { MapPin, Search, Loader2 } from 'lucide-react'
+import { MapPin, Search, Loader2, Sparkles } from 'lucide-react'
 import type { Address } from '@/lib/types'
 
 interface MapAddress extends Address {
@@ -14,12 +14,14 @@ interface AddressMapPickerProps {
   onAddressSelect: (address: MapAddress) => void
   isOpen: boolean
   onClose: () => void
+  isFullPage?: boolean
 }
 
 export default function AddressMapPicker({
   onAddressSelect,
   isOpen,
   onClose,
+  isFullPage = false
 }: AddressMapPickerProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const [search, setSearch] = useState('')
@@ -107,157 +109,138 @@ export default function AddressMapPicker({
 
   if (!isOpen) return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
-          <h2 className="text-xl font-bold flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-blue-600" />
-            Select Address
-          </h2>
+  const content = (
+    <div className={`bg-white shadow-2xl w-full flex flex-col overflow-hidden animate-fade-in-up ${isFullPage ? '' : 'rounded-[2rem] md:rounded-[3rem] max-w-lg max-h-[95vh]'}`}>
+      {/* Header */}
+      <div className="sticky top-0 bg-white border-b border-gray-100 p-6 md:p-8 flex items-center justify-between z-10">
+          <div className="flex items-center gap-4">
+            <div className="p-3 rounded-2xl bg-[#eb9a05]/10 text-[#eb9a05]">
+              <MapPin className="w-5 h-5 md:w-6 md:h-6" />
+            </div>
+            <h2 className="text-xl md:text-2xl font-playfair font-black text-[#002147]">Select Address</h2>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="p-2 rounded-xl hover:bg-gray-50 text-gray-400 hover:text-[#002147] transition-all"
           >
             ✕
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
           {/* Search */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Search Address</label>
+          <div className="space-y-3">
+            <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-1">Search Area</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && searchAddress()}
-                placeholder="Search on map (e.g., '123 Main St, Karachi')"
-                className="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Search location (e.g. 123 Main St, Karachi)"
+                className="flex-1 bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:border-[#eb9a05] outline-none placeholder:text-gray-300"
               />
               <button
                 onClick={searchAddress}
                 disabled={searching}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                className="bg-[#002147] hover:bg-[#002b5c] disabled:bg-gray-100 text-[#eb9a05] px-5 py-3 rounded-xl transition-all"
               >
                 {searching ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Search className="w-4 h-4" />
+                  <Search className="w-5 h-5" />
                 )}
               </button>
             </div>
           </div>
 
-          {/* Map Display (Simple representation) */}
-          <div className="bg-gray-100 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
+          {/* Map Placeholder */}
+          <div className="bg-[#f8f9fa] rounded-3xl p-6 min-h-[160px] flex items-center justify-center border-2 border-dashed border-[#eb9a05]/10 group transition-all hover:border-[#eb9a05]/30">
             {selectedAddress ? (
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-blue-600 mx-auto mb-2" />
-                <p className="text-sm font-medium">
-                  Lat: {selectedAddress.latitude.toFixed(4)}°
-                </p>
-                <p className="text-sm font-medium">
-                  Lon: {selectedAddress.longitude.toFixed(4)}°
-                </p>
-                <p className="text-xs text-gray-500 mt-2">
+              <div className="text-center animate-fade-in">
+                <div className="w-12 h-12 rounded-full bg-[#eb9a05]/20 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                  <MapPin className="w-6 h-6 text-[#eb9a05]" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#002147]">Location Verified</p>
+                <p className="text-[10px] text-gray-400 mt-1 italic max-w-[200px]">
                   {selectedAddress.street}, {selectedAddress.city}
                 </p>
               </div>
             ) : (
-              <p className="text-gray-500">Search to select location on map</p>
+              <div className="text-center opacity-30">
+                <MapPin className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-[10px] font-black uppercase tracking-widest">Pinpoint on Map</p>
+              </div>
             )}
           </div>
 
           {/* Address Form */}
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Label</label>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-1">Label</label>
               <input
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="e.g., Home, Office"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g. Home, Office"
+                className="w-full bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:border-[#eb9a05] outline-none"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Street Address *
-              </label>
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-1">Street Address *</label>
               <input
                 type="text"
                 value={formData.street}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, street: e.target.value }))
-                }
+                onChange={(e) => setFormData((prev) => ({ ...prev, street: e.target.value }))}
                 placeholder="123 Main Street"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:border-[#eb9a05] outline-none"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">City *</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-1">City *</label>
                 <input
                   type="text"
                   value={formData.city}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, city: e.target.value }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, city: e.target.value }))}
                   placeholder="Karachi"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:border-[#eb9a05] outline-none"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">State</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-1">State</label>
                 <input
                   type="text"
                   value={formData.state}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, state: e.target.value }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, state: e.target.value }))}
                   placeholder="Sindh"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:border-[#eb9a05] outline-none"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">ZIP Code</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-1">ZIP Code</label>
                 <input
                   type="text"
                   value={formData.zipCode}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      zipCode: e.target.value,
-                    }))
-                  }
+                  onChange={(e) => setFormData((prev) => ({ ...prev, zipCode: e.target.value }))}
                   placeholder="75500"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:border-[#eb9a05] outline-none"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Country</label>
+              <div className="space-y-2">
+                <label className="block text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-1">Country</label>
                 <select
                   value={formData.country}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      country: e.target.value,
-                    }))
-                  }
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(e) => setFormData((prev) => ({ ...prev, country: e.target.value }))}
+                  className="w-full bg-[#f8f9fa] border border-gray-100 rounded-xl px-4 py-3 text-xs font-bold focus:border-[#eb9a05] outline-none appearance-none"
                 >
                   <option>Pakistan</option>
                   <option>United States</option>
@@ -283,23 +266,31 @@ export default function AddressMapPicker({
           )}
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100 sticky bottom-0 bg-white">
             <button
               onClick={onClose}
-              className="flex-1 border border-gray-300 hover:bg-gray-50 py-2 rounded-lg font-medium transition-colors"
+              className="flex-1 py-4 rounded-2xl border-2 border-gray-100 font-black text-[10px] tracking-widest uppercase hover:bg-gray-50 transition-all text-[#002147]"
             >
               Cancel
             </button>
             <button
               onClick={handleAddressSelect}
               disabled={!selectedAddress || !formData.street || !formData.city}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-2 rounded-lg font-medium transition-colors"
+              className="flex-1 btn-primary py-4 rounded-2xl flex items-center justify-center gap-4 group disabled:opacity-30 disabled:grayscale"
             >
-              Add Address
+              <span className="text-[10px] font-black tracking-widest uppercase">Add Address</span>
+              <Sparkles className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
-    </div>
-  )
+    )
+
+    if (isFullPage) return content
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#002147]/40 backdrop-blur-md animate-fade-in">
+        {content}
+      </div>
+    )
 }

@@ -103,12 +103,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               .filter((item: any): item is CartItem => item !== null)
           }
 
-          // 2. Check if there are local items to sync
-          const savedCart = localStorage.getItem("cart")
-          if (savedCart) {
-            const localItems: CartItem[] = JSON.parse(savedCart)
+          // 2. Check if there are guest items to sync
+          const guestCart = localStorage.getItem("guest_cart")
+          if (guestCart) {
+            const localItems: CartItem[] = JSON.parse(guestCart)
             if (localItems.length > 0) {
-              // Sync each local item to the server
+              // Sync each guest item to the server
               for (const item of localItems) {
                 await cartApi.addToCart({
                   productId: item.product.id,
@@ -117,10 +117,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
                   selectedSize: item.selectedSize
                 })
               }
-              // Clear local storage after sync
-              localStorage.removeItem("cart")
+              // Clear guest cart after sync
+              localStorage.removeItem("guest_cart")
 
-              // Refetch canonical cart
+              // Refetch canonical cart to get server IDs
               const { data: finalData, success: finalSuccess } = await cartApi.getCart()
               if (finalSuccess && finalData?.items) {
                 serverItems = finalData.items
@@ -145,9 +145,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           console.error("Failed to load or sync cart:", error)
         }
       } else {
-        const savedCart = localStorage.getItem("cart")
-        if (savedCart) {
-          setItems(JSON.parse(savedCart))
+        // Guest user - load from guest_cart
+        const guestCart = localStorage.getItem("guest_cart")
+        if (guestCart) {
+          setItems(JSON.parse(guestCart))
+        } else {
+          // If no guest cart and no user, clear the state (e.g., after logout)
+          setItems([])
         }
       }
       setIsInitialized(true)
@@ -159,7 +163,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Save guest cart to localStorage
   useEffect(() => {
     if (!user && isInitialized) {
-      localStorage.setItem("cart", JSON.stringify(items))
+      localStorage.setItem("guest_cart", JSON.stringify(items))
     }
   }, [items, user, isInitialized])
 

@@ -87,7 +87,7 @@ export default function AboutPage() {
   return (
     <div className="bg-[#f8f9fa] overflow-hidden">
       {/* Hero Section */}
-      <section className="relative h-[85vh] flex items-center overflow-hidden bg-[#002147]">
+      <section className="relative min-h-[60vh] md:h-[85vh] flex items-center overflow-hidden bg-[#002147] py-20 md:py-0">
         {/* Dynamic Background Elements */}
         <div className="absolute inset-0 z-0">
           <div className="absolute top-[-10%] right-[-5%] w-[50%] h-[120%] bg-[#eb9a05] opacity-10 rotate-12 blur-3xl rounded-full"></div>
@@ -111,7 +111,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <h1 className="text-6xl md:text-8xl font-playfair font-black text-white leading-tight mb-8">
+            <h1 className="text-4xl md:text-8xl font-playfair font-black text-white leading-tight mb-8">
               {aboutSettings.title}
             </h1>
 
@@ -119,13 +119,13 @@ export default function AboutPage() {
               {aboutSettings.content}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-6">
-              <a href="/shop" className="btn-secondary group flex items-center justify-center gap-3 py-5 px-10 text-base font-bold tracking-widest uppercase shadow-2xl">
+            <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
+              <a href="/shop" className="btn-secondary group flex items-center justify-center gap-3 py-4 md:py-5 px-8 md:px-10 text-sm md:text-base font-bold tracking-widest uppercase shadow-2xl">
                 Explore History
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />
               </a>
 
-              <a href="/contact" className="flex items-center justify-center gap-3 py-5 px-10 text-white font-bold tracking-widest uppercase border border-white/20 rounded-xl hover:bg-white/10 transition-all hover:border-[#eb9a05]">
+              <a href="/contact" className="flex items-center justify-center gap-3 py-4 md:py-5 px-8 md:px-10 text-white font-bold tracking-widest uppercase border border-white/20 rounded-xl hover:bg-white/10 transition-all hover:border-[#eb9a05] text-sm md:text-base">
                 Join Council
               </a>
             </div>
@@ -139,19 +139,25 @@ export default function AboutPage() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-32 relative">
+      <section className="py-20 md:py-32 relative bg-white/50">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-12">
+          {/* Section Heading */}
+          <div className="text-center mb-16 md:mb-24">
+            <h2 className="text-[10px] font-black tracking-[0.5em] uppercase text-[#eb9a05] mb-4">The Impact</h2>
+            <h3 className="text-4xl md:text-5xl font-playfair font-black text-[#002147]">Company Stats</h3>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-12">
             {(stats || []).map((stat: any, index: number) => {
               const Icon = getIcon(stat.icon)
               return (
                 <div key={index} className="text-center animate-fade-in-up" style={{ animationDelay: `${index * 100}ms` }}>
-                  <div className="bg-white rounded-[3rem] p-10 shadow-xl border border-[#eb9a05]/10 transform hover:-translate-y-2 transition-all duration-500">
-                    <div className="w-16 h-16 bg-[#002147]/5 rounded-2xl flex items-center justify-center text-[#eb9a05] mx-auto mb-6">
-                      <Icon className="w-8 h-8" />
+                  <div className="bg-white rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 shadow-xl border border-[#eb9a05]/10 transform hover:-translate-y-2 transition-all duration-500 h-full">
+                    <div className="w-12 h-12 md:w-16 md:h-16 bg-[#002147]/5 rounded-2xl flex items-center justify-center text-[#eb9a05] mx-auto mb-6">
+                      <Icon className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
-                    <div className="text-4xl font-playfair font-black text-[#002147] mb-2">{stat.value}</div>
-                    <div className="text-[10px] font-black tracking-widest uppercase text-[#eb9a05]">{stat.label}</div>
+                    <div className="text-3xl md:text-4xl font-playfair font-black text-[#002147] mb-2">{stat.value}</div>
+                    <div className="text-[9px] md:text-[10px] font-black tracking-widest uppercase text-[#eb9a05] leading-relaxed">{stat.label}</div>
                   </div>
                 </div>
               )
@@ -203,9 +209,9 @@ export default function AboutPage() {
             {(values || []).map((value: any, index: number) => {
               const Icon = getIcon(value.icon)
               return (
-                <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 p-12 rounded-[3rem] group hover:bg-[#eb9a05] transition-all duration-700">
-                  <div className="w-16 h-16 bg-[#eb9a05]/10 rounded-2xl flex items-center justify-center text-[#eb9a05] mb-8 group-hover:bg-[#002147] group-hover:text-white transition-all">
-                    <Icon className="w-8 h-8" />
+                <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 md:p-12 rounded-[2rem] md:rounded-[3rem] group hover:bg-[#eb9a05] transition-all duration-700">
+                  <div className="w-14 h-14 md:w-16 md:h-16 bg-[#eb9a05]/10 rounded-2xl flex items-center justify-center text-[#eb9a05] mb-8 group-hover:bg-[#002147] group-hover:text-white transition-all">
+                    <Icon className="w-7 h-7 md:w-8 md:h-8" />
                   </div>
                   <h4 className="text-2xl font-playfair font-black text-white mb-4 group-hover:text-[#002147] transition-all">{value.title}</h4>
                   <p className="text-white/40 text-sm italic leading-relaxed group-hover:text-[#002147]/60 transition-all">{value.description}</p>
@@ -330,9 +336,9 @@ export default function AboutPage() {
               <div className="relative h-[500px] lg:h-auto min-h-[500px] lg:min-h-[650px]">
                 <Image src={getImageUrl(sustainability.image)} alt="Sustainability" fill className="object-cover object-center" unoptimized />
               </div>
-              <div className="p-16 md:p-24 flex flex-col justify-center">
-                <h4 className="text-sm font-black tracking-[0.3em] uppercase text-[#eb9a05] mb-6">Committed to Sustainability</h4>
-                <p className="text-white/60 text-lg italic leading-relaxed mb-10">{sustainability.description}</p>
+              <div className="p-8 md:p-24 flex flex-col justify-center">
+                <h4 className="text-[10px] md:text-sm font-black tracking-[0.3em] uppercase text-[#eb9a05] mb-6">Committed to Sustainability</h4>
+                <p className="text-white/60 text-base md:text-lg italic leading-relaxed mb-10">{sustainability.description}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
                   {(sustainability.bullets || []).map((b: string, i: number) => (
                     <div key={i} className="flex items-center gap-4">

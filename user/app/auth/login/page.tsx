@@ -63,15 +63,15 @@ export default function LoginPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-8">
             <Sparkles className="w-4 h-4" />
-            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Private Access</span>
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Secure Login</span>
           </div>
           <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">
-            The Connoisseur Login
+            Welcome Back
           </h2>
           <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">
-            New to the collection?{" "}
+            New to LuxaCart?{" "}
             <Link href="/auth/register" className="text-[#eb9a05] hover:underline">
-              Join Us
+              Create Account
             </Link>
           </p>
         </div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
         <form className="space-y-8" onSubmit={formik.handleSubmit}>
           {/* Email */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Authorized Email</label>
+            <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Email Address</label>
             <div className="relative">
               <Mail className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
               <input
@@ -89,9 +89,8 @@ export default function LoginPage() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 placeholder="Enter your email"
-                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-6 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${
-                  formik.touched.email && formik.errors.email ? "border-red-400" : "border-gray-50"
-                }`}
+                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-6 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.email && formik.errors.email ? "border-red-400" : "border-gray-50"
+                  }`}
               />
             </div>
             {formik.touched.email && formik.errors.email && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.email}</p>}
@@ -100,9 +99,9 @@ export default function LoginPage() {
           {/* Password */}
           <div className="space-y-2">
             <div className="flex items-center justify-between px-4">
-              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40">Private Key</label>
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40">Password</label>
               <Link href="/auth/forgot-password" className="text-[10px] font-black tracking-widest uppercase text-[#eb9a05] hover:underline">
-                Forgot Key?
+                Forgot Password?
               </Link>
             </div>
             <div className="relative">
@@ -114,9 +113,8 @@ export default function LoginPage() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 placeholder="Enter your password"
-                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${
-                  formik.touched.password && formik.errors.password ? "border-red-400" : "border-gray-50"
-                }`}
+                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.password && formik.errors.password ? "border-red-400" : "border-gray-50"
+                  }`}
               />
               <button
                 type="button"
@@ -134,18 +132,18 @@ export default function LoginPage() {
             disabled={isLoading || formik.isSubmitting}
             className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-4 group shadow-xl"
           >
-            <span className="text-sm font-black tracking-[0.2em] uppercase">{isLoading || formik.isSubmitting ? "Authenticating..." : "Authorize Access"}</span>
+            <span className="text-sm font-black tracking-[0.2em] uppercase">{isLoading || formik.isSubmitting ? "Signing In..." : "Sign In"}</span>
             {!isLoading && <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />}
           </button>
 
           <div className="relative flex items-center justify-center py-4">
             <div className="w-full border-t border-gray-100"></div>
-            <span className="absolute bg-white px-4 text-[8px] font-black tracking-[0.3em] uppercase text-gray-300">Alternatively</span>
+            <span className="absolute bg-white px-4 text-[8px] font-black tracking-[0.3em] uppercase text-gray-300">Or continue with</span>
           </div>
 
           <div className="flex justify-center">
             <div className="w-full transform hover:scale-105 transition-transform duration-500">
-               <GoogleLogin
+              <GoogleLogin
                 onSuccess={handleGoogleLogin}
                 onError={() => addToast("Google login failed", "error")}
                 theme="outline"
