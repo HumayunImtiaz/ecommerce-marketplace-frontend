@@ -2,11 +2,45 @@
 
 import Link from "next/link"
 import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, Sparkles, ShieldCheck, Globe, Clock } from "lucide-react"
+import { useState } from "react"
 import { useSettings } from "@/contexts/SettingsContext"
+import { useAuth } from "@/contexts/AuthContext"
+import { useToast } from "@/contexts/ToastContext"
 import { getImageUrl } from "@/lib/utils"
+import { siteApi, authApi } from "@/lib/api"
+import { Loader2 } from "lucide-react"
 
 export default function Footer() {
   const { settings } = useSettings()
+  const { user } = useAuth()
+  const { addToast } = useToast()
+  const [email, setEmail] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) return
+    
+    setSubmitting(true)
+    try {
+      const res = await siteApi.subscribeNewsletter(email)
+      if (res.success) {
+        addToast("Successfully subscribed to our newsletter!", "success")
+        setEmail("")
+        
+        // If user is logged in, sync their promotional preferences
+        if (user) {
+          await authApi.updateEmailPreferences({ promotionalEmails: true })
+        }
+      } else {
+        addToast(res.message || "Subscription failed.", "error")
+      }
+    } catch (err) {
+      addToast("Something went wrong. Please try again.", "error")
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <footer className="relative overflow-hidden bg-[#002147] text-white">
@@ -120,17 +154,28 @@ export default function Footer() {
           <div className="space-y-10">
             <h4 className="text-[10px] font-black tracking-[0.5em] uppercase text-[#eb9a05]">Newsletter</h4>
             <p className="text-sm opacity-60 italic leading-relaxed">Join our mailing list for exclusive updates on new products and offers.</p>
-            <form className="space-y-4">
+            <form onSubmit={handleSubscribe} className="space-y-4">
               <div className="relative group">
                 <input
                   type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="Your Email"
+                  required
                   className="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl focus:outline-none focus:border-[#eb9a05] focus:bg-white/10 transition-all text-sm font-bold placeholder:opacity-30"
                 />
               </div>
-              <button type="submit" className="w-full btn-secondary py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-2xl flex items-center justify-center gap-3 group">
-                <Sparkles className="w-4 h-4 transition-transform group-hover:rotate-12" />
-                Subscribe Now
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full btn-secondary py-5 rounded-2xl font-black text-xs tracking-widest uppercase shadow-2xl flex items-center justify-center gap-3 group disabled:opacity-50"
+              >
+                {submitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Sparkles className="w-4 h-4 transition-transform group-hover:rotate-12" />
+                )}
+                {submitting ? "Subscribing..." : "Subscribe Now"}
               </button>
             </form>
           </div>

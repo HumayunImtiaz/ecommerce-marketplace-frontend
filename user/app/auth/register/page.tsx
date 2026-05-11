@@ -47,9 +47,9 @@ export default function RegisterPage() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-8">
             <Sparkles className="w-4 h-4" />
-            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Join The Collection</span>
+            <span className="text-[10px] font-black tracking-[0.3em] uppercase">Get Started</span>
           </div>
-          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Create Identity</h2>
+          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Create Account</h2>
           <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">
             Already a member?{" "}
             <Link href="/auth/login" className="text-[#eb9a05] hover:underline">Sign In</Link>
@@ -60,7 +60,7 @@ export default function RegisterPage() {
           <div className="space-y-6">
             {/* Name */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Full Identity</label>
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Full Name</label>
               <div className="relative">
                 <User className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
@@ -78,7 +78,7 @@ export default function RegisterPage() {
 
             {/* Email */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Electronic Address</label>
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Email Address</label>
               <div className="relative">
                 <Mail className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
@@ -96,7 +96,7 @@ export default function RegisterPage() {
 
             {/* Password */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Access Key</label>
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Password</label>
               <div className="relative">
                 <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
@@ -117,7 +117,7 @@ export default function RegisterPage() {
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Validate Key</label>
+              <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Confirm Password</label>
               <div className="relative">
                 <Lock className="h-5 w-5 text-[#eb9a05] absolute left-6 top-1/2 -translate-y-1/2" />
                 <input
@@ -142,7 +142,7 @@ export default function RegisterPage() {
             disabled={isLoading || formik.isSubmitting}
             className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-4 group shadow-xl mt-8"
           >
-            <span className="text-sm font-black tracking-[0.2em] uppercase">{isLoading || formik.isSubmitting ? "Generating Identity..." : "Join The Collection"}</span>
+            <span className="text-sm font-black tracking-[0.2em] uppercase">{isLoading || formik.isSubmitting ? "Creating Account..." : "Create Account"}</span>
             {!isLoading && <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />}
           </button>
         </form>

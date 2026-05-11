@@ -40,8 +40,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           setItems(mapped)
         }
       } else {
-        // Fetch from localStorage for guests
-        const savedWishlist = localStorage.getItem("wishlist")
+        // Fetch from guest_wishlist for guests
+        const savedWishlist = localStorage.getItem("guest_wishlist")
         if (savedWishlist) {
           setItems(JSON.parse(savedWishlist))
         } else {
@@ -69,7 +69,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   // 2. Persist guest wishlist to localStorage
   useEffect(() => {
     if (!user) {
-      localStorage.setItem("wishlist", JSON.stringify(items))
+      localStorage.setItem("guest_wishlist", JSON.stringify(items))
     }
   }, [items, user])
 
@@ -143,7 +143,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const syncGuestWishlist = useCallback(async () => {
     if (!user) return
 
-    const savedWishlist = localStorage.getItem("wishlist")
+    const savedWishlist = localStorage.getItem("guest_wishlist")
     if (!savedWishlist) return
 
     try {
@@ -154,7 +154,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       const res = await wishlistApi.syncWishlist(productIds)
       
       if (res.success) {
-        localStorage.removeItem("wishlist")
+        localStorage.removeItem("guest_wishlist")
         await fetchWishlist() // Get merged wishlist
         addToast("Your guest wishlist has been synced!", "success")
       }

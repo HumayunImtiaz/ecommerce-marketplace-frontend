@@ -9,11 +9,11 @@ import { useToast } from "@/contexts/ToastContext"
 import { getImageUrl } from "@/lib/utils"
 
 export default function CartPage() {
-  const { 
-    items, 
-    updateQuantity, 
-    removeFromCart, 
-    getCartTotal, 
+  const {
+    items,
+    updateQuantity,
+    removeFromCart,
+    getCartTotal,
     clearCart,
     appliedCoupon,
     discountAmount
@@ -91,7 +91,7 @@ export default function CartPage() {
                               <Minus className="w-4 h-4" />
                             </button>
                             <span className="w-10 text-center font-black text-lg">{item.quantity}</span>
-                            <button 
+                            <button
                               onClick={() => {
                                 const avail = (() => {
                                   if (!item.product.variants || item.product.variants.length === 0) return item.product.totalStock || 0

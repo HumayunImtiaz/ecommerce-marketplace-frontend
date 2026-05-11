@@ -31,12 +31,12 @@ function VerifyEmailContent() {
       finally { setIsLoading(false) }
     }
     verify()
-  }, []) 
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] px-4 py-20 relative overflow-hidden">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#eb9a05]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
-      
+
       <div className="max-w-md w-full bg-white p-12 md:p-16 rounded-[3rem] shadow-2xl border border-[#eb9a05]/10 relative z-10 text-center animate-fade-in-up">
         <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-10">
           <Sparkles className="w-4 h-4" />
@@ -54,11 +54,11 @@ function VerifyEmailContent() {
               <CheckCircle className="h-12 w-12 text-green-500" />
             </div>
             <div>
-              <h2 className="text-3xl font-playfair font-black text-[#002147] mb-4">Identity Confirmed</h2>
+              <h2 className="text-3xl font-playfair font-black text-[#002147] mb-4">Verification successful</h2>
               <p className="text-gray-400 text-sm italic font-medium leading-relaxed">Your electronic address has been successfully authenticated. Access to the collection is now granted.</p>
             </div>
             <Link href="/auth/login" className="btn-primary w-full py-5 rounded-2xl flex items-center justify-center gap-4 group">
-              <span className="text-sm font-black tracking-widest uppercase">Advance To Login</span>
+              <span className="text-sm font-black tracking-widest uppercase">Please Login</span>
               <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />
             </Link>
           </div>

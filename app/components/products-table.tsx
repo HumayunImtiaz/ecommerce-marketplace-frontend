@@ -250,25 +250,25 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
       {selectedProducts.length > 0 && (
         <div className="flex items-center gap-2 p-4 bg-muted rounded-lg">
           <span className="text-sm">{selectedProducts.length} product(s) selected</span>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             onClick={() => handleBulkStatusUpdate(true)}
             disabled={isBulkUpdating}
           >
             {isBulkUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Publish
           </Button>
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => handleBulkStatusUpdate(false)}
             disabled={isBulkUpdating}
           >
             {isBulkUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
             Unpublish
           </Button>
-          <Button 
-            size="sm" 
+          <Button
+            size="sm"
             variant="outline"
             className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
             onClick={handleBulkDelete}
@@ -445,24 +445,24 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
             <Pagination>
               <PaginationContent>
                 <PaginationItem>
-                  <PaginationPrevious 
-                    href="#" 
+                  <PaginationPrevious
+                    href="#"
                     onClick={(e) => { e.preventDefault(); if (currentPage > 1) setCurrentPage(currentPage - 1) }}
                     className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />
                 </PaginationItem>
-                
+
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
                   // Show current page, first, last, and pages around current
                   if (
-                    page === 1 || 
-                    page === totalPages || 
+                    page === 1 ||
+                    page === totalPages ||
                     (page >= currentPage - 1 && page <= currentPage + 1)
                   ) {
                     return (
                       <PaginationItem key={page}>
-                        <PaginationLink 
-                          href="#" 
+                        <PaginationLink
+                          href="#"
                           onClick={(e) => { e.preventDefault(); setCurrentPage(page) }}
                           isActive={currentPage === page}
                         >
@@ -471,7 +471,7 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
                       </PaginationItem>
                     )
                   } else if (
-                    page === currentPage - 2 || 
+                    page === currentPage - 2 ||
                     page === currentPage + 2
                   ) {
                     return <PaginationEllipsis key={page} />
@@ -480,8 +480,8 @@ export function ProductsTable({ searchQuery, filters, onProductsLoaded }: Produc
                 })}
 
                 <PaginationItem>
-                  <PaginationNext 
-                    href="#" 
+                  <PaginationNext
+                    href="#"
                     onClick={(e) => { e.preventDefault(); if (currentPage < totalPages) setCurrentPage(currentPage + 1) }}
                     className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
                   />

@@ -108,7 +108,7 @@ export default function ProductCard({ product, variant = "default" }: ProductCar
             {product.name}
           </h3>
         </Link>
-        
+
         <div className="flex items-center gap-2 mb-4">
           <div className="flex">
             {[...Array(5)].map((_, i) => (

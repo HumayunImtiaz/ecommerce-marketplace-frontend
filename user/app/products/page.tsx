@@ -22,6 +22,8 @@ function ProductsContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalProducts, setTotalProducts] = useState(0)
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false)
+  const [isSortOpen, setIsSortOpen] = useState(false)
   const [sortOptions, setSortOptions] = useState<{ value: string; label: string }[]>([
     { value: "featured", label: "Featured Selection" },
     { value: "price-low", label: "Price: Low to High" },
@@ -109,8 +111,8 @@ function ProductsContent() {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-16">
-          {/* Filters Sidebar */}
-          <div className="lg:w-1/4">
+          {/* Filters Sidebar - Desktop */}
+          <div className="hidden lg:block lg:w-1/4">
             <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar bg-white rounded-[2.5rem] p-10 shadow-xl border border-[#eb9a05]/10">
               <div className="flex items-center gap-4 mb-10">
                 <div className="h-px w-6 bg-[#eb9a05]"></div>
@@ -124,13 +126,49 @@ function ProductsContent() {
             </div>
           </div>
 
+          {/* Filters Drawer - Mobile */}
+          <div className={`fixed inset-0 z-[1000] lg:hidden transition-all duration-500 ${isFilterDrawerOpen ? "visible" : "invisible pointer-events-none"}`}>
+            <div 
+              className={`absolute inset-0 bg-[#002147]/40 backdrop-blur-sm transition-opacity duration-500 ${isFilterDrawerOpen ? "opacity-100" : "opacity-0"}`}
+              onClick={() => setIsFilterDrawerOpen(false)}
+            ></div>
+            <div className={`absolute right-0 top-0 h-full w-[85%] max-w-sm bg-white shadow-2xl transition-transform duration-500 transform ${isFilterDrawerOpen ? "translate-x-0" : "translate-x-full"}`}>
+              <div className="flex flex-col h-full">
+                <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="h-px w-6 bg-[#eb9a05]"></div>
+                    <h2 className="text-sm font-black tracking-[0.3em] uppercase text-[#002147]">Refine</h2>
+                  </div>
+                  <button onClick={() => setIsFilterDrawerOpen(false)} className="p-3 rounded-xl bg-gray-50 text-gray-400 hover:text-[#002147] transition-all">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                  <ProductFilters
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    categories={categories}
+                  />
+                </div>
+                <div className="p-8 border-t border-gray-50">
+                  <button 
+                    onClick={() => setIsFilterDrawerOpen(false)}
+                    className="w-full py-5 rounded-2xl bg-[#002147] text-[#eb9a05] text-[10px] font-black uppercase tracking-[0.3em] shadow-xl hover:shadow-2xl transition-all"
+                  >
+                    Apply Selections
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Main Content */}
           <div className="lg:w-3/4">
             {/* Header */}
             <div className="mb-16">
-              <div className="flex flex-col sm:flex-row justify-between items-end gap-8 mb-12">
-                <div className="max-w-xl">
-                  <h1 className="text-5xl font-playfair font-black mb-6" style={{ color: 'var(--primary)' }}>
+              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8 mb-12">
+                <div className="w-full lg:max-w-xl">
+                  <h1 className="text-4xl sm:text-5xl font-playfair font-black mb-6" style={{ color: 'var(--primary)' }}>
                     {filters.category ? filters.category : "The Entire Collection"}
                   </h1>
                   <div className="flex items-center gap-3">
@@ -141,35 +179,64 @@ function ProductsContent() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6">
-                  {/* View Toggle */}
-                  <div className="flex bg-white rounded-2xl p-1.5 shadow-lg border border-gray-100">
-                    <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-3 rounded-xl transition-all ${viewMode === "grid" ? "bg-[#002147] text-white shadow-xl" : "text-gray-400 hover:text-[#002147]"}`}
-                    >
-                      <Grid className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-3 rounded-xl transition-all ${viewMode === "list" ? "bg-[#002147] text-white shadow-xl" : "text-gray-400 hover:text-[#002147]"}`}
-                    >
-                      <List className="w-5 h-5" />
-                    </button>
-                  </div>
+                <div className="w-full lg:w-auto flex flex-wrap items-center gap-4 sm:gap-6">
+                  {/* Mobile Filter Toggle */}
+                  <button 
+                    onClick={() => setIsFilterDrawerOpen(true)}
+                    className="lg:hidden flex-1 sm:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-[#002147] rounded-2xl shadow-lg border border-[#002147] text-[10px] font-black uppercase tracking-widest text-[#eb9a05] hover:shadow-2xl transition-all"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Filter
+                  </button>
 
-                  {/* Sort */}
-                  <div className="relative group">
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="appearance-none bg-white border border-gray-100 rounded-2xl px-6 py-4 pr-12 focus:outline-none focus:border-[#eb9a05] focus:shadow-2xl transition-all font-bold text-sm text-[#002147] cursor-pointer shadow-lg"
-                    >
-                      {sortOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#eb9a05] pointer-events-none transition-transform group-hover:translate-y-[-40%]" />
+                  <div className="flex items-center gap-4 flex-1 sm:flex-none">
+                    {/* View Toggle */}
+                    <div className="flex bg-white rounded-2xl p-1.5 shadow-lg border border-gray-100 flex-1 sm:flex-none justify-center">
+                      <button
+                        onClick={() => setViewMode("grid")}
+                        className={`flex-1 sm:flex-none p-3 rounded-xl transition-all flex justify-center ${viewMode === "grid" ? "bg-[#002147] text-white shadow-xl" : "text-gray-400 hover:text-[#002147]"}`}
+                      >
+                        <Grid className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => setViewMode("list")}
+                        className={`flex-1 sm:flex-none p-3 rounded-xl transition-all flex justify-center ${viewMode === "list" ? "bg-[#002147] text-white shadow-xl" : "text-gray-400 hover:text-[#002147]"}`}
+                      >
+                        <List className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    {/* Sort Dropdown - Custom */}
+                    <div className="relative flex-1 sm:flex-none" id="sort-dropdown">
+                      <button 
+                        onClick={() => setIsSortOpen(!isSortOpen)}
+                        className="w-full flex items-center justify-between bg-white border border-gray-100 rounded-2xl px-6 py-4 min-w-[200px] hover:border-[#eb9a05] hover:shadow-2xl transition-all font-bold text-sm text-[#002147] shadow-lg"
+                      >
+                        <span className="truncate">{sortOptions.find(o => o.value === sortBy)?.label || "Sort Selection"}</span>
+                        <ChevronDown className={`w-4 h-4 text-[#eb9a05] transition-transform duration-300 ${isSortOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {isSortOpen && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setIsSortOpen(false)}></div>
+                          <div className="absolute right-0 mt-3 w-full sm:w-64 bg-white rounded-2xl shadow-2xl border border-gray-50 py-3 z-20 animate-fade-in-up overflow-hidden">
+                            {sortOptions.map((opt) => (
+                              <button
+                                key={opt.value}
+                                onClick={() => {
+                                  setSortBy(opt.value)
+                                  setIsSortOpen(false)
+                                }}
+                                className={`w-full text-left px-6 py-3 text-sm font-bold transition-all flex items-center justify-between ${sortBy === opt.value ? "bg-[#002147] text-[#eb9a05]" : "text-[#002147] hover:bg-gray-50 hover:text-[#eb9a05]"}`}
+                              >
+                                {opt.label}
+                                {sortBy === opt.value && <div className="w-1.5 h-1.5 rounded-full bg-[#eb9a05]"></div>}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

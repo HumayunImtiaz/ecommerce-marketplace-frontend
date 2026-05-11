@@ -229,12 +229,12 @@ export function OrdersTable({ searchQuery, filters, onOrdersLoaded }: OrdersTabl
     <div className="space-y-4">
       {/* Bulk action bar */}
       {selectedOrders.length > 0 && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl shadow-sm">
-          <span className="text-sm font-semibold text-blue-700">{selectedOrders.length} order(s) selected</span>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm" onClick={handleBulkPrintLabels}>
+        <div className="flex items-center gap-3 px-4 py-3 bg-primary/10 border border-primary/20 rounded-xl shadow-sm">
+          <span className="text-sm font-semibold text-primary">{selectedOrders.length} order(s) selected</span>
+          <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm" onClick={handleBulkPrintLabels}>
             <Printer className="h-4 w-4 mr-2" />Print Labels
           </Button>
-          <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100" onClick={() => { setBulkStatus(""); setBulkStatusDialog(true) }}>
+          <Button size="sm" variant="outline" className="border-primary/30 text-primary hover:bg-primary/10" onClick={() => { setBulkStatus(""); setBulkStatusDialog(true) }}>
             <RefreshCw className="h-4 w-4 mr-2" />Update Status
           </Button>
         </div>
@@ -269,20 +269,20 @@ export function OrdersTable({ searchQuery, filters, onOrdersLoaded }: OrdersTabl
       <div className="rounded-xl border shadow-sm overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 hover:bg-gray-50">
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="w-12">
                 <Checkbox
                   checked={paginatedOrders.length > 0 && selectedOrders.length === paginatedOrders.length}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
-              <TableHead className="font-semibold text-gray-700">Order</TableHead>
-              <TableHead className="font-semibold text-gray-700">Customer</TableHead>
-              <TableHead className="font-semibold text-gray-700">Date</TableHead>
-              <TableHead className="font-semibold text-gray-700">Total</TableHead>
-              <TableHead className="font-semibold text-gray-700">Payment</TableHead>
-              <TableHead className="font-semibold text-gray-700">Status</TableHead>
-              <TableHead className="font-semibold text-gray-700">Items</TableHead>
+              <TableHead className="font-semibold">Order</TableHead>
+              <TableHead className="font-semibold">Customer</TableHead>
+              <TableHead className="font-semibold">Date</TableHead>
+              <TableHead className="font-semibold">Total</TableHead>
+              <TableHead className="font-semibold">Payment</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold">Items</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -301,8 +301,8 @@ export function OrdersTable({ searchQuery, filters, onOrdersLoaded }: OrdersTabl
                   key={order.id}
                   className={`transition-all duration-200 border-b ${
                     selectedOrders.includes(order.id)
-                      ? "bg-blue-50 border-l-4 border-l-blue-600 text-blue-900"
-                      : "hover:bg-blue-50/50 hover:border-l-4 hover:border-l-blue-400 text-gray-900 transition-colors"
+                      ? "bg-primary/5 border-l-4 border-l-primary text-foreground"
+                      : "hover:bg-muted/50 hover:border-l-4 hover:border-l-primary/50 text-foreground transition-colors"
                   }`}
                 >
                   <TableCell>
@@ -392,7 +392,7 @@ export function OrdersTable({ searchQuery, filters, onOrdersLoaded }: OrdersTabl
       {/* Pagination Controls */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-2 py-4">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredOrders.length)} of {filteredOrders.length} entries
           </div>
           <div className="flex items-center space-x-2">
