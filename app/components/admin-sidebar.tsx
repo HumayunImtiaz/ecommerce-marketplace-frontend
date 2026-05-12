@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BarChart3, Package, ShoppingCart, Users, Megaphone, Settings, Home, ChevronDown, Mail, MessageCircle } from "lucide-react"
+import { BarChart3, Package, ShoppingCart, Users, Megaphone, Settings, Home, ChevronDown, Mail, MessageCircle, Store, DollarSign } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
@@ -40,6 +40,16 @@ const menuItems = [
     title: "Customers",
     url: "/admin/customers",
     icon: Users,
+  },
+  {
+    title: "Vendors",
+    url: "/admin/vendors",
+    icon: Store,
+  },
+  {
+    title: "Payouts",
+    url: "/admin/payouts",
+    icon: DollarSign,
   },
   {
     title: "Marketing",

@@ -64,6 +64,7 @@ const COOKIE_OPTIONS = {
 // ─── Cookie Keys ─────────────────────────────────────────────────────────────
 const KEYS = {
   TOKEN:       "token",   // middleware isko check karta hai
+  ROLE:        "role",    // middleware role check karta hai
   ID:          "u_id",
   NAME:        "u_name",
   EMAIL:       "u_email",
@@ -76,6 +77,12 @@ const KEYS = {
 export const setUserTokenCookie = async (token: string) => {
   const cookieStore = await cookies()
   cookieStore.set(KEYS.TOKEN, encrypt(token), COOKIE_OPTIONS)
+}
+
+export const setUserRoleCookie = async (role: string) => {
+  const cookieStore = await cookies()
+  // Role is NOT encrypted — middleware needs to read it directly
+  cookieStore.set(KEYS.ROLE, role, COOKIE_OPTIONS)
 }
 
 export const setUserIdCookie = async (id: string) => {
@@ -113,6 +120,11 @@ export const getUserTokenCookie = async (): Promise<string | null> => {
   const cookieStore = await cookies()
   const val = cookieStore.get(KEYS.TOKEN)?.value
   return val ? decrypt(val) : null
+}
+
+export const getUserRoleCookie = async (): Promise<string | null> => {
+  const cookieStore = await cookies()
+  return cookieStore.get(KEYS.ROLE)?.value ?? null
 }
 
 export const getUserIdCookie = async (): Promise<string | null> => {
@@ -163,6 +175,7 @@ export const getUserFromCookies = async () => {
 
   const raw = {
     token:       cookieStore.get(KEYS.TOKEN)?.value,
+    role:        cookieStore.get(KEYS.ROLE)?.value,
     id:          cookieStore.get(KEYS.ID)?.value,
     name:        cookieStore.get(KEYS.NAME)?.value,
     email:       cookieStore.get(KEYS.EMAIL)?.value,
@@ -173,6 +186,7 @@ export const getUserFromCookies = async () => {
 
   return {
     token:       raw.token       ? decrypt(raw.token)       : null,
+    role:        raw.role        ?? null,
     id:          raw.id          ? decrypt(raw.id)          : null,
     name:        raw.name        ? decrypt(raw.name)        : null,
     email:       raw.email       ? decrypt(raw.email)       : null,

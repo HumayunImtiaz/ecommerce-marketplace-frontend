@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { Star, ThumbsUp, User, Loader2, Sparkles } from "lucide-react"
+import { Star, ThumbsUp, User, Loader2, Sparkles, CheckCircle } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
 import { productApi } from "@/lib/api"
@@ -211,7 +211,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                     ))}
                   </div>
                   <p className="text-lg text-gray-600 leading-relaxed italic pr-12">&quot;{review.comment}&quot;</p>
-                  
+
                   <div className="mt-8 pt-8 border-t border-gray-50 flex items-center justify-between">
                     <button className="flex items-center gap-2 text-[10px] font-black tracking-widest uppercase opacity-20 hover:opacity-100 transition-opacity">
                       <ThumbsUp className="w-3 h-3" />

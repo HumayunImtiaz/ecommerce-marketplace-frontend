@@ -1,144 +1,204 @@
 "use client"
 
-import { useEffect, useCallback, useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Select, SelectContent, SelectItem, SelectValue, SelectTrigger } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { AnalyticsCharts } from "@/components/analytics-charts"
-import { RevenueMetrics } from "@/components/revenue-metrics"
-import { CustomerAnalytics } from "@/components/customer-analytics"
-import { ProductAnalytics } from "@/components/product-analytics"
-import { Download, RefreshCw } from "lucide-react"
+import { useState, useEffect } from "react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts"
+import { TrendingUp, Users, DollarSign, PieChart as PieChartIcon, ArrowUpRight, ArrowDownRight, Activity } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AdminLoader } from "@/components/admin-loader"
-import { DatePickerWithRange } from "@/components/date-range-picker"
-import { DateRange } from "react-day-picker"
-import { format } from "date-fns"
+import { toast } from "sonner"
 
 export default function AnalyticsPage() {
-  const [dateRange, setDateRange] = useState("30d")
-  const [date, setDate] = useState<DateRange | undefined>()
   const [data, setData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchAnalytics = useCallback(async (rangeStr: string, customRange?: DateRange) => {
-    try {
-      setData((prev: any) => {
-        if (!prev) setLoading(true)
-        else setIsRefreshing(true)
-        return prev
-      })
-
-      let url = `/api/analytics?dateRange=${rangeStr}`
-      if (customRange?.from && customRange?.to) {
-        const start = format(customRange.from, "yyyy-MM-dd")
-        const end = format(customRange.to, "yyyy-MM-dd")
-        url += `&startDate=${start}&endDate=${end}`
-      }
-
-      const response = await fetch(url)
-      const result = await response.json()
-
-      if (result.success) {
-        setData(result.data)
-        setError(null)
-      } else {
-        setError(result.message || "Failed to fetch analytics data")
-      }
-    } catch {
-      setError("Failed to connect to server")
-    } finally {
-      setLoading(false)
-      setIsRefreshing(false)
-    }
-  }, []) // Removed [data] dependency
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Default to '30d' if no custom date is selected
-    fetchAnalytics(dateRange, date)
-  }, [date, fetchAnalytics]) // Removed dateRange as we are leaning on calendar
+    const fetchAnalytics = async () => {
+      try {
+        const res = await fetch("/api/admin/analytics/platform")
+        const result = await res.json()
+        if (result.success) setData(result.data)
+        else toast.error("Failed to load analytics")
+      } catch { toast.error("Error connecting to server") }
+      finally { setIsLoading(false) }
+    }
+    fetchAnalytics()
+  }, [])
 
-  const handleExport = () => {
-    const csvContent = "data:text/csv;charset=utf-8,Date,Revenue,Orders,Customers\n2024-01-01,$1000,50,25"
-    const encodedUri = encodeURI(csvContent)
-    const link = document.createElement("a")
-    link.setAttribute("href", encodedUri)
-    link.setAttribute("download", `analytics-report.csv`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+  if (isLoading) return <div className="flex justify-center items-center min-h-[60vh]"><AdminLoader /></div>
+  if (!data) return <div className="p-8 text-center">No data available</div>
 
-  if (loading) {
-    return <AdminLoader message="Loading analytics..." minHeight="min-h-[60vh]" />
-  }
+  const COLORS = ["#0ea5e9", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"]
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Analytics</h1>
-          <p className="text-muted-foreground">Comprehensive business insights and metrics</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-          <DatePickerWithRange date={date} setDate={setDate} />
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fetchAnalytics(dateRange, date)}
-            disabled={isRefreshing}
-            className="bg-transparent"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span className="sr-only">Refresh</span>
-          </Button>
-          <Button onClick={handleExport} className="w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
+    <div className="p-8 space-y-8 animate-in fade-in duration-700">
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Platform Analytics</h1>
+        <p className="text-muted-foreground">Comprehensive overview of marketplace performance and vendor growth.</p>
       </div>
 
-      {error && (
-        <div className="p-4 bg-destructive/10 text-destructive rounded-lg flex items-center justify-between">
-          <p className="text-sm font-medium">{error}</p>
-          <button onClick={() => fetchAnalytics(dateRange)} className="text-xs underline">
-            Retry
-          </button>
-        </div>
-      )}
+      {/* KPI Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="border-none shadow-sm bg-gradient-to-br from-blue-600 to-blue-700 text-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium opacity-80">Total GMV</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${data.totalGMV.toFixed(2)}</div>
+            <p className="text-xs mt-1 opacity-70 flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" /> +12.5% from last month
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-none shadow-sm bg-gradient-to-br from-emerald-600 to-emerald-700 text-white">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium opacity-80">Platform Commission</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${data.totalCommission.toFixed(2)}</div>
+            <p className="text-xs mt-1 opacity-70 flex items-center gap-1">
+              <Activity className="w-3 h-3" /> 10.0% average rate
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Vendors</CardTitle>
+            <Users className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{data.vendorPerformance.length}</div>
+            <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
+              <ArrowUpRight className="w-3 h-3" /> +2 this week
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Avg. Basket Size</CardTitle>
+            <DollarSign className="w-4 h-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">$142.00</div>
+            <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+              <ArrowDownRight className="w-3 h-3" /> -2.4% from last month
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="revenue">Revenue</TabsTrigger>
-          <TabsTrigger value="customers">Customers</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-        </TabsList>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Top Vendors Chart */}
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <CardTitle>Top Performing Vendors</CardTitle>
+            <CardDescription>Based on gross revenue generated</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data.topVendors} layout="vertical" margin={{ left: 40, right: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                <XAxis type="number" hide />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false}
+                  width={100}
+                  fontSize={12}
+                  tick={{ fill: '#64748b', fontWeight: 500 }}
+                />
+                <Tooltip 
+                  cursor={{ fill: '#f8fafc' }}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                  formatter={(value: any) => [`$${value.toFixed(2)}`, "Gross Revenue"]}
+                />
+                <Bar dataKey="grossRevenue" radius={[0, 4, 4, 0]} barSize={24}>
+                  {data.topVendors.map((_: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="overview" className="space-y-6 pt-6">
-          <AnalyticsCharts data={data?.dailyTrends || []} />
-        </TabsContent>
+        {/* Revenue Distribution */}
+        <Card className="border shadow-sm">
+          <CardHeader>
+            <CardTitle>Revenue Distribution</CardTitle>
+            <CardDescription>Platform vs Vendor share</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px] flex flex-col items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: "Vendors Share", value: data.totalGMV - data.totalCommission },
+                    { name: "Platform Fee", value: data.totalCommission }
+                  ]}
+                  innerRadius={80}
+                  outerRadius={110}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  <Cell fill="#0ea5e9" />
+                  <Cell fill="#8b5cf6" />
+                </Pie>
+                <Tooltip 
+                   formatter={(value: any) => [`$${value.toFixed(2)}`, "Amount"]}
+                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex gap-6 mt-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-sky-500" />
+                <span className="text-xs font-medium text-slate-600">Vendors Share</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-violet-500" />
+                <span className="text-xs font-medium text-slate-600">Platform Fee</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-        <TabsContent value="revenue" className="space-y-6 pt-6">
-          <RevenueMetrics data={data?.revenueMetrics || []} />
-        </TabsContent>
-
-        <TabsContent value="customers" className="space-y-6 pt-6">
-          <CustomerAnalytics 
-            segmentData={data?.customerSegmentData || []} 
-            acquisitionData={data?.acquisitionData || []} 
-          />
-        </TabsContent>
-
-        <TabsContent value="products" className="space-y-6 pt-6">
-          <ProductAnalytics 
-            topProducts={data?.topProducts || []} 
-            categoryPerformance={data?.categoryPerformance || []} 
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Performance Table */}
+      <Card className="border shadow-sm overflow-hidden">
+        <CardHeader className="bg-slate-50/50">
+          <CardTitle>Vendor Performance Rankings</CardTitle>
+          <CardDescription>Detailed breakdown of sales and commission per vendor</CardDescription>
+        </CardHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Vendor</TableHead>
+              <TableHead>Products</TableHead>
+              <TableHead className="text-right">Gross Sales</TableHead>
+              <TableHead className="text-right">Commission Paid</TableHead>
+              <TableHead className="text-right font-bold">Net Earnings</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.vendorPerformance.map((v: any) => (
+              <TableRow key={v.id} className="hover:bg-slate-50/50 transition-colors">
+                <TableCell>
+                  <div>
+                    <p className="font-bold text-slate-900">{v.name}</p>
+                    <p className="text-xs text-muted-foreground">{v.owner}</p>
+                  </div>
+                </TableCell>
+                <TableCell>{v.products}</TableCell>
+                <TableCell className="text-right font-mono text-slate-600">${v.grossRevenue.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono text-red-500">-${v.commissionPaid.toFixed(2)}</TableCell>
+                <TableCell className="text-right font-mono font-bold text-emerald-600">${v.netEarnings.toFixed(2)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import {
   setUserAvatarCookie,
   setUserPhoneCookie,
   setUserDateOfBirthCookie,
+  setUserRoleCookie,
 } from "@/lib/cookies"
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
 
       // ── Encrypted httpOnly cookies set karo ──
       await setUserTokenCookie(token)
+      await setUserRoleCookie(user.role ?? "user")
       await setUserIdCookie(user._id ?? user.id ?? "")
       await setUserNameCookie(user.fullName ?? user.name ?? "")
       await setUserEmailCookie(user.email ?? "")
