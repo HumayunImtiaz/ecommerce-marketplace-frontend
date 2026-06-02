@@ -19,7 +19,7 @@ export default function CommissionPage() {
   useEffect(() => {
     const fetchVendor = async () => {
       try {
-        const res = await fetch(`/api/admin/vendors/${id}`)
+        const res = await fetch(`/api/admin/vendors/${id}`, { cache: "no-store" })
         const result = await res.json()
         if (result.success) {
           setVendor(result.data)

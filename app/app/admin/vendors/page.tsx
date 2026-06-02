@@ -179,7 +179,14 @@ export default function VendorsPage() {
                       <span className="font-bold text-slate-700">{vendor._count?.products || 0}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="font-mono font-bold">{Number(vendor.commissionRate)}%</Badge>
+                      <Badge variant="outline" className="font-mono font-bold">
+                        {(() => {
+                          const raw = vendor.commissionRate;
+                          if (raw === undefined || raw === null) return "N/A";
+                          const rate = typeof raw === 'number' ? raw : parseFloat((raw as any).toString());
+                          return isNaN(rate) ? "N/A" : rate.toFixed(1);
+                        })()}%
+                      </Badge>
                     </TableCell>
                     <TableCell>{getStatusBadge(vendor.status)}</TableCell>
                     <TableCell>

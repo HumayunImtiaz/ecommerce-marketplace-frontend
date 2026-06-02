@@ -7,8 +7,8 @@ import { authApi } from "@/lib/api"
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<boolean>
-  socialLogin: (loggedInUser: any, token: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<{ success: boolean; role?: string }>
+  socialLogin: (loggedInUser: any, token: string) => Promise<{ success: boolean; role?: string }>
   register: (name: string, email: string, password: string) => Promise<boolean>
   logout: () => void
   isLoading: boolean
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // ─── Login ────────────────────────────────────────────────────────────────
-  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; role?: string }> => {
     try {
       setIsLoading(true)
 
@@ -57,13 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id:     u._id ?? u.id,
         name:   u.fullName ?? u.name,
         email:  u.email,
-        role:   u.role ?? "user",
+        role:   u.role ?? "USER",
         avatar: u.avatar ?? null,
         phone: u.phone ?? null,
         dateOfBirth: u.dateOfBirth ?? null,
       })
 
-      return true
+      return { success: true, role: u.role ?? "USER" }
     } catch (error) {
       throw error
     } finally {
@@ -72,11 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   // ─── Social Login ─────────────────────────────────────────────────────────
-  const socialLogin = useCallback(async (loggedInUser: any, token: string): Promise<boolean> => {
+  const socialLogin = useCallback(async (loggedInUser: any, token: string): Promise<{ success: boolean; role?: string }> => {
     try {
       setIsLoading(true)
 
-      if (!loggedInUser || !token) return false
+      if (!loggedInUser || !token) return { success: false }
 
       // Social login route already cookies set kar chuka hai
       // Bas user state update karo
@@ -84,15 +84,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id:     loggedInUser._id ?? loggedInUser.id,
         name:   loggedInUser.fullName ?? loggedInUser.name,
         email:  loggedInUser.email,
-        role:   loggedInUser.role ?? "user",
+        role:   loggedInUser.role ?? "USER",
         avatar: loggedInUser.avatar ?? null,
         phone: loggedInUser.phone ?? null,
         dateOfBirth: loggedInUser.dateOfBirth ?? null,
       })
 
-      return true
+      return { success: true, role: loggedInUser.role ?? "USER" }
     } catch {
-      return false
+      return { success: false }
     } finally {
       setIsLoading(false)
     }

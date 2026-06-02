@@ -18,7 +18,7 @@ interface Review {
 }
 
 interface ProductReviewsProps {
-  productId: string
+  productId: string 
 }
 
 export default function ProductReviews({ productId }: ProductReviewsProps) {

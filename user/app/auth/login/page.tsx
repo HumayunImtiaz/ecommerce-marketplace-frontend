@@ -29,10 +29,15 @@ export default function LoginPage() {
     validationSchema: loginValidationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        const success = await authLogin(values.email, values.password)
+        const { success, role } = await authLogin(values.email, values.password)
         if (!success) { addToast("Login failed. Please try again.", "error"); return }
         addToast("Welcome back to LuxeCart.", "success")
-        router.push("/")
+        
+        if (role?.toLowerCase() === "vendor") {
+          router.push("/vendor/dashboard")
+        } else {
+          router.push("/")
+        }
       } catch (error: any) { addToast(error?.message || "Login failed", "error") }
       finally { setSubmitting(false) }
     },
@@ -46,10 +51,15 @@ export default function LoginPage() {
       const loggedInUser = data?.user
       const token = data?.token
       if (!apiSuccess || !loggedInUser || !token) { addToast(message || "Google login failed", "error"); return }
-      const sessionSuccess = await authSocialLogin(loggedInUser, token)
+      const { success: sessionSuccess, role } = await authSocialLogin(loggedInUser, token)
       if (!sessionSuccess) { addToast("Failed to save Google login session", "error"); return }
       addToast("Login successful!", "success")
-      router.push("/")
+      
+      if (role?.toLowerCase() === "vendor") {
+        router.push("/vendor/dashboard")
+      } else {
+        router.push("/")
+      }
     } catch (error: any) { addToast(error?.message || "Google login failed", "error") }
   }
 

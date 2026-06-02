@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
     const response = await fetch(url.toString(), {
       headers: { Authorization: `Bearer ${token}` },
       cache: "no-store",
+      next: { revalidate: 0 }
     })
 
     const result = await response.json()

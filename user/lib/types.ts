@@ -31,6 +31,8 @@ export interface Product {
   slug?: string
   isActive?: boolean
   outOfStock?: boolean
+  vendorName?: string
+  vendorSlug?: string
 }
 
 export interface CartItem {

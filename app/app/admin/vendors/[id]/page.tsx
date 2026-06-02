@@ -142,7 +142,14 @@ export default function VendorDetailPage() {
             <div className="p-2 bg-amber-50 rounded-xl text-amber-600"><Percent className="w-5 h-5" /></div>
             <p className="text-sm font-medium text-muted-foreground">Commission Rate</p>
           </div>
-          <p className="text-3xl font-bold text-slate-900">{Number(vendor.commissionRate)}%</p>
+          <p className="text-3xl font-bold text-slate-900">
+            {(() => {
+              const raw = vendor.commissionRate;
+              if (raw === undefined || raw === null) return "N/A";
+              const rate = typeof raw === 'number' ? raw : parseFloat((raw as any).toString());
+              return isNaN(rate) ? "N/A" : rate.toFixed(1);
+            })()}%
+          </p>
           <p className="text-xs text-muted-foreground mt-1">Joined {new Date(vendor.createdAt).toLocaleDateString()}</p>
         </div>
       </div>

@@ -267,4 +267,6 @@ export const vendorApi = {
       method: "POST",
       body: JSON.stringify({ amount }),
     }),
+
+  getPublicProfile: (slug: string) => fetcher(`/api/vendor/public/${slug}`, { cache: "no-store" }),
 }

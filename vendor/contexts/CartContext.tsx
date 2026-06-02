@@ -1,0 +1,452 @@
+"use client"
+
+import type React from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
+import type { CartItem, Product } from "@/lib/types"
+import { useToast } from "./ToastContext"
+import { useAuth } from "./AuthContext"
+import { cartApi, orderApi } from "@/lib/api"
+
+interface CartContextType {
+  items: CartItem[]
+  addToCart: (product: Product, quantity?: number, selectedColor?: string, selectedSize?: string) => void
+  removeFromCart: (itemId: string) => void
+  updateQuantity: (itemId: string, quantity: number) => void
+  clearCart: () => void
+  getCartTotal: () => number
+  getCartCount: () => number
+  isInCart: (productId: string) => boolean
+  appliedCoupon: any | null
+  applyCoupon: (code: string) => Promise<void>
+  removeCoupon: () => void
+  discountAmount: number
+}
+
+const CartContext = createContext<CartContextType | undefined>(undefined)
+
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [items, setItems] = useState<CartItem[]>([])
+  const { addToast } = useToast()
+  const { user } = useAuth()
+  const [isInitialized, setIsInitialized] = useState(false)
+  
+  // Coupon State
+  const [appliedCoupon, setAppliedCoupon] = useState<any | null>(null)
+  const [discountAmount, setDiscountAmount] = useState(0)
+
+  // Helper to map backend product to frontend product
+  const mapProduct = (p: any): Product | null => {
+    if (!p) return null
+
+    return {
+      id: p._id || p.id,
+      name: p.name,
+      description: p.description || "",
+      price: p.price,
+      originalPrice: p.comparePrice,
+      image: p.images?.[0] || "/placeholder.svg",
+      images: p.images || [],
+      category: p.category?.name || "Uncategorized",
+      categoryId: p.categoryId,
+      rating: p.avgRating || 0,
+      reviewCount: p.reviewCount || 0,
+      inStock: p.inStock ?? (p.totalStock > 0),
+      outOfStock: p.outOfStock ?? (p.totalStock <= 0),
+      isActive: p.isActive,
+      slug: p.slug,
+      sku: p.sku,
+      totalStock: p.totalStock,
+      variants: p.variants?.map((v: any) => ({
+        id: v.id,
+        color: v.color,
+        size: v.size,
+        price: v.price,
+        stock: v.stock ? { quantity: v.stock.quantity, status: v.stock.status } : null
+      }))
+    }
+  }
+
+  // Helper to get stock for a specific variant
+  const getAvailableStock = (product: Product, color?: string, size?: string): number => {
+    if (!product.variants || product.variants.length === 0) return product.totalStock || 0
+
+    const variant = product.variants.find(v =>
+      (color ? v.color === color : true) &&
+      (size ? v.size === size : true)
+    )
+
+    return variant?.stock?.quantity ?? 0
+  }
+
+  // Load cart from localStorage or server
+  useEffect(() => {
+    const initializeCart = async () => {
+      if (user) {
+        try {
+          // 1. Fetch current server cart
+          const { data, success } = await cartApi.getCart()
+
+          let serverItems: CartItem[] = []
+          if (success && data?.items) {
+            serverItems = data.items
+              .map((item: any) => {
+                const mappedProduct = mapProduct(item.product)
+                if (!mappedProduct) return null
+                return {
+                  id: item._id,
+                  product: mappedProduct,
+                  quantity: item.quantity,
+                  selectedColor: item.selectedColor,
+                  selectedSize: item.selectedSize,
+                }
+              })
+              .filter((item: any): item is CartItem => item !== null)
+          }
+
+          // 2. Check if there are guest items to sync
+          const guestCart = localStorage.getItem("guest_cart")
+          if (guestCart) {
+            const localItems: CartItem[] = JSON.parse(guestCart)
+            if (localItems.length > 0) {
+              // Sync each guest item to the server
+              for (const item of localItems) {
+                await cartApi.addToCart({
+                  productId: item.product.id,
+                  quantity: item.quantity,
+                  selectedColor: item.selectedColor,
+                  selectedSize: item.selectedSize
+                })
+              }
+              // Clear guest cart after sync
+              localStorage.removeItem("guest_cart")
+
+              // Refetch canonical cart to get server IDs
+              const { data: finalData, success: finalSuccess } = await cartApi.getCart()
+              if (finalSuccess && finalData?.items) {
+                serverItems = finalData.items
+                  .map((item: any) => {
+                    const mappedProduct = mapProduct(item.product)
+                    if (!mappedProduct) return null
+                    return {
+                      id: item._id,
+                      product: mappedProduct,
+                      quantity: item.quantity,
+                      selectedColor: item.selectedColor,
+                      selectedSize: item.selectedSize,
+                    }
+                  })
+                  .filter((item: any): item is CartItem => item !== null)
+              }
+            }
+          }
+
+          setItems(serverItems)
+        } catch (error) {
+          console.error("Failed to load or sync cart:", error)
+        }
+      } else {
+        // Guest user - load from guest_cart
+        const guestCart = localStorage.getItem("guest_cart")
+        if (guestCart) {
+          setItems(JSON.parse(guestCart))
+        } else {
+          // If no guest cart and no user, clear the state (e.g., after logout)
+          setItems([])
+        }
+      }
+      setIsInitialized(true)
+    }
+
+    initializeCart()
+  }, [user])
+
+  // Save guest cart to localStorage
+  useEffect(() => {
+    if (!user && isInitialized) {
+      localStorage.setItem("guest_cart", JSON.stringify(items))
+    }
+  }, [items, user, isInitialized])
+
+  const addToCart = useCallback(async (
+    product: Product,
+    quantity = 1,
+    selectedColor?: string,
+    selectedSize?: string
+  ) => {
+    // Optimistic Update
+    const existingItem = items.find(
+      (item) =>
+        item.product.id === product.id &&
+        item.selectedColor === selectedColor &&
+        item.selectedSize === selectedSize
+    )
+
+    if (existingItem) {
+      const availableStock = getAvailableStock(product, selectedColor, selectedSize)
+      const newQuantity = existingItem.quantity + quantity
+
+      if (newQuantity > availableStock) {
+        addToast(`Cannot add more. Only ${availableStock} in stock.`, "error")
+        return
+      }
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === existingItem.id
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      )
+
+      if (user) {
+        // Sync to server
+        const { success, message } = await cartApi.addToCart({
+          productId: product.id,
+          quantity,
+          selectedColor,
+          selectedSize
+        })
+        if (success) {
+          addToast(`Updated ${product.name} quantity in cart`, "success")
+        } else {
+          // Rollback
+          setItems((prev) =>
+            prev.map((item) =>
+              item.id === existingItem.id
+                ? { ...item, quantity: existingItem.quantity }
+                : item
+            )
+          )
+          addToast(message || "Failed to update quantity", "error")
+        }
+      } else {
+        addToast(`Updated ${product.name} quantity in cart`, "success")
+      }
+    } else {
+      const availableStock = getAvailableStock(product, selectedColor, selectedSize)
+      if (quantity > availableStock) {
+        addToast(`Cannot add items beyond available stock (${availableStock}).`, "error")
+        return
+      }
+
+      const tempId = `${product.id}-${selectedColor || ""}-${selectedSize || ""}-${Date.now()}`
+      const newItem: CartItem = {
+        id: tempId,
+        product,
+        quantity,
+        selectedColor,
+        selectedSize,
+      }
+      setItems((prev) => [...prev, newItem])
+
+      if (user) {
+        // Sync to server
+        const { data, success, message } = await cartApi.addToCart({
+          productId: product.id,
+          quantity,
+          selectedColor,
+          selectedSize
+        })
+        if (success && data?.items) {
+          // Update temp ID with server ID
+          const latestItem = data.items.find((item: any) =>
+            item.productId.toString() === product.id &&
+            item.selectedColor === selectedColor &&
+            item.selectedSize === selectedSize
+          )
+          if (latestItem) {
+            setItems(prev => prev.map(item => item.id === tempId ? { ...item, id: latestItem._id } : item))
+          }
+          addToast(`Added ${product.name} to cart`, "success")
+        } else {
+          // Rollback
+          setItems(prev => prev.filter(item => item.id !== tempId))
+          addToast(message || "Failed to add to cart", "error")
+        }
+      } else {
+        addToast(`Added ${product.name} to cart`, "success")
+      }
+    }
+  }, [items, user, addToast])
+
+  const removeFromCart = useCallback(async (itemId: string) => {
+    const item = items.find((i) => i.id === itemId)
+    if (item) {
+      addToast(`Removed ${item.product.name} from cart`, "info")
+    }
+
+    // Optimistic Update
+    setItems((prev) => prev.filter((i) => i.id !== itemId))
+
+    if (user) {
+      await cartApi.removeFromCart(itemId)
+    }
+  }, [items, user, addToast])
+
+  const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
+    const originalItem = items.find((i) => i.id === itemId)
+    if (!originalItem) return
+
+    if (quantity <= 0) {
+      removeFromCart(itemId)
+      return
+    }
+
+    // Stock validation
+    const availableStock = getAvailableStock(originalItem.product, originalItem.selectedColor, originalItem.selectedSize)
+    if (quantity > availableStock) {
+      addToast(`Only ${availableStock} items available in stock.`, "error")
+      return
+    }
+
+    // Optimistic Update
+    setItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, quantity } : item))
+    )
+
+    if (user) {
+      const { success, message } = await cartApi.updateQuantity(itemId, quantity)
+      if (!success) {
+        // Rollback
+        setItems((prev) =>
+          prev.map((item) => (item.id === itemId ? { ...item, quantity: originalItem.quantity } : item))
+        )
+        addToast(message || "Failed to update quantity", "error")
+      }
+    }
+  }, [items, user, addToast, removeFromCart])
+
+  const clearCart = useCallback(async () => {
+    if (items.length === 0) return
+
+    setItems([])
+    setAppliedCoupon(null)
+    setDiscountAmount(0)
+    
+    if (user) {
+      await cartApi.clearCart()
+    }
+    addToast("Cart cleared", "info")
+  }, [items.length, user, addToast])
+
+  const getCartTotal = useCallback(() => {
+    return items.reduce((total, item) => total + item.product.price * item.quantity, 0)
+  }, [items])
+
+  const getCartCount = useCallback(() => {
+    return items.reduce((count, item) => count + item.quantity, 0)
+  }, [items])
+
+  const isInCart = useCallback((productId: string) => {
+    return items.some((item) => item.product.id === productId)
+  }, [items])
+
+  // ── Coupon Logic ──
+  const applyCoupon = useCallback(async (code: string) => {
+    if (!code.trim()) return
+
+    try {
+      const subtotal = getCartTotal()
+      const { data, success, message } = await orderApi.validateCoupon(code, subtotal)
+
+      if (success && data) {
+        const coupon = data
+        setAppliedCoupon(coupon)
+        
+        // Calulate discount manually since backend returns the coupon object
+        let discountValue = 0
+        if (coupon.discountType === "percentage") {
+          discountValue = (subtotal * coupon.discountValue) / 100
+        } else {
+          discountValue = coupon.discountValue
+        }
+        
+        setDiscountAmount(discountValue)
+        addToast(`Coupon "${code}" applied! You saved $${discountValue.toFixed(2)}`, "success")
+      } else {
+        addToast(message || "Invalid coupon code", "error")
+      }
+    } catch (error) {
+      console.error("Coupon validation error:", error)
+      addToast("Failed to validate coupon", "error")
+    }
+  }, [getCartTotal, addToast])
+
+  const removeCoupon = useCallback(() => {
+    if (!appliedCoupon) return
+    
+    setAppliedCoupon(null)
+    setDiscountAmount(0)
+    addToast("Coupon removed", "info")
+  }, [appliedCoupon, addToast])
+
+  // Recalculate discount if items change
+  useEffect(() => {
+    const updateDiscount = async () => {
+      if (appliedCoupon) {
+        const subtotal = getCartTotal()
+        try {
+          const { data, success } = await orderApi.validateCoupon(appliedCoupon.code, subtotal)
+          if (success && data) {
+            const coupon = data
+            let discountValue = 0
+            if (coupon.discountType === "percentage") {
+              discountValue = (subtotal * coupon.discountValue) / 100
+            } else {
+              discountValue = coupon.discountValue
+            }
+            setDiscountAmount(discountValue)
+          } else {
+            // If coupon no longer valid (e.g. subtotal below minPurchase)
+            removeCoupon()
+          }
+        } catch (error) {
+          console.error("Discount recalculation error:", error)
+        }
+      }
+    }
+    updateDiscount()
+  }, [items, appliedCoupon])
+
+  const value = useMemo(() => ({
+    items,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getCartTotal,
+    getCartCount,
+    isInCart,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    discountAmount,
+  }), [
+    items,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getCartTotal,
+    getCartCount,
+    isInCart,
+    appliedCoupon,
+    applyCoupon,
+    removeCoupon,
+    discountAmount,
+  ])
+
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+    </CartContext.Provider>
+  )
+}
+
+export function useCart() {
+  const context = useContext(CartContext)
+  if (context === undefined) {
+    throw new Error("useCart must be used within a CartProvider")
+  }
+  return context
+}

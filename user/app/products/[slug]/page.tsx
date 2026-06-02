@@ -160,6 +160,17 @@ export default function ProductPage() {
               <div className="flex items-center gap-4 mb-4">
                 <div className="h-px w-8 bg-[#eb9a05]"></div>
                 <p className="text-[10px] font-black tracking-[0.4em] uppercase text-[#eb9a05]">{product.category}</p>
+                {product.vendorName && (
+                  <>
+                    <span className="text-gray-300">|</span>
+                    <Link 
+                      href={`/vendors/${product.vendorSlug}`}
+                      className="text-[10px] font-black tracking-[0.2em] uppercase text-[#002147] hover:text-[#eb9a05] transition-colors"
+                    >
+                      Sold by: {product.vendorName}
+                    </Link>
+                  </>
+                )}
               </div>
               <h1 className="text-5xl font-playfair font-black leading-tight mb-4" style={{ color: 'var(--primary)' }}>{product.name}</h1>
               

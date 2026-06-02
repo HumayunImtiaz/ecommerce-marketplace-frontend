@@ -52,9 +52,9 @@ const menuItems = [
     icon: DollarSign,
   },
   {
-    title: "Marketing",
-    url: "/admin/marketing",
-    icon: Megaphone,
+    title: "Newsletter",
+    url: "/admin/newsletter",
+    icon: Mail,
   },
   {
     title: "Coupons",
@@ -158,6 +158,20 @@ export function AdminSidebar() {
                 >
                   <div className="overflow-hidden ml-[22px] space-y-1 border-l-2 border-border pl-3 py-1">
                     <Link
+                      href="/admin/products/approval"
+                      className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 relative group ${pathname === "/admin/products/approval"
+                        ? "bg-amber-50 text-amber-600 shadow-sm"
+                        : "text-amber-600/70 hover:text-amber-600 hover:bg-amber-50/50"
+                        }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${pathname === "/admin/products/approval"
+                        ? "bg-amber-500 scale-125 ring-4 ring-amber-500/20"
+                        : "bg-amber-500/50 group-hover:bg-amber-500"
+                        }`}></span>
+                      Approval Queue
+                    </Link>
+
+                    <Link
                       href="/admin/products"
                       className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 relative group ${pathname === "/admin/products" && !currentCategory
                         ? "bg-primary/10 text-primary shadow-sm"
@@ -170,6 +184,12 @@ export function AdminSidebar() {
                         }`}></span>
                       All Products
                     </Link>
+
+                    {categories.length > 0 && (
+                      <div className="px-3 pt-3 pb-1 text-[10px] uppercase font-bold tracking-wider text-muted-foreground/50">
+                        Categories
+                      </div>
+                    )}
 
                     {categories.map((cat) => {
                       const isActive = pathname === "/admin/products" && currentCategory === cat.slug;
