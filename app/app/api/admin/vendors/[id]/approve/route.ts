@@ -29,9 +29,10 @@ async function getAdminToken() {
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await props.params;
     const token = await getAdminToken()
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 

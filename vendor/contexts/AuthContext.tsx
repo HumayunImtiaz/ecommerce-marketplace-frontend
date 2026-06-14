@@ -53,6 +53,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (success && data?.token) {
+        if (data.user.role !== "VENDOR") {
+          if (data.user.vendorStatus === "PENDING") {
+            throw new Error("Your application is pending admin approval.");
+          } else if (data.user.vendorStatus === "SUSPENDED" || data.user.vendorStatus === "REJECTED") {
+            throw new Error(`Your vendor account is ${data.user.vendorStatus.toLowerCase()}.`);
+          }
+        }
+
         localStorage.setItem("vendorToken", data.token);
         setUser({
           id: data.user._id ?? data.user.id,
@@ -62,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           avatar: data.user.avatar ?? null,
           phone: data.user.phone ?? null,
           dateOfBirth: data.user.dateOfBirth ?? null,
+          vendorStatus: data.user.vendorStatus ?? null,
         });
         return true;
       }
@@ -81,6 +90,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!loggedInUser || !token) return false
 
+      if (loggedInUser.role !== "VENDOR") {
+        if (loggedInUser.vendorStatus === "PENDING") {
+          throw new Error("Your application is pending admin approval.");
+        } else if (loggedInUser.vendorStatus === "SUSPENDED" || loggedInUser.vendorStatus === "REJECTED") {
+          throw new Error(`Your vendor account is ${loggedInUser.vendorStatus.toLowerCase()}.`);
+        }
+      }
+
       // Social login route already cookies set kar chuka hai
       // Bas user state update karo
       setUser({
@@ -91,6 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar: loggedInUser.avatar ?? null,
         phone: loggedInUser.phone ?? null,
         dateOfBirth: loggedInUser.dateOfBirth ?? null,
+        vendorStatus: loggedInUser.vendorStatus ?? null,
       })
 
       return true

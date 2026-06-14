@@ -59,6 +59,7 @@ export interface User {
   avatar?: string | null
   phone?: string | null
   dateOfBirth?: string | null
+  vendorStatus?: string | null
   addresses?: Address[]
 }
 

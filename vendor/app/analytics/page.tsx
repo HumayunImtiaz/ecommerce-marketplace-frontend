@@ -17,31 +17,39 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, DollarSign, PieChart as PieChartIcon, BarChart3, Calendar } from "lucide-react"
 
-const revenueData = [
-  { name: "Mon", revenue: 2400 },
-  { name: "Tue", revenue: 1398 },
-  { name: "Wed", revenue: 9800 },
-  { name: "Thu", revenue: 3908 },
-  { name: "Fri", revenue: 4800 },
-  { name: "Sat", revenue: 3800 },
-  { name: "Sun", revenue: 4300 },
-]
-
-const topProductsData = [
-  { name: "Velvet Tuxedo", sales: 45 },
-  { name: "Silk Gown", sales: 32 },
-  { name: "Leather Shoes", sales: 28 },
-  { name: "Gold Cufflinks", sales: 24 },
-  { name: "Wool Coat", sales: 18 },
-]
-
-const breakdownData = [
-  { name: "Net Earnings", value: 85, color: "#002147" },
-  { name: "Commission", value: 10, color: "#eb9a05" },
-  { name: "Fees", value: 5, color: "#cbd5e1" },
-]
+import { useState, useEffect } from "react"
+import { vendorApi } from "@/lib/api"
+import { Loader2 } from "lucide-react"
 
 export default function VendorAnalytics() {
+  const [data, setData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const res = await vendorApi.getAnalytics()
+        if (res.success) {
+          setData(res.data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch analytics:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchAnalytics()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-[#002147]" />
+      </div>
+    )
+  }
+
+  if (!data) return <p>Failed to load analytics.</p>
   return (
     <div className="space-y-8 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -65,16 +73,16 @@ export default function VendorAnalytics() {
                 <CardDescription>Daily sales performance this week</CardDescription>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-black text-[#002147]">$32,450.00</p>
+                <p className="text-2xl font-black text-[#002147]">${data.totalWeeklyRevenue?.toFixed(2) || "0.00"}</p>
                 <p className="text-xs text-green-600 font-bold flex items-center justify-end gap-1 mt-1">
-                  <TrendingUp className="w-3 h-3" /> +12.5%
+                  <TrendingUp className="w-3 h-3" /> Real-time
                 </p>
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-8 h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+              <LineChart data={data.revenueGrowth || []} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis 
                   dataKey="name" 
@@ -123,13 +131,13 @@ export default function VendorAnalytics() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={breakdownData}
+                    data={data.breakdownData || []}
                     innerRadius={60}
                     outerRadius={80}
                     paddingAngle={8}
                     dataKey="value"
                   >
-                    {breakdownData.map((entry, index) => (
+                    {(data.breakdownData || []).map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -138,7 +146,7 @@ export default function VendorAnalytics() {
               </ResponsiveContainer>
             </div>
             <div className="w-full space-y-4 mt-6">
-              {breakdownData.map((item) => (
+              {(data.breakdownData || []).map((item: any) => (
                 <div key={item.name} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
@@ -166,7 +174,7 @@ export default function VendorAnalytics() {
           </CardHeader>
           <CardContent className="p-8 h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topProductsData} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
+              <BarChart data={data.topProductsData || []} layout="vertical" margin={{ top: 20, right: 30, left: 40, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                 <XAxis type="number" hide />
                 <YAxis 

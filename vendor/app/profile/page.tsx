@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { 
   Store, 
   Mail, 
@@ -38,6 +38,16 @@ export default function VendorProfilePage() {
       accountTitle: ""
     }
   })
+  
+  const getImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("data:")) return url;
+    const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+    return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -78,6 +88,30 @@ export default function VendorProfilePage() {
     }
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploading(true)
+    const formData = new FormData()
+    formData.append("images", file)
+
+    try {
+      const { data, success, message } = await vendorApi.uploadImages(formData)
+      if (success && data && data.length > 0) {
+        setProfile({ ...profile, logo: data[0] })
+        toast.success("Image uploaded successfully")
+      } else {
+        toast.error(message || "Failed to upload image")
+      }
+    } catch (err) {
+      toast.error("An error occurred during upload")
+    } finally {
+      setIsUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
+    }
+  }
+
   return (
     <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -111,16 +145,30 @@ export default function VendorProfilePage() {
           </CardHeader>
           <CardContent className="p-8 space-y-10">
             <div className="flex flex-col md:flex-row items-center gap-8">
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleImageUpload} 
+              />
               <div className="relative group">
                 <div className="h-32 w-32 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
                   {profile.logo ? (
-                    <img src={profile.logo} alt="Logo" className="h-full w-full object-cover" />
+                    <img src={getImageUrl(profile.logo)} alt="Logo" className="h-full w-full object-cover" />
                   ) : (
                     <Camera className="h-10 w-10 text-slate-300" />
                   )}
                 </div>
-                <Button variant="outline" size="icon" className="absolute -bottom-2 -right-2 h-10 w-10 rounded-xl bg-white shadow-xl border-slate-100 hover:scale-110 transition-transform">
-                  <Camera className="h-4 w-4 text-[#eb9a05]" />
+                <Button 
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  variant="outline" 
+                  size="icon" 
+                  className="absolute -bottom-2 -right-2 h-10 w-10 rounded-xl bg-white shadow-xl border-slate-100 hover:scale-110 transition-transform"
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 text-[#eb9a05] animate-spin" /> : <Camera className="h-4 w-4 text-[#eb9a05]" />}
                 </Button>
               </div>
               <div className="flex-1 space-y-4 text-center md:text-left">
@@ -128,7 +176,15 @@ export default function VendorProfilePage() {
                 <p className="text-sm text-slate-400 max-w-md">
                   Professional logos help build trust. We recommend a square PNG or JPG at least 500x500px.
                 </p>
-                <Button variant="outline" className="rounded-xl font-bold border-slate-200">Replace Image</Button>
+                <Button 
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  variant="outline" 
+                  className="rounded-xl font-bold border-slate-200"
+                >
+                  {isUploading ? "Uploading..." : "Replace Image"}
+                </Button>
               </div>
             </div>
 

@@ -49,7 +49,7 @@ export default function RegisterPage() {
             <Sparkles className="w-4 h-4" />
             <span className="text-[10px] font-black tracking-[0.3em] uppercase">Get Started</span>
           </div>
-          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Create Account</h2>
+          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">User Registration</h2>
           <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">
             Already a member?{" "}
             <Link href="/auth/login" className="text-[#eb9a05] hover:underline">Sign In</Link>

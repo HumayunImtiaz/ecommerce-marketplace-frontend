@@ -1,43 +1,59 @@
-import { 
-  DollarSign, 
-  ShoppingBag, 
-  Package, 
-  AlertTriangle, 
-  ArrowUpRight, 
+"use client"
+import { useState, useEffect } from "react"
+import {
+  DollarSign,
+  ShoppingBag,
+  Package,
+  AlertTriangle,
+  ArrowUpRight,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import Link from "next/link"
+import { vendorApi } from "@/lib/api"
+import { MonthlyEarningsChart } from "@/components/MonthlyEarningsChart"
 
-// This is a Server Component. It would fetch data directly from Prisma or the local API.
-async function getDashboardData() {
-  // In a real implementation, this would be:
-  // const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/analytics`, { cache: 'no-store' });
-  // return res.json();
-  
-  // Mock data for UI demonstration
-  return {
-    stats: {
-      todayRevenue: 1250.00,
-      pendingOrders: 8,
-      totalProducts: 42,
-      lowStockItems: 3
-    },
-    recentOrders: [
-      { id: "ORD-9281", customer: "Sarah Wilson", amount: 240.00, status: "PENDING", date: "2 hrs ago" },
-      { id: "ORD-9275", customer: "Michael Brown", amount: 150.00, status: "PROCESSING", date: "5 hrs ago" },
-      { id: "ORD-9270", customer: "Emma Davis", amount: 890.00, status: "PENDING", date: "Yesterday" },
-      { id: "ORD-9268", customer: "James Smith", amount: 45.00, status: "SHIPPED", date: "Yesterday" },
-    ]
+export default function VendorDashboardPage() {
+  const [data, setData] = useState<any>(null)
+  const [analytics, setAnalytics] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [res, analyticsRes] = await Promise.all([
+          vendorApi.getDashboard(),
+          vendorApi.getAnalytics()
+        ])
+        if (res.success) {
+          setData(res.data)
+        }
+        if (analyticsRes.success) {
+          setAnalytics(analyticsRes.data)
+        }
+      } catch (err) {
+        console.error("Failed to fetch dashboard data", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchData()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-[#002147]" />
+      </div>
+    )
   }
-}
 
-export default async function VendorDashboardPage() {
-  const data = await getDashboardData()
+  if (!data) return <p>Failed to load dashboard data.</p>
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
@@ -56,9 +72,9 @@ export default async function VendorDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-[#002147]">${data.stats.todayRevenue.toFixed(2)}</div>
+            <div className="text-3xl font-black text-[#002147]">${data.todayRevenue?.toFixed(2) || "0.00"}</div>
             <p className="text-xs text-green-600 font-bold flex items-center gap-1 mt-2">
-              <ArrowUpRight className="h-3 w-3" /> +15% from yesterday
+              <ArrowUpRight className="h-3 w-3" /> Real-time tracking
             </p>
           </CardContent>
         </Card>
@@ -71,7 +87,7 @@ export default async function VendorDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-[#002147]">{data.stats.pendingOrders}</div>
+            <div className="text-3xl font-black text-[#002147]">{data.pendingOrders || 0}</div>
             <p className="text-xs text-slate-400 font-medium mt-2">Requires fulfillment</p>
           </CardContent>
         </Card>
@@ -84,7 +100,7 @@ export default async function VendorDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-[#002147]">{data.stats.totalProducts}</div>
+            <div className="text-3xl font-black text-[#002147]">{data.totalProducts || 0}</div>
             <p className="text-xs text-slate-400 font-medium mt-2">Listed in catalog</p>
           </CardContent>
         </Card>
@@ -97,11 +113,42 @@ export default async function VendorDashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-red-600">{data.stats.lowStockItems}</div>
+            <div className="text-3xl font-black text-red-600">{data.lowStockItems || 0}</div>
             <p className="text-xs text-red-400 font-medium mt-2 underline cursor-pointer">View items</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Analytics Chart ── */}
+      <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white mb-8">
+        <CardHeader className="px-8 py-6 border-b bg-slate-50/30">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-xl font-bold text-[#002147]">Monthly Earnings</CardTitle>
+              <CardDescription>Your net earnings over the last 6 months</CardDescription>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#002147]"></div>
+                <span className="text-xs font-bold text-slate-500">Previous</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-[#eb9a05]"></div>
+                <span className="text-xs font-bold text-slate-500">Current Month</span>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-8">
+          {analytics?.chartData ? (
+            <MonthlyEarningsChart data={analytics.chartData} />
+          ) : (
+            <div className="h-[300px] flex items-center justify-center bg-slate-50 rounded-2xl border border-dashed">
+              <p className="text-slate-400 font-medium">No analytics data available yet.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Orders */}
@@ -116,36 +163,46 @@ export default async function VendorDashboardPage() {
             </Button>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="px-8 font-bold">Order ID</TableHead>
-                  <TableHead className="font-bold">Customer</TableHead>
-                  <TableHead className="font-bold">Amount</TableHead>
-                  <TableHead className="font-bold">Status</TableHead>
-                  <TableHead className="text-right px-8 font-bold">Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.recentOrders.map((order) => (
-                  <TableRow key={order.id} className="group hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="px-8 font-bold text-[#002147]">{order.id}</TableCell>
-                    <TableCell className="font-medium">{order.customer}</TableCell>
-                    <TableCell className="font-black">${order.amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Badge className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                        order.status === 'PENDING' ? 'bg-amber-100 text-amber-700 hover:bg-amber-100' :
-                        order.status === 'PROCESSING' ? 'bg-blue-100 text-blue-700 hover:bg-blue-100' :
-                        'bg-slate-100 text-slate-700 hover:bg-slate-100'
-                      }`}>
-                        {order.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right px-8 text-slate-400 text-sm">{order.date}</TableCell>
+            {data.recentOrders && data.recentOrders.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="px-8 font-bold">Order ID</TableHead>
+                    <TableHead className="font-bold">Customer</TableHead>
+                    <TableHead className="font-bold">Amount</TableHead>
+                    <TableHead className="font-bold">Status</TableHead>
+                    <TableHead className="text-right px-8 font-bold">Date</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {data.recentOrders.map((order: any) => (
+                    <TableRow key={order.id} className="group hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="px-8 font-bold text-[#002147]">
+                        {order.id.slice(0, 8).toUpperCase()}...
+                      </TableCell>
+                      <TableCell className="font-medium">{order.customerName}</TableCell>
+                      <TableCell className="font-black">${order.total?.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge className={`rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${order.status === 'pending' ? 'bg-amber-100 text-amber-700 hover:bg-amber-100' :
+                            order.status === 'processing' ? 'bg-blue-100 text-blue-700 hover:bg-blue-100' :
+                              order.status === 'delivered' ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' :
+                                'bg-slate-100 text-slate-700 hover:bg-slate-100'
+                          }`}>
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right px-8 text-slate-400 text-sm">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="p-12 text-center text-slate-400">
+                You have no recent orders.
+              </div>
+            )}
           </CardContent>
         </Card>
 

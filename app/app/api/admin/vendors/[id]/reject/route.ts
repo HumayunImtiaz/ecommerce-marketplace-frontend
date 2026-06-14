@@ -27,14 +27,18 @@ async function getAdminToken() {
   return token ? decrypt(token) : null
 }
 
-export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   try {
     const params = await props.params;
+    const { id } = params;
     const token = await getAdminToken()
     if (!token) return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
 
-    const response = await fetch(`${API_BASE_URL}/api/vendors/admin/${params.id}/suspend`, {
-      method: "PATCH",
+    // We can extract params.id like params.id or via the second argument.
+    // In nextjs route handlers, params is a Promise in Next.js 15, but let's do it safely
+    // Actually the other files just use it synchronously or `const { id } = await params` based on Next 15 rules.
+    const response = await fetch(`${API_BASE_URL}/api/vendors/admin/${id}/reject`, {
+      method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     })
 

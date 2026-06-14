@@ -17,7 +17,7 @@ const applyValidationSchema = Yup.object({
 export default function ApplyPage() {
   const router = useRouter()
   const { addToast } = useToast()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [existingVendor, setExistingVendor] = useState<any>(null)
   const [isChecking, setIsChecking] = useState(true)
@@ -48,7 +48,8 @@ export default function ApplyPage() {
         const response = await vendorApi.register(values)
         if (response.success) {
           addToast("Application submitted successfully! Please wait for admin approval.", "success")
-          router.push("/login") // Or a status page
+          logout()
+          router.push("/login")
         } else {
           addToast(response.message || "Failed to submit application", "error")
         }

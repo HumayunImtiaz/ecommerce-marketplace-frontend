@@ -76,7 +76,7 @@ export default function LoginPage() {
             <span className="text-[10px] font-black tracking-[0.3em] uppercase">Secure Login</span>
           </div>
           <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">
-            Welcome Back
+            User Login
           </h2>
           <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">
             New to LuxaCart?{" "}

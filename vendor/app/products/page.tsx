@@ -55,8 +55,13 @@ export default function VendorProductsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   
-  // Pagination (Mocked for now)
-  const [page, setPage] = useState(1)
+  // Pagination
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery, statusFilter]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -80,6 +85,10 @@ export default function VendorProductsPage() {
     const matchesStatus = statusFilter === "all" || (statusFilter === "active" ? p.isActive : !p.isActive)
     return matchesSearch && matchesStatus
   })
+
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) || 1;
+  const paginatedProducts = filteredProducts.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
 
   const handleDelete = async (id: string) => {
     // Deprecated: use modal flow instead. This function kept for direct calls (not used by UI).
@@ -206,7 +215,7 @@ export default function VendorProductsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredProducts.map((product) => (
+              paginatedProducts.map((product) => (
                 <TableRow key={product.id} className="group hover:bg-slate-50/50 transition-colors">
                   <TableCell className="px-8 py-5">
                     <div className="flex items-center gap-4">
@@ -333,16 +342,16 @@ export default function VendorProductsPage() {
 
         <div className="p-6 border-t bg-slate-50/50 flex items-center justify-between">
           <p className="text-sm font-medium text-slate-500">
-            Showing <span className="text-[#002147] font-bold">{filteredProducts.length}</span> of <span className="text-[#002147] font-bold">{products.length}</span> products
+            Showing <span className="text-[#002147] font-bold">{filteredProducts.length === 0 ? 0 : (page - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-[#002147] font-bold">{Math.min(page * ITEMS_PER_PAGE, filteredProducts.length)}</span> of <span className="text-[#002147] font-bold">{filteredProducts.length}</span> products
           </p>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#002147] text-white text-xs font-bold">
               {page}
             </div>
-            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" onClick={() => setPage(p => p + 1)}>
+            <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>

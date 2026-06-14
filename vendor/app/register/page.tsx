@@ -10,6 +10,7 @@ import * as Yup from "yup"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useToast } from "@/contexts/ToastContext"
+import { vendorApi } from "@/lib/api"
 
 const registerValidationSchema = Yup.object({
   name: Yup.string().required("Full name is required"),
@@ -26,13 +27,25 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const formik = useFormik({
-    initialValues: { name: "", email: "", password: "", confirmPassword: "" },
+    initialValues: { 
+      name: "", 
+      email: "", 
+      password: "", 
+      confirmPassword: "",
+    },
     validationSchema: registerValidationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       try {
-        await register(values.name, values.email, values.password)
-        addToast("Registration successful. Please login.", "success")
-        router.push("/login")
+        const success = await register(
+          values.name,
+          values.email,
+          values.password
+        )
+
+        if (success) {
+          addToast("Registration successful. Please verify your email.", "success")
+          router.push("/login")
+        }
       } catch (error: any) { 
         addToast(error?.message || "Registration failed", "error") 
       } finally { 
@@ -52,7 +65,7 @@ export default function RegisterPage() {
             <Sparkles className="w-4 h-4" />
             <span className="text-[10px] font-black tracking-[0.3em] uppercase">Get Started</span>
           </div>
-          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Create Account</h2>
+          <h2 className="text-4xl font-playfair font-black text-[#002147] leading-tight">Vendor Registration</h2>
           <p className="text-gray-400 text-xs font-bold tracking-widest uppercase mt-4">
             Already a member?{" "}
             <Link href="/login" className="text-[#eb9a05] hover:underline">Sign In</Link>
@@ -138,6 +151,7 @@ export default function RegisterPage() {
               </div>
               {formik.touched.confirmPassword && formik.errors.confirmPassword && <p className="text-red-500 text-[10px] mt-1 font-bold uppercase tracking-widest ml-4">{formik.errors.confirmPassword}</p>}
             </div>
+
           </div>
 
           <button

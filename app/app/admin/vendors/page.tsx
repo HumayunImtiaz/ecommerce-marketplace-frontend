@@ -65,6 +65,16 @@ export default function VendorsPage() {
     } catch (error) { toast.error("Error suspending vendor") }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this vendor? This action cannot be undone.")) return;
+    try {
+      const res = await fetch(`/api/admin/vendors/${id}/reject`, { method: "DELETE" })
+      const result = await res.json()
+      if (result.success) { toast.success("Vendor deleted successfully"); fetchVendors() }
+      else toast.error(result.message || "Failed to delete vendor")
+    } catch (error) { toast.error("Error deleting vendor") }
+  }
+
   const filteredVendors = vendors.filter(v =>
     v.businessName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     v.user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -211,18 +221,27 @@ export default function VendorsPage() {
                             </Link>
                           </DropdownMenuItem>
                           {vendor.status === "PENDING" && (
-                            <DropdownMenuItem onClick={() => handleApprove(vendor.id)} className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 rounded-lg py-2">
+                            <DropdownMenuItem onClick={() => handleApprove(vendor.id)} className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 rounded-lg py-2 cursor-pointer">
                               <CheckCircle className="w-4 h-4 mr-2" /> Approve
+                            </DropdownMenuItem>
+                          )}
+                          {vendor.status === "SUSPENDED" && (
+                            <DropdownMenuItem onClick={() => handleApprove(vendor.id)} className="text-emerald-600 focus:text-emerald-700 focus:bg-emerald-50 rounded-lg py-2 cursor-pointer">
+                              <CheckCircle className="w-4 h-4 mr-2" /> Reactivate
                             </DropdownMenuItem>
                           )}
                           {vendor.status !== "SUSPENDED" && (
                             <>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleSuspend(vendor.id)} className="text-red-600 focus:text-red-700 focus:bg-red-50 rounded-lg py-2">
+                              <DropdownMenuItem onClick={() => handleSuspend(vendor.id)} className="text-amber-600 focus:text-amber-700 focus:bg-amber-50 rounded-lg py-2 cursor-pointer">
                                 <ShieldAlert className="w-4 h-4 mr-2" /> Suspend
                               </DropdownMenuItem>
                             </>
                           )}
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleDelete(vendor.id)} className="text-red-600 focus:text-red-700 focus:bg-red-50 rounded-lg py-2 cursor-pointer">
+                            <XCircle className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

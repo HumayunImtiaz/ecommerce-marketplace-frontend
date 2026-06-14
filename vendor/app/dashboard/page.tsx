@@ -1,11 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { 
-  ShoppingBag, 
-  Package, 
-  DollarSign, 
-  TrendingUp, 
+import {
+  ShoppingBag,
+  Package,
+  DollarSign,
+  TrendingUp,
   ArrowUpRight,
   ArrowDownRight,
   Clock,
@@ -28,7 +28,7 @@ export default function VendorDashboard() {
           vendorApi.getDashboard(),
           vendorApi.getAnalytics()
         ])
-        
+
         if (statsRes.success) setStats(statsRes.data)
         if (analyticsRes.success) setAnalytics(analyticsRes.data)
       } catch (err) {
@@ -54,7 +54,7 @@ export default function VendorDashboard() {
       value: `$${stats?.totalEarnings?.toFixed(2) || "0.00"}`,
       icon: DollarSign,
       color: "blue",
-      trend: "+12.5%",
+      trend: "All time",
       isPositive: true,
     },
     {
@@ -62,7 +62,7 @@ export default function VendorDashboard() {
       value: stats?.totalOrders || "0",
       icon: ShoppingBag,
       color: "orange",
-      trend: "+4.2%",
+      trend: "All time",
       isPositive: true,
     },
     {
@@ -70,12 +70,12 @@ export default function VendorDashboard() {
       value: stats?.totalProducts || "0",
       icon: Package,
       color: "green",
-      trend: "0.0%",
+      trend: "All time",
       isPositive: true,
     },
     {
       title: "Avg. Commission",
-      value: "10%",
+      value: `${stats?.commissionRate || 10}%`,
       icon: TrendingUp,
       color: "purple",
       trend: "Fixed",
@@ -90,9 +90,13 @@ export default function VendorDashboard() {
           <h1 className="text-3xl font-playfair font-black text-[#002147]">Store Overview</h1>
           <p className="text-gray-500 mt-1">Track your store performance and sales metrics.</p>
         </div>
-        <div className="flex items-center gap-2 text-sm font-bold bg-green-50 text-green-700 px-4 py-2 rounded-full border border-green-100">
+        <div className={`flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-full border ${
+          stats?.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-100' :
+          stats?.status === 'SUSPENDED' ? 'bg-red-50 text-red-700 border-red-100' :
+          'bg-orange-50 text-orange-700 border-orange-100'
+        }`}>
           <CheckCircle2 className="w-4 h-4" />
-          Store Status: Active
+          Store Status: {stats?.status || "PENDING"}
         </div>
       </div>
 
@@ -101,12 +105,11 @@ export default function VendorDashboard() {
         {statCards.map((card) => (
           <div key={card.title} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
             <div className="flex items-start justify-between mb-4">
-              <div className={`p-3 rounded-2xl ${
-                card.color === 'blue' ? 'bg-blue-50 text-blue-600' :
-                card.color === 'orange' ? 'bg-orange-50 text-orange-600' :
-                card.color === 'green' ? 'bg-green-50 text-green-600' :
-                'bg-purple-50 text-purple-600'
-              }`}>
+              <div className={`p-3 rounded-2xl ${card.color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                  card.color === 'orange' ? 'bg-orange-50 text-orange-600' :
+                    card.color === 'green' ? 'bg-green-50 text-green-600' :
+                      'bg-purple-50 text-purple-600'
+                }`}>
                 <card.icon className="w-6 h-6" />
               </div>
               <div className={`flex items-center gap-1 text-xs font-bold ${card.isPositive ? 'text-green-600' : 'text-red-600'}`}>
@@ -153,16 +156,50 @@ export default function VendorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Recent Orders Placeholder */}
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="p-6 border-b flex items-center justify-between">
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+          <div className="p-6 border-b flex items-center justify-between bg-slate-50/50">
             <h3 className="font-bold text-[#002147]">Recent Orders</h3>
-            <button className="text-sm font-bold text-[#eb9a05] hover:underline">View All</button>
+            <a href="/dashboard/orders" className="text-sm font-bold text-[#eb9a05] hover:underline">View All</a>
           </div>
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-50 rounded-full mb-4">
-              <Clock className="w-8 h-8 text-gray-300" />
-            </div>
-            <p className="text-gray-400 font-medium">Your recent orders will appear here.</p>
+          <div className="flex-1 p-0 overflow-y-auto max-h-[350px]">
+            {stats?.recentOrders && stats.recentOrders.length > 0 ? (
+              <div className="divide-y">
+                {stats.recentOrders.map((order: any) => (
+                  <div key={order.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-bold">
+                        {order.customerName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-[#002147]">{order.customerName}</p>
+                        <p className="text-xs text-slate-500 font-medium">Items: {order.items.length}</p>
+                        <span className={`text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full mt-1 inline-block ${
+                          order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                          order.status === 'processing' ? 'bg-blue-100 text-blue-700' :
+                          order.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                          'bg-orange-100 text-orange-700'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-black text-[#002147]">${order.total.toFixed(2)}</p>
+                      <p className="text-xs text-slate-400 font-medium mt-1">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-12 text-center h-full flex flex-col items-center justify-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-50 rounded-full mb-4">
+                  <Clock className="w-8 h-8 text-gray-300" />
+                </div>
+                <p className="text-gray-400 font-medium">Your recent orders will appear here.</p>
+              </div>
+            )}
           </div>
         </div>
 

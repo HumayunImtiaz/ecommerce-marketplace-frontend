@@ -61,13 +61,13 @@ export const authApi = {
   login: (credentials: any) =>
     fetcher("/api/auth/user/login", {
       method: "POST",
-      body: JSON.stringify(credentials),
+      body: JSON.stringify({ ...credentials, portal: "vendor" }),
     }),
 
   register: (userData: any) =>
     fetcher("/api/auth/user/register", {
       method: "POST",
-      body: JSON.stringify(userData),
+      body: JSON.stringify({ ...userData, portal: "vendor" }),
     }),
 
   logout: () => fetcher("/api/auth/user/logout", { method: "POST" }),
@@ -75,10 +75,10 @@ export const authApi = {
   socialLogin: (data: any) =>
     fetcher("/api/auth/social-login", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, portal: "vendor" }),
     }),
 
-  verifyEmail: (token: string) => fetcher(`/api/auth/verify-email?token=${token}`),
+  verifyEmail: (token: string) => fetcher(`/api/auth/user/verify-email/${token}`),
   forgotPassword: (email: string) =>
     fetcher("/api/auth/forgot-password", {
       method: "POST",
