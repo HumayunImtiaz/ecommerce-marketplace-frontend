@@ -1,0 +1,170 @@
+"use client"
+
+import type React from "react"
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react"
+import type { User } from "@/lib/types"
+import { authApi } from "@/lib/api"
+
+interface AuthContextType {
+  user: User | null
+  login: (email: string, password: string) => Promise<boolean>
+  socialLogin: (loggedInUser: any, token: string) => Promise<boolean>
+  register: (name: string, email: string, password: string) => Promise<boolean>
+  logout: () => void
+  isLoading: boolean
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // ── App start pe /api/auth/me se user load karo ──
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const { data, success } = await authApi.getMe()
+
+        if (success && data?.user) {
+          setUser(data.user)
+        } else {
+          setUser(null)
+        }
+      } catch {
+        setUser(null)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadUser()
+  }, [])
+
+  // ─── Login ────────────────────────────────────────────────────────────────
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+
+      const { data, success, message } = await authApi.login({ email, password })
+
+      if (!success || !data?.user) {
+        throw new Error(message || "Login failed")
+      }
+
+      if (success && data?.token) {
+        if (data.user.role !== "VENDOR") {
+          if (data.user.vendorStatus === "PENDING") {
+            throw new Error("Your application is pending admin approval.");
+          } else if (data.user.vendorStatus === "SUSPENDED" || data.user.vendorStatus === "REJECTED") {
+            throw new Error(`Your vendor account is ${data.user.vendorStatus.toLowerCase()}.`);
+          }
+        }
+
+        localStorage.setItem("vendorToken", data.token);
+        setUser({
+          id: data.user._id ?? data.user.id,
+          name: data.user.fullName ?? data.user.name,
+          email: data.user.email,
+          role: data.user.role ?? "USER",
+          avatar: data.user.avatar ?? null,
+          phone: data.user.phone ?? null,
+          dateOfBirth: data.user.dateOfBirth ?? null,
+          vendorStatus: data.user.vendorStatus ?? null,
+        });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Login Error:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setUser]);
+
+  // ─── Social Login ─────────────────────────────────────────────────────────
+  const socialLogin = useCallback(async (loggedInUser: any, token: string): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+
+      if (!loggedInUser || !token) return false
+
+      if (loggedInUser.role !== "VENDOR") {
+        if (loggedInUser.vendorStatus === "PENDING") {
+          throw new Error("Your application is pending admin approval.");
+        } else if (loggedInUser.vendorStatus === "SUSPENDED" || loggedInUser.vendorStatus === "REJECTED") {
+          throw new Error(`Your vendor account is ${loggedInUser.vendorStatus.toLowerCase()}.`);
+        }
+      }
+
+      // Social login route already cookies set kar chuka hai
+      // Bas user state update karo
+      setUser({
+        id:     loggedInUser._id ?? loggedInUser.id,
+        name:   loggedInUser.fullName ?? loggedInUser.name,
+        email:  loggedInUser.email,
+        role:   loggedInUser.role ?? "user",
+        avatar: loggedInUser.avatar ?? null,
+        phone: loggedInUser.phone ?? null,
+        dateOfBirth: loggedInUser.dateOfBirth ?? null,
+        vendorStatus: loggedInUser.vendorStatus ?? null,
+      })
+
+      return true
+    } catch {
+      return false
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  // ─── Register ────────────────────────────────────────────────────────────
+  const register = useCallback(async (
+    name: string,
+    email: string,
+    password: string
+  ): Promise<boolean> => {
+    try {
+      setIsLoading(true)
+
+      const { success, message } = await authApi.register({
+        fullName: name,
+        email,
+        password,
+        confirmPassword: password,
+      })
+
+      if (!success) {
+        throw new Error(message || "Registration failed")
+      }
+
+      return true
+    } catch (error) {
+      throw error
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  // ─── Logout ───────────────────────────────────────────────────────────────
+  const logout = useCallback(() => {
+    localStorage.removeItem("vendorToken");
+    setUser(null);
+  }, [setUser]);
+
+  const value = useMemo(
+    () => ({ user, login, socialLogin, register, logout, isLoading }),
+    [user, isLoading]
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider")
+  }
+  return context
+}

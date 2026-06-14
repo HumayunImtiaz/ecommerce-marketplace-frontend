@@ -1,0 +1,305 @@
+
+
+
+
+async function fetcher<T = any>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<{ data: T | null; success: boolean; message: string; status: number }> {
+  try {
+    const isFormData = options.body instanceof FormData
+    const defaultHeaders: any = {}
+    if (!isFormData) {
+      defaultHeaders["Content-Type"] = "application/json"
+    }
+
+    const defaultOptions: RequestInit = {
+      credentials: "include",
+      headers: {
+        ...defaultHeaders,
+        ...(options.headers || {}),
+      },
+      ...options,
+    }
+
+    // Attach token if available in localStorage
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("vendorToken");
+      if (token) {
+        (defaultOptions.headers as any)["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000"
+    const response = await fetch(`${baseUrl}${endpoint}`, defaultOptions)
+    const result = await response.json()
+
+    return {
+      ...result,
+      data: result.data || null,
+      success: result.success || response.ok,
+      message: result.message || "",
+      status: response.status,
+    }
+  } catch (error: any) {
+    console.error(`API Error [${endpoint}]:`, error)
+    return {
+      data: null,
+      success: false,
+      message: error.message || "Network error occurred",
+      status: 500,
+    }
+  }
+}
+
+
+// Auth APIs
+
+export const authApi = {
+  getMe: () => fetcher("/api/auth/user/me", { cache: "no-store" }),
+
+  login: (credentials: any) =>
+    fetcher("/api/auth/user/login", {
+      method: "POST",
+      body: JSON.stringify({ ...credentials, portal: "vendor" }),
+    }),
+
+  register: (userData: any) =>
+    fetcher("/api/auth/user/register", {
+      method: "POST",
+      body: JSON.stringify({ ...userData, portal: "vendor" }),
+    }),
+
+  logout: () => fetcher("/api/auth/user/logout", { method: "POST" }),
+
+  socialLogin: (data: any) =>
+    fetcher("/api/auth/social-login", {
+      method: "POST",
+      body: JSON.stringify({ ...data, portal: "vendor" }),
+    }),
+
+  verifyEmail: (token: string) => fetcher(`/api/auth/user/verify-email/${token}`),
+  forgotPassword: (email: string) =>
+    fetcher("/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+  resetPassword: (token: string, data: any) =>
+    fetcher("/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, ...data }),
+    }),
+
+  requestDeletion: () =>
+    fetcher("/api/auth/request-deletion", {
+      method: "POST",
+    }),
+
+  updateProfile: (formData: FormData) =>
+    fetcher("/api/auth/profile", {
+      method: "PATCH",
+      body: formData,
+    }),
+
+  getEmailPreferences: () =>
+    fetcher("/api/auth/email-preferences", { cache: "no-store" }),
+
+  updateEmailPreferences: (prefs: Record<string, boolean>) =>
+    fetcher("/api/auth/email-preferences", {
+      method: "PATCH",
+      body: JSON.stringify(prefs),
+    }),
+}
+
+
+//  * Product & Category APIs
+
+export const productApi = {
+  getProducts: (options: any = {}) => {
+    const params = new URLSearchParams();
+    if (options.activeOnly) params.append("activeOnly", "true");
+    if (options.search) params.append("search", options.search);
+    if (options.category) params.append("category", options.category);
+    if (options.priceRange?.[0] !== undefined) params.append("minPrice", options.priceRange[0].toString());
+    if (options.priceRange?.[1] !== undefined) params.append("maxPrice", options.priceRange[1].toString());
+    if (options.rating) params.append("rating", options.rating.toString());
+    if (options.inStock) params.append("inStock", "true");
+    if (options.sortBy) params.append("sortBy", options.sortBy);
+    if (options.isFeatured) params.append("isFeatured", "true");
+    if (options.page) params.append("page", options.page.toString());
+    if (options.limit) params.append("limit", options.limit.toString());
+
+    const queryString = params.toString();
+    return fetcher(`/api/products${queryString ? `?${queryString}` : ""}`, { cache: "no-store" });
+  },
+
+  getCategories: (hideEmpty: boolean = false) => 
+    fetcher(`/api/categories${hideEmpty ? "?hideEmpty=true" : ""}`, { cache: "no-store" }),
+
+  getProductBySlug: (slug: string) => fetcher(`/api/products/${slug}`, { cache: "no-store" }),
+
+  // Custom Reviews (via product detail logic)
+  getReviews: (productId: string) => fetcher(`/api/reviews/${productId}`),
+
+  addReview: (productId: string, reviewData: any) =>
+    fetcher(`/api/reviews/${productId}`, {
+      method: "POST",
+      body: JSON.stringify(reviewData),
+    }),
+}
+
+// Cart Api
+export const cartApi = {
+  getCart: () => fetcher("/api/cart"),
+
+  addToCart: (data: { productId: string; quantity: number; selectedColor?: string; selectedSize?: string }) =>
+    fetcher("/api/cart", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateQuantity: (itemId: string, quantity: number) =>
+    fetcher("/api/cart", {
+      method: "PATCH",
+      body: JSON.stringify({ itemId, quantity }),
+    }),
+
+  removeFromCart: (itemId: string) => fetcher(`/api/cart?itemId=${itemId}`, { method: "DELETE" }),
+
+  clearCart: () => fetcher("/api/cart?clear=true", { method: "DELETE" }),
+}
+
+
+//   Order APIs
+
+export const orderApi = {
+  getOrders: () => fetcher("/api/orders", { cache: "no-store" }),
+
+  createOrder: (orderData: any) =>
+    fetcher("/api/orders", {
+      method: "POST",
+      body: JSON.stringify(orderData),
+    }),
+
+  createPaymentIntent: (data: any) =>
+    fetcher("/api/orders/payment-intent", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  confirmPayment: (orderId: string, paymentIntentId: string) =>
+    fetcher(`/api/orders/${orderId}/confirm-payment`, {
+      method: "POST",
+      body: JSON.stringify({ paymentIntentId }),
+    }),
+
+  validateCoupon: (code: string, subtotal: number) =>
+    fetcher("/api/orders/coupons/validate", {
+      method: "POST",
+      body: JSON.stringify({ code, subtotal }),
+    }),
+
+  getPublicCoupons: () => fetcher("/api/orders/coupons/public"),
+}
+
+// Wishlist APIs
+
+export const wishlistApi = {
+  getWishlist: () => fetcher("/api/wishlist", { cache: "no-store" }),
+
+  addToWishlist: (productId: string) =>
+    fetcher("/api/wishlist", {
+      method: "POST",
+      body: JSON.stringify({ productId }),
+    }),
+
+  removeFromWishlist: (productId: string) =>
+    fetcher(`/api/wishlist/${productId}`, {
+      method: "DELETE",
+    }),
+
+  clearWishlist: () => fetcher("/api/wishlist", { method: "DELETE" }),
+
+  syncWishlist: (productIds: string[]) =>
+    fetcher("/api/wishlist/sync", {
+      method: "POST",
+      body: JSON.stringify({ productIds }),
+    }),
+}
+
+// Contact API
+export const contactApi = {
+  sendInquiry: (data: any) =>
+    fetcher("/api/contact", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+// Site Settings API
+export const siteApi = {
+  getSettings: () => fetcher("/api/settings", { cache: "no-store" }),
+  subscribeNewsletter: (email: string) =>
+    fetcher("/api/newsletter", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    }),
+}
+
+// Vendor API
+export const vendorApi = {
+  register: (data: { businessName: string; description?: string }) =>
+    fetcher("/api/vendors/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getProfile: () => fetcher("/api/vendors/profile", { cache: "no-store" }),
+
+  getDashboard: () => fetcher("/api/vendors/dashboard", { cache: "no-store" }),
+
+  getProducts: () => fetcher("/api/vendors/products", { cache: "no-store" }),
+  getOrders: () => fetcher("/api/vendors/orders", { cache: "no-store" }),
+  getOrderDetail: (id: string) => fetcher(`/api/vendors/orders/${id}`, { cache: "no-store" }),
+
+  updateProfile: (data: any) =>
+    fetcher("/api/vendors/profile", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  getAnalytics: () => fetcher("/api/vendors/analytics", { cache: "no-store" }),
+
+  getPayoutHistory: () => fetcher("/api/vendors/payout/history", { cache: "no-store" }),
+
+  requestPayout: (amount: number) =>
+    fetcher("/api/vendors/payout/request", {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    }),
+
+  getPublicProfile: (slug: string) => fetcher(`/api/vendors/public/${slug}`, { cache: "no-store" }),
+
+  createProduct: (data: any) =>
+    fetcher("/api/products", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateProduct: (id: string, data: any) =>
+    fetcher(`/api/products/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteProduct: (id: string) =>
+    fetcher(`/api/products/${id}`, {
+      method: "DELETE",
+    }),
+
+  uploadImages: (formData: FormData) =>
+    fetcher("/api/upload/images", {
+      method: "POST",
+      body: formData,
+    }),
+}

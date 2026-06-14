@@ -10,6 +10,7 @@ import { AdminLoader } from "@/components/admin-loader"
 import { DateRange } from "react-day-picker"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
+import { TopVendorsChart } from "@/components/top-vendors-chart"
 
 interface DashboardData {
   kpis: {
@@ -32,6 +33,7 @@ interface DashboardData {
     amount: string | null
     time: string
   }[]
+  topVendors: { id: string; name: string; grossRevenue: number }[]
 }
 
 export default function DashboardPage() {
@@ -128,6 +130,10 @@ export default function DashboardPage() {
         <div className="col-span-3">
           <RecentActivity activities={data?.recentActivity || []} />
         </div>
+      </div>
+
+      <div className="grid gap-6">
+        <TopVendorsChart data={data?.topVendors || []} />
       </div>
     </div>
   )

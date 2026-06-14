@@ -235,3 +235,38 @@ export const siteApi = {
       body: JSON.stringify({ email }),
     }),
 }
+
+// Vendor API
+export const vendorApi = {
+  register: (data: { businessName: string; description?: string }) =>
+    fetcher("/api/vendor/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  getProfile: () => fetcher("/api/vendor/profile", { cache: "no-store" }),
+
+  getDashboard: () => fetcher("/api/vendor/dashboard", { cache: "no-store" }),
+
+  getProducts: () => fetcher("/api/vendor/products", { cache: "no-store" }),
+  getOrders: () => fetcher("/api/vendor/orders", { cache: "no-store" }),
+  getOrderDetail: (id: string) => fetcher(`/api/vendor/orders/${id}`, { cache: "no-store" }),
+
+  updateProfile: (data: any) =>
+    fetcher("/api/vendor/profile", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  getAnalytics: () => fetcher("/api/vendor/analytics", { cache: "no-store" }),
+
+  getPayoutHistory: () => fetcher("/api/vendor/payout/history", { cache: "no-store" }),
+
+  requestPayout: (amount: number) =>
+    fetcher("/api/vendor/payout/request", {
+      method: "POST",
+      body: JSON.stringify({ amount }),
+    }),
+
+  getPublicProfile: (slug: string) => fetcher(`/api/vendor/public/${slug}`, { cache: "no-store" }),
+}

@@ -50,6 +50,8 @@ export const mapProduct = (p: any): Product | null => {
     isActive: p.isActive ?? true,
     isFeatured: p.isFeatured ?? false,
     isTrending: p.isTrending ?? false,
+    vendorName: p.vendor?.businessName ?? undefined,
+    vendorSlug: p.vendor?.slug ?? undefined,
   }
 }
 

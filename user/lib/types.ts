@@ -31,6 +31,8 @@ export interface Product {
   slug?: string
   isActive?: boolean
   outOfStock?: boolean
+  vendorName?: string
+  vendorSlug?: string
 }
 
 export interface CartItem {
@@ -55,6 +57,7 @@ export interface User {
   id: string
   name: string
   email: string
+  role?: string | null
   avatar?: string | null
   phone?: string | null
   dateOfBirth?: string | null
