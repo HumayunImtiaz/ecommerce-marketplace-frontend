@@ -23,16 +23,20 @@ import { vendorApi } from "@/lib/api"
 import { toast } from "sonner"
 import Link from "next/link"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useParams } from "next/navigation"
 
-export default function VendorOrderDetailPage({ params }: { params: { id: string } }) {
+export default function VendorOrderDetailPage() {
+  const params = useParams()
+  const id = params?.id as string
   const [order, setOrder] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchOrderDetail = async () => {
+      if (!id) return;
       try {
         setIsLoading(true)
-        const { data, success } = await vendorApi.getOrderDetail(params.id)
+        const { data, success } = await vendorApi.getOrderDetail(id)
         if (success) setOrder(data)
         else toast.error("Failed to load order details")
       } catch (err) {
@@ -42,7 +46,7 @@ export default function VendorOrderDetailPage({ params }: { params: { id: string
       }
     }
     fetchOrderDetail()
-  }, [params.id])
+  }, [id])
 
   if (isLoading) {
     return (
