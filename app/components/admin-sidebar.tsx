@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BarChart3, Package, ShoppingCart, Users, Megaphone, Settings, Home, ChevronDown, Mail, MessageCircle, Store, DollarSign } from "lucide-react"
+import { BarChart3, Package, ShoppingCart, Users, Megaphone, Settings, Home, ChevronDown, Mail, MessageCircle, Store, DollarSign, Layers } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
@@ -60,6 +60,11 @@ const menuItems = [
     title: "Coupons",
     url: "/admin/coupons",
     icon: ShoppingCart, // Changed icon for variety, or keep Megaphone? Let's use Ticket if available, otherwise ShoppingCart is fine. Actually, let's look for a better icon.
+  },
+  {
+    title: "Categories",
+    url: "/admin/categories",
+    icon: Layers, 
   },
   {
     title: "Analytics",

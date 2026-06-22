@@ -13,13 +13,8 @@ import { AdminLoader } from "./admin-loader"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { ImageUpload } from "@/components/image-upload"
+import { getImageUrl } from "@/lib/utils"
 
-const resolveAvatar = (url: string) => {
-  if (!url) return "/placeholder.svg";
-  if (url.startsWith("http")) return url;
-  if (url.startsWith("/")) return url;
-  return `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"}/uploads/${url}`;
-};
 
 interface Category {
   _id: string
@@ -160,7 +155,7 @@ export default function CategoriesTable() {
               <TableRow key={category._id}>
                 <TableCell>
                   <div className="h-12 w-12 rounded overflow-hidden border bg-gray-50">
-                    <img src={resolveAvatar(category.image)} alt={category.name} className="h-full w-full object-cover" />
+                    <img src={getImageUrl(category.image)} alt={category.name} className="h-full w-full object-cover" />
                   </div>
                 </TableCell>
                 <TableCell>
