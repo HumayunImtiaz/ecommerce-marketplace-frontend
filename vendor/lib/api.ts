@@ -14,7 +14,6 @@ async function fetcher<T = any>(
     }
 
     const defaultOptions: RequestInit = {
-      credentials: "include",
       headers: {
         ...defaultHeaders,
         ...(options.headers || {}),
@@ -22,16 +21,8 @@ async function fetcher<T = any>(
       ...options,
     }
 
-    // Attach token if available in localStorage
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("vendorToken");
-      if (token) {
-        (defaultOptions.headers as any)["Authorization"] = `Bearer ${token}`;
-      }
-    }
-
-    const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000"
-    const response = await fetch(`${baseUrl}${endpoint}`, defaultOptions)
+    // Direct fetch to relative endpoint (Next.js handles same-origin proxying)
+    const response = await fetch(endpoint, defaultOptions)
     const result = await response.json()
 
     return {
