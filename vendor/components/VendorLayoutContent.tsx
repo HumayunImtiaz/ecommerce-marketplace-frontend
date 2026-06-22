@@ -40,6 +40,13 @@ export default function VendorLayoutContent({ children }: { children: React.Reac
   const authPages = ["/login", "/register", "/forgot-password", "/reset-password", "/verify-email", "/apply"]
   const isAuthPage = authPages.some(page => pathname.startsWith(page))
 
+  const getImageUrl = (url: string) => {
+    if (!url) return "";
+    if (url.startsWith("http") || url.startsWith("data:")) return url;
+    const baseUrl = process.env.NEXT_PUBLIC_SERVER_URL || process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+    return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   // Redirect logic
   useEffect(() => {
     if (!authLoading) {
@@ -108,7 +115,7 @@ export default function VendorLayoutContent({ children }: { children: React.Reac
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
               <div className="h-10 w-10 overflow-hidden rounded-lg bg-white border flex items-center justify-center">
                 {vendorProfile?.logo ? (
-                  <img src={vendorProfile.logo} alt="Logo" className="h-full w-full object-cover" />
+                  <img src={getImageUrl(vendorProfile.logo)} alt="Logo" className="h-full w-full object-cover" />
                 ) : (
                   <Store className="h-5 w-5 text-slate-400" />
                 )}
