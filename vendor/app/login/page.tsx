@@ -32,10 +32,10 @@ export default function LoginPage() {
         await authLogin(values.email, values.password)
         addToast("Welcome back to LuxeCart.", "success")
         router.push("/")
-      } catch (error: any) { 
-        addToast(error?.message || "Login failed. Please try again.", "error") 
-      } finally { 
-        setSubmitting(false) 
+      } catch (error: any) {
+        addToast(error?.message || "Login failed. Please try again.", "error")
+      } finally {
+        setSubmitting(false)
       }
     },
   })
@@ -56,13 +56,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] px-4 py-20 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] px-4 py-8 relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#eb9a05]/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-[100px]"></div>
       <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#002147]/5 rounded-full translate-y-1/2 -translate-x-1/2 blur-[100px]"></div>
 
-      <div className="max-w-md w-full bg-white p-12 md:p-16 rounded-[3rem] shadow-2xl border border-[#eb9a05]/10 relative z-10 animate-fade-in-up">
-        <div className="text-center mb-12">
+      <div className="max-w-lg w-full bg-white p-10 md:p-12 rounded-[3rem] shadow-2xl border border-[#eb9a05]/10 relative z-10 animate-fade-in-up">
+        <div className="text-center mb-10">
           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-[#eb9a05]/10 border border-[#eb9a05]/20 text-[#eb9a05] mb-8">
             <Sparkles className="w-4 h-4" />
             <span className="text-[10px] font-black tracking-[0.3em] uppercase">Secure Login</span>
@@ -78,7 +78,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
           {/* Email */}
           <div className="space-y-2">
             <label className="text-[10px] font-black tracking-widest uppercase text-[#002147] opacity-40 ml-4">Email Address</label>
@@ -91,7 +91,7 @@ export default function LoginPage() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 placeholder="Enter your email"
-                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-6 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.email && formik.errors.email ? "border-red-400" : "border-gray-50"
+                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-6 py-3 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.email && formik.errors.email ? "border-red-400" : "border-gray-50"
                   }`}
               />
             </div>
@@ -115,7 +115,7 @@ export default function LoginPage() {
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 placeholder="Enter your password"
-                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-4 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.password && formik.errors.password ? "border-red-400" : "border-gray-50"
+                className={`w-full bg-[#f8f9fa] border-2 rounded-2xl pl-16 pr-14 py-3 focus:outline-none focus:border-[#eb9a05] focus:bg-white focus:shadow-xl transition-all font-bold text-sm ${formik.touched.password && formik.errors.password ? "border-red-400" : "border-gray-50"
                   }`}
               />
               <button
@@ -133,15 +133,35 @@ export default function LoginPage() {
             type="button"
             onClick={() => formik.handleSubmit()}
             disabled={isLoading || formik.isSubmitting}
-            className="w-full btn-primary py-5 rounded-2xl flex items-center justify-center gap-4 group shadow-xl"
+            className="w-full btn-primary py-4 rounded-2xl flex items-center justify-center gap-4 group shadow-xl"
           >
             <span className="text-sm font-black tracking-[0.2em] uppercase">{isLoading || formik.isSubmitting ? "Signing In..." : "Sign In"}</span>
             {!isLoading && <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-2" />}
           </button>
 
-          <div className="relative flex items-center justify-center py-4">
+          <div className="relative flex items-center justify-center py-3 mt-1">
             <div className="w-full border-t border-gray-100"></div>
-            <span className="absolute bg-white px-4 text-[8px] font-black tracking-[0.3em] uppercase text-gray-300">Or continue with</span>
+            <span className="absolute bg-white px-3 text-[8px] font-black tracking-[0.3em] uppercase text-gray-400">Quick Access</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              formik.setFieldValue("email", "test3@yopmail.com")
+              formik.setFieldValue("password", "123456")
+            }}
+            className="w-full py-4 rounded-2xl flex items-center justify-center gap-3 bg-gradient-to-r from-[#eb9a05]/10 via-[#eb9a05]/5 to-[#002147]/5 border-2 border-[#eb9a05]/30 hover:border-[#eb9a05] hover:shadow-md hover:from-[#eb9a05]/20 hover:to-[#eb9a05]/10 text-[#002147] transition-all group relative overflow-hidden"
+          >
+            <Sparkles className="w-4 h-4 text-[#eb9a05] animate-pulse" />
+            <span className="text-sm font-black tracking-[0.15em] uppercase relative z-10">
+              <span className="text-[#eb9a05] group-hover:text-[#002147] transition-colors">One-Click</span>{" "}
+              <span className="text-[#002147] group-hover:text-[#eb9a05] transition-colors">Demo Login</span>
+            </span>
+          </button>
+
+          <div className="relative flex items-center justify-center py-3">
+            <div className="w-full border-t border-gray-100"></div>
+            <span className="absolute bg-white px-3 text-[8px] font-black tracking-[0.3em] uppercase text-gray-400">Or continue with</span>
           </div>
 
           <div className="flex justify-center">

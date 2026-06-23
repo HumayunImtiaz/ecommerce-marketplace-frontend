@@ -87,6 +87,11 @@ export default function VendorLayoutContent({ children }: { children: React.Reac
     return <>{children}</>
   }
 
+  // Prevent flashing the dashboard while redirecting unauthenticated users
+  if (!user || user.role !== "VENDOR") {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50/50">
       {/* ── Sidebar (Desktop) ── */}
